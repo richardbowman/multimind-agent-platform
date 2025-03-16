@@ -1,6 +1,9 @@
 import React from 'react';
 import DescriptionIcon from '@mui/icons-material/Description';
 import LanguageIcon from '@mui/icons-material/Language';
+import ImageIcon from '@mui/icons-material/Image';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import { Box, Typography } from '@mui/material';
 
 interface AttachmentCardProps {
@@ -48,16 +51,47 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
                 backgroundColor: type === 'artifact' ? (theme) => theme.palette.action.hover : (theme) => theme.palette.action.hover
             }
         }}>
-            {type === 'file' && previewUrl && (
-                <img
-                    src={previewUrl}
-                    alt={title}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                    }}
-                />
+            {type === 'file' && (
+                <Box sx={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: (theme) => theme.palette.background.paper,
+                    p: 2
+                }}>
+                    {previewUrl && previewUrl.startsWith('data:image/') ? (
+                        <img
+                            src={previewUrl}
+                            alt={title}
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                            }}
+                        />
+                    ) : (
+                        <>
+                            {previewUrl?.includes('pdf') ? (
+                                <PictureAsPdfIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+                            ) : previewUrl?.startsWith('data:image/') ? (
+                                <ImageIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+                            ) : (
+                                <InsertDriveFileIcon sx={{ fontSize: 48, color: 'text.secondary' }} />
+                            )}
+                            <Typography variant="body2" sx={{ 
+                                ml: 1,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: '100px'
+                            }}>
+                                {title}
+                            </Typography>
+                        </>
+                    )}
+                </Box>
             )}
             
             {type === 'artifact' && (
