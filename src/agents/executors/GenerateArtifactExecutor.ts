@@ -8,7 +8,7 @@ import { Artifact, ArtifactType } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType, OutputType, globalRegistry } from 'src/llm/promptBuilder';
-import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
+import { ArtifactGenerationResponse, OperationTypes } from 'src/schemas/ArtifactGenerationResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
@@ -71,26 +71,29 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         });
     }
 
+    protected getInstructionByOperation(operation: OperationTypes) : string {
+        return operation === "create" ? `Create a NEW document.` :
+            operation === "patch" ? `Update specific parts of an EXISTING document using merge conflict style syntax. Use merge conflict syntax to specify changes:
+\<<<<<<< SEARCH
+text to find and replace
+=======
+new replacement text
+>>>>>>> REPLACE);` :
+            operation === "replace" ? `Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...").` :
+            operation === "append" ? "Append to the end of an EXISTING document. Provide ONLY the new content." : "";
+    }
+
     protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation> {
         const promptBuilder = this.startModel(params);
 
         // Add core instructions
         promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
-        promptBuilder.addInstruction(`You can perform these 'operations':
-1. create: Create a NEW document
-2. replace: Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...")
-3. patch: Update specific parts of an EXISTING document using merge conflict style syntax
-4. append: Append to the end of an EXISTING document
+        promptBuilder.addInstruction(`# AVAILABLE OPERATIONS:
+1. create: ${this.getInstructionByOperation('create')}
+2. replace: ${this.getInstructionByOperation('create')}
+3. patch: ${this.getInstructionByOperation('patch')}
+4. append: ${this.getInstructionByOperation('append')}
 `);
-
-        promptBuilder.addInstruction(`IMPORTANT RULES:
-- For 'replace', 'patch', 'append', specify artifactIndex.
-- For 'edit' operations: Use merge conflict syntax to specify changes:
-<<<<<<< SEARCH
-text to find and replace
-=======
-new replacement text
->>>>>>> REPLACE`);
 
         promptBuilder.addContext({contentType: ContentType.ABOUT})
         promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});
