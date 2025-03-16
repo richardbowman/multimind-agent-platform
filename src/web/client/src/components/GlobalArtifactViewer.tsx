@@ -135,12 +135,19 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
 
     const handleDelete = async () => {
         if (selectedArtifacts.length > 0) {
+            // Get the type/subtype of the first selected artifact before deletion
+            const firstArtifact = selectedArtifacts[0];
+            const parentType = firstArtifact.type;
+            const parentSubtype = firstArtifact.metadata?.subtype || 'Other';
+            
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
             
             // Clear all selections and refresh state
             setSelectedArtifacts([]);
             setSelectedArtifact(null);
-            setSelectedItemIds([]);
+            
+            // Select the parent type/subtype folder
+            setSelectedItemIds([`${parentType}-${parentSubtype}`]);
             
             // Update bulk delete state
             updateActionState('bulk-delete', {
