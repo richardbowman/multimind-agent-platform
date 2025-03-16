@@ -103,14 +103,25 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         selectedTask={selectedTask}
                         onSelectTask={setSelectedTask}
                     />
-                    <Box sx={{ 
-                        width: '70%',
-                        height: '70vh',
-                        pl: 2
-                    }}>
-                        <ScrollView>
-                        {selectedTask && (
-                            <Stack spacing={2} sx={{ mt: 1 }}>
+                    <TaskDetailsPanel
+                        selectedTask={selectedTask}
+                        projectDetails={projectDetails}
+                        artifacts={artifacts}
+                        handles={handles}
+                        onViewParentTask={async (taskId) => {
+                            const parentTask = tasks.find(t => t.id === taskId);
+                            if (parentTask) {
+                                setSelectedTask(parentTask);
+                            }
+                        }}
+                        onViewChildTask={async (taskId) => {
+                            const childTasks = tasks.filter(t => t.projectId === taskId);
+                            if (childTasks.length > 0) {
+                                setSelectedTask(childTasks[0]);
+                                setProjectTasks(childTasks);
+                            }
+                        }}
+                    />
                                 {(selectedTask.projectId || selectedTask.props?.childProjectId) && (
                                     <Box sx={{ 
                                         p: 2,
@@ -297,10 +308,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         </Typography>
                                     </Box>
                                 ))}
-                            </Stack>
-                        )}
-                        </ScrollView>
-                    </Box>
                 </Box>
             </DialogContent>
             <DialogActions>
