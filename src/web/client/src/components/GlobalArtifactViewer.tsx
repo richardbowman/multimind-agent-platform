@@ -146,8 +146,14 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             setSelectedArtifacts([]);
             setSelectedArtifact(null);
             
-            // Select the parent type/subtype folder
+            // Select the parent type/subtype folder and keep it expanded
             setSelectedItemIds([`${parentType}-${parentSubtype}`]);
+            setExpandedItems(prevExpanded => {
+                const newExpanded = new Set(prevExpanded);
+                newExpanded.add(parentType);
+                newExpanded.add(`${parentType}-${parentSubtype}`);
+                return Array.from(newExpanded);
+            });
             
             // Update bulk delete state
             updateActionState('bulk-delete', {
