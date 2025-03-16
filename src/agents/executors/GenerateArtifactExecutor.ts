@@ -167,8 +167,14 @@ new replacement text
                     // Handle requestFullContent operation
                     if (result.operation === 'requestFullContent')
                         if (params.context?.artifacts && result.artifactIndex != null) {
-                            existingArtifact = await this.artifactManager.loadArtifact(params.context.artifacts[result.artifactIndex].id);
-                            artifactIndex = result.artifactIndex;
+                            // Handle both numeric index and UUID string
+                            if (typeof result.artifactIndex === 'number') {
+                                existingArtifact = await this.artifactManager.loadArtifact(params.context.artifacts[result.artifactIndex].id);
+                                artifactIndex = result.artifactIndex;
+                            } else if (typeof result.artifactIndex === 'string') {
+                                existingArtifact = await this.artifactManager.loadArtifact(result.artifactIndex);
+                                artifactIndex = params.context.artifacts.findIndex(a => a.id === result.artifactIndex);
+                            }
                             throw new RetryError("Retry with full artifact provided");
                         } else {
                             throw new Error("Request full content requested but no artifacts avaialble or artifactIndex not specified");
@@ -189,9 +195,14 @@ new replacement text
                 };
 
 
-                if (result.operation !== 'create' && result.artifactIndex != null && result.artifactIndex > 0 && params.context?.artifacts) {
+                if (result.operation !== 'create' && result.artifactIndex != null && params.context?.artifacts) {
                     try {
-                        artifactUpdate.id = params.context?.artifacts[result.artifactIndex - 1].id;
+                        // Handle both numeric index and UUID string
+                        if (typeof result.artifactIndex === 'number' && result.artifactIndex > 0) {
+                            artifactUpdate.id = params.context.artifacts[result.artifactIndex - 1].id;
+                        } else if (typeof result.artifactIndex === 'string') {
+                            artifactUpdate.id = result.artifactIndex;
+                        }
                         const existingArtifact = await this.artifactManager.loadArtifact(artifactUpdate.id);
 
                         // If types don't match, force create new artifact instead
