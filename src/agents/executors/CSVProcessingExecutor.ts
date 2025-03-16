@@ -2,7 +2,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { JSONSchema } from "../../llm/ILLMService";
+import { CSVProcessingSchema, CSVResultSchema } from "../../schemas/CSVProcessingSchema";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
@@ -83,17 +83,15 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         // Create schema for agent selection
         const supportedAgents = [{...params.self, messagingHandle: "@self"} as Agent, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
 
-        const schema : JSONSchema = {
-            type: 'object',
+        const schema = {
+            ...CSVProcessingSchema,
             properties: {
-                projectName: { type: 'string' },
-                taskDescription: { type: 'string' },
-                assignedAgent: { 
+                ...CSVProcessingSchema.properties,
+                assignedAgent: {
                     type: 'string',
                     enum: supportedAgents.map(a => a.messagingHandle) ?? []
                 }
-            },
-            required: ["projectName", "taskDescription", "assignedAgent"]
+            }
         };
 
         // Create prompt for agent selection
@@ -296,24 +294,8 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
             Logger.error('Error reading CSV headers:', error);
         }
 
-        // Create schema for result extraction
-        const schema: JSONSchema = {
-            type: 'object',
-            properties: {
-                columns: { 
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            name: { type: 'string' },
-                            value: { type: 'string' }
-                        },
-                        required: ['name', 'value']
-                    }
-                }
-            },
-            required: ['columns']
-        };
+        // Use the predefined schema for result extraction
+        const schema = CSVResultSchema;
 
         // Create prompt for result processing
         const instructions = this.startModel(params, "processTaskResult");
