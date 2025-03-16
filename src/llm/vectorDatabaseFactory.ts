@@ -1,11 +1,13 @@
 import { IVectorDatabase } from './IVectorDatabase';
 import ChromaDBService from './chromaService';
 import VectraService from './vectraService';
+import SQLiteVecService from './sqliteVecService';
 import { IEmbeddingService, ILLMService } from './ILLMService';
 
 export enum VectorDatabaseType {
     CHROMA = 'chroma',
-    VECTRA = 'vectra'
+    VECTRA = 'vectra',
+    SQLITE_VEC = 'sqlite_vec'
 }
 
 export function createVectorDatabase(
@@ -18,7 +20,9 @@ export function createVectorDatabase(
             return new ChromaDBService(embeddingService, llmService);
         case VectorDatabaseType.VECTRA:
             return new VectraService(embeddingService, llmService);
+        case VectorDatabaseType.SQLITE_VEC:
+            return new SQLiteVecService(embeddingService, llmService);
         default:
-            return new VectraService(embeddingService, llmService);
+            return new SQLiteVecService(embeddingService, llmService);
     }
 }

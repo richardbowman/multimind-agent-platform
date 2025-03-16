@@ -668,9 +668,47 @@ export class Settings {
         label: 'Vector Database Type',
         category: 'Vector DB',
         type: 'select',
-        options: ['vectra', 'chroma']
+        options: ['vectra', 'chroma', 'sqlite_vec'],
+        description: 'Type of vector database to use for storing and querying embeddings'
     })
-    vectorDatabaseType!: string;
+    vectorDatabaseType: string = 'sqlite_vec';
+
+    @ClientSettings({
+        label: 'SQLiteVec Settings',
+        category: 'Vector DB',
+        type: 'section',
+        description: 'Configuration for SQLiteVec vector database'
+    })
+    sqliteVec: {
+        @ClientSettings({
+            label: 'Embedding Dimensions',
+            category: 'Vector DB',
+            type: 'number',
+            description: 'Number of dimensions for embeddings (must match embedding model)'
+        })
+        dimensions: number = 768;
+
+        @ClientSettings({
+            label: 'Auto Vacuum',
+            category: 'Vector DB',
+            type: 'boolean',
+            description: 'Enable automatic database vacuuming to optimize storage'
+        })
+        autoVacuum: boolean = true;
+
+        @ClientSettings({
+            label: 'Journal Mode',
+            category: 'Vector DB',
+            type: 'select',
+            options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
+            description: 'SQLite journal mode (WAL recommended for better concurrency)'
+        })
+        journalMode: string = 'WAL';
+    } = {
+        dimensions: 768,
+        autoVacuum: true,
+        journalMode: 'WAL'
+    };
 
     @ClientSettings({
         label: 'DuckDuckGo Settings',
