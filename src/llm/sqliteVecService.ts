@@ -107,7 +107,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                 WHERE embedding MATCH ?
                 ${conditions ? `AND ${conditions}` : ''}
                 ORDER BY distance ASC
-                LIMIT ?
+                LIMIT ${nResults}
             `;
 
             const stmt = this.db!.prepare(query);
