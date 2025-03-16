@@ -62,8 +62,9 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             const transaction = this.db!.transaction((items) => {
                 for (let i = 0; i < items.length; i++) {
                     const { id, vector, metadata, text } = items[i];
-                    // Convert UUID to numeric hash for rowid
-                    const numericId = parseInt(crypto.createHash('sha256').update(id).digest('hex').slice(0, 15), 16);
+                    // Convert UUID to a safe SQLite integer
+                    const hash = crypto.createHash('sha1').update(id).digest();
+                    const numericId = hash.readUInt32LE(0); // Use first 4 bytes for 32-bit integer
                     insertStmt.run(
                         numericId,
                         new Float32Array(vector),
