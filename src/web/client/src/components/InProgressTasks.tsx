@@ -26,33 +26,77 @@ export const InProgressTasks: React.FC<InProgressTasksProps> = ({ tasks }) => {
                 borderRadius: 2
             }}
         >
-            <Typography
-                variant="overline"
-                sx={{
-                    mb: 1,
-                    color: 'text.secondary',
-                    display: 'block'
-                }}
-            >
-                In Progress Tasks
-            </Typography>
-            <List sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {tasks.map(task => (
-                    <TaskCard
-                        key={task.id}
-                        task={task}
-                        onClick={() => {
-                            setSelectedTask(task);
-                            setDialogOpen(true);
-                        }}
-                        onCheckboxClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTask(task);
-                            setDialogOpen(true);
-                        }}
-                    />
-                ))}
-            </List>
+            <Box sx={{ mb: 2 }}>
+                {/* Steps Section */}
+                {tasks.some(t => t.type === 'step') && (
+                    <>
+                        <Typography
+                            variant="overline"
+                            sx={{
+                                color: 'text.secondary',
+                                display: 'block',
+                                mb: 1
+                            }}
+                        >
+                            In Progress Steps
+                        </Typography>
+                        <List sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                            {tasks
+                                .filter(t => t.type === 'step')
+                                .map(task => (
+                                    <TaskCard
+                                        key={task.id}
+                                        task={task}
+                                        onClick={() => {
+                                            setSelectedTask(task);
+                                            setDialogOpen(true);
+                                        }}
+                                        onCheckboxClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTask(task);
+                                            setDialogOpen(true);
+                                        }}
+                                    />
+                                ))}
+                        </List>
+                    </>
+                )}
+
+                {/* Regular Tasks Section */}
+                {tasks.some(t => t.type !== 'step') && (
+                    <>
+                        <Typography
+                            variant="overline"
+                            sx={{
+                                color: 'text.secondary',
+                                display: 'block',
+                                mb: 1
+                            }}
+                        >
+                            In Progress Tasks
+                        </Typography>
+                        <List sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            {tasks
+                                .filter(t => t.type !== 'step')
+                                .map(task => (
+                                    <TaskCard
+                                        key={task.id}
+                                        task={task}
+                                        onClick={() => {
+                                            setSelectedTask(task);
+                                            setDialogOpen(true);
+                                        }}
+                                        onCheckboxClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTask(task);
+                                            setDialogOpen(true);
+                                        }}
+                                    />
+                                ))}
+                        </List>
+                    </>
+                )}
+            </Box>
 
             {selectedTask && (
                 <TaskDialog
