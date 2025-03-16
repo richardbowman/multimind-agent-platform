@@ -123,19 +123,23 @@ new replacement text
 
 
     async execute(params: ExecuteParams, modelType?: ModelType): Promise<StepResult<ArtifactGenerationStepResponse>> {
-        // Handle requestFullContent operation
-        if (params.context?.stepResponse?.data?.requestFullContent) {
-            const artifactIndex = params.context.stepResponse.data.artifactIndex;
-            if (artifactIndex != null && params.context?.artifacts?.[artifactIndex]) {
-                const artifact = await this.artifactManager.loadArtifact(params.context.artifacts[artifactIndex].id);
-                if (artifact) {
-                    // Add the full content to the context
-                    params.context.artifacts[artifactIndex] = artifact;
+        let retryCount = 0;
+        const maxRetries = 1; // Only retry once after getting full content
+        
+        while (retryCount <= maxRetries) {
+            // Handle requestFullContent operation
+            if (params.context?.stepResponse?.data?.requestFullContent) {
+                const artifactIndex = params.context.stepResponse.data.artifactIndex;
+                if (artifactIndex != null && params.context?.artifacts?.[artifactIndex]) {
+                    const artifact = await this.artifactManager.loadArtifact(params.context.artifacts[artifactIndex].id);
+                    if (artifact) {
+                        // Add the full content to the context
+                        params.context.artifacts[artifactIndex] = artifact;
+                    }
                 }
             }
-        }
 
-        const conversation = await this.createBasePrompt(params);
+            const conversation = await this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
         // Add content formatting rules
@@ -233,18 +237,22 @@ new replacement text
 
                 // Handle requestFullContent operation
                 if (result.operation === 'requestFullContent' && result.artifactIndex != null) {
-                    return {
-                        type: StepResultType.GenerateArtifact,
-                        finished: false,
-                        needsUserInput: false,
-                        response: {
+                    if (retryCount < maxRetries) {
+                        // Update context and retry
+                        params.context = params.context || {};
+                        params.context.stepResponse = {
                             type: StepResponseType.GeneratedArtifact,
                             data: {
                                 requestFullContent: true,
                                 artifactIndex: result.artifactIndex
                             }
-                        }
-                    };
+                        };
+                        retryCount++;
+                        continue; // Retry with full content
+                    } else {
+                        Logger.error('Max retries reached for requestFullContent operation');
+                        throw new Error('Failed to process artifact after requesting full content');
+                    }
                 }
 
                 return {
