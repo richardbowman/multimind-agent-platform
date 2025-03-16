@@ -98,40 +98,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 overflowY: 'hidden'
             }}>
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Box sx={{ 
-                        width: '30%',
-                        height: '70vh',
-                        p: 1,
-                        borderRight: '1px solid',
-                        borderColor: 'divider'
-                    }}>
-                        <ScrollView>
-                        <Typography 
-                            variant="h6" 
-                            sx={{ 
-                                mb: 1, 
-                                position: 'sticky', 
-                                top: 0, 
-                                bgcolor: 'background.default', 
-                                zIndex: 1,
-                                color: 'text.primary'
-                            }}
-                        >
-                            Project Tasks
-                        </Typography>
-                        <List>
-                            {projectTasks.map(task => (
-                                <TaskCard
-                                    key={task.id}
-                                    task={task}
-                                    selected={task.id === selectedTask?.id}
-                                    onClick={() => setSelectedTask(task)}
-                                />
-                            ))}
-                            
-                        </List>
-                        </ScrollView>
-                    </Box>
+                    <TaskListPanel 
+                        projectTasks={projectTasks}
+                        selectedTask={selectedTask}
+                        onSelectTask={setSelectedTask}
+                    />
                     <Box sx={{ 
                         width: '70%',
                         height: '70vh',
