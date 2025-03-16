@@ -37,10 +37,23 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                 .prepare("select sqlite_version() as sqlite_version, vec_version() as vec_version;")
                 .get();
             
-            // Create virtual table for vectors
+            // Create virtual table with metadata columns
             this.db.exec(`
                 CREATE VIRTUAL TABLE IF NOT EXISTS vec_items 
-                USING vec0(embedding float[${this.dimensions}], text TEXT, metadata TEXT)
+                USING vec0(
+                    embedding float[${this.dimensions}],
+                    text TEXT,
+                    type TEXT,
+                    projectId TEXT,
+                    url TEXT,
+                    task TEXT,
+                    title TEXT,
+                    docId TEXT,
+                    chunkId INTEGER,
+                    chunkTotal INTEGER,
+                    artifactId TEXT,
+                    +metadata TEXT  // Additional metadata as auxiliary column
+                )
             `);
           
             Logger.info(`SQLite-vec index initialized for collection: ${name} at ${dbPath} sqlite_version=${sqlite_version}, vec_version=${vec_version}`);
@@ -55,18 +68,38 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
         await syncQueue.enqueue(async () => {
             const insertStmt = this.db!.prepare(`
-                INSERT OR REPLACE INTO vec_items (rowid, embedding, text, metadata)
-                VALUES (?, ?, ?, ?)
+                INSERT OR REPLACE INTO vec_items (
+                    embedding, 
+                    text,
+                    type,
+                    projectId,
+                    url,
+                    task,
+                    title,
+                    docId,
+                    chunkId,
+                    chunkTotal,
+                    artifactId,
+                    metadata
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             const transaction = this.db!.transaction((items) => {
                 for (let i = 0; i < items.length; i++) {
                     const { id, vector, metadata, text } = items[i];
                     insertStmt.run(
-                        null, // Let SQLite auto-assign rowid
                         new Float32Array(vector),
                         text,
-                        JSON.stringify(metadata)
+                        metadata.type,
+                        metadata.projectId,
+                        metadata.url,
+                        metadata.task,
+                        metadata.title,
+                        metadata.docId,
+                        metadata.chunkId,
+                        metadata.chunkTotal,
+                        metadata.artifactId,
+                        JSON.stringify(metadata) // Store full metadata as auxiliary column
                     );
                 }
             });
@@ -97,22 +130,41 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                 SELECT 
                     rowid,
                     text,
+                    type,
+                    projectId,
+                    url,
+                    task,
+                    title,
+                    docId,
+                    chunkId,
+                    chunkTotal,
+                    artifactId,
                     metadata,
                     distance
                 FROM vec_items
                 WHERE embedding MATCH ?
+                ${conditions ? `AND ${conditions}` : ''}
                 ORDER BY distance ASC
                 LIMIT ${nResults}`;
 
-                                // ${conditions ? `AND ${conditions}` : ''}
-
             const stmt = this.db!.prepare(query);
-            const results = stmt.all(new Float32Array(queryVector)); //, ...params]);
+            const results = stmt.all(new Float32Array(queryVector), ...params);
 
             return results.map(result => ({
-                id: result.rowid.toString(), // Convert numeric rowid to string
+                id: result.rowid.toString(),
                 text: result.text,
-                metadata: JSON.parse(result.metadata),
+                metadata: {
+                    type: result.type,
+                    projectId: result.projectId,
+                    url: result.url,
+                    task: result.task,
+                    title: result.title,
+                    docId: result.docId,
+                    chunkId: result.chunkId,
+                    chunkTotal: result.chunkTotal,
+                    artifactId: result.artifactId,
+                    ...JSON.parse(result.metadata) // Merge with additional metadata
+                },
                 score: result.distance
             }));
         });
