@@ -19,11 +19,11 @@ import {
 interface ArtifactSelectionDialogProps {
     assets: Array<{
         id: string;
+        type: ArtifactType;
         metadata: {
             title: string;
             description?: string;
             previewUrl?: string;
-            type?: ArtifactType;
         };
     }>;
     onSelect: (assetIds: string[]) => void;
@@ -42,8 +42,8 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
             (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
         const matchesType = selectedTypes.length === 0 ||
-            (asset.metadata.type && selectedTypes.some(type => 
-                type.toLowerCase() === asset.metadata.type?.toLowerCase()
+            (asset.type && selectedTypes.some(type => 
+                type.toLowerCase() === asset.type?.toLowerCase()
             ));
 
         console.log('Matches search:', matchesSearch, 'Matches type:', matchesType);
