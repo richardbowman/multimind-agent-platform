@@ -1,14 +1,12 @@
 import { EventEmitter } from "events";
 import Database from 'better-sqlite3';
-import { VectorExtension } from 'sqlite-vec';
 import * as crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import * as sqliteVec from "sqlite-vec";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
-import { saveToFile } from "../tools/storeToFile";
-import { ConversationContext } from "../chat/chatClient";
 import { IEmbeddingService, ILLMService } from "./ILLMService";
 import { getDataPath } from "src/helpers/paths";
 import { asError } from "src/types/types";
@@ -33,28 +31,13 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             
             // Initialize SQLite database with vector extension
             this.db = new Database(dbPath);
-            this.db.loadExtension(VectorExtension);
+            sqliteVec.load(this.db);
             
-            // Create vector table if it doesn't exist
-            this.db.prepare(`
-                CREATE TABLE IF NOT EXISTS vectors (
-                    id TEXT PRIMARY KEY,
-                    vector BLOB,
-                    metadata TEXT,
-                    text TEXT
-                )
-            `).run();
-
-            // Create virtual table for vector search
-            this.db.prepare(`
-                CREATE VIRTUAL TABLE IF NOT EXISTS vec_index USING vec0(
-                    vector(${this.dimensions}),
-                    text TEXT,
-                    metadata TEXT
-                )
-            `).run();
-
-            Logger.info(`SQLite-vec index initialized for collection: ${name} at ${dbPath}`);
+            const { vec_version } = this.db
+            .prepare("select vec_version() as vec_version;")
+            .get();
+          
+            Logger.info(`SQLite-vec index initialized for collection: ${name} at ${dbPath} vec_version=${vec_version}`);
         });
     }
 
@@ -110,7 +93,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
         return syncQueue.enqueue(async () => {
-            if (!this.db) throw newError("Database not initialized");
+            if (!this.db) throw new Error("Database not initialized");
 
             const embedder = this.embeddingService.getEmbeddingModel();
             const queryEmbeddings = await embedder.generate(queryTexts);
@@ -213,8 +196,6 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             this.db!.prepare('DROP TABLE IF EXISTS vectors').run();
             this.db!.prepare('DROP TABLE IF EXISTS vec_index').run();
             
-            // Reinitialize collection
-            await this.initializeCollection(this.collectionName, this.dimensions);
             Logger.info("Cleared SQLite-vec collection");
         });
     }

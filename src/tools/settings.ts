@@ -402,6 +402,33 @@ export class TTSSettings {
     enabled: boolean = true;
 }
 
+export class SQLiteVecSettings{
+    @ClientSettings({
+        label: 'Embedding Dimensions',
+        category: 'Vector DB',
+        type: 'number',
+        description: 'Number of dimensions for embeddings (must match embedding model)'
+    })
+    dimensions: number = 768;
+
+    @ClientSettings({
+        label: 'Auto Vacuum',
+        category: 'Vector DB',
+        type: 'boolean',
+        description: 'Enable automatic database vacuuming to optimize storage'
+    })
+    autoVacuum: boolean = true;
+
+    @ClientSettings({
+        label: 'Journal Mode',
+        category: 'Vector DB',
+        type: 'select',
+        options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
+        description: 'SQLite journal mode (WAL recommended for better concurrency)'
+    })
+    journalMode: string = 'WAL';
+};
+
 export class Settings {
     @ClientSettings({
         label: 'Text-to-Speech',
@@ -679,36 +706,7 @@ export class Settings {
         type: 'section',
         description: 'Configuration for SQLiteVec vector database'
     })
-    sqliteVec: {
-        @ClientSettings({
-            label: 'Embedding Dimensions',
-            category: 'Vector DB',
-            type: 'number',
-            description: 'Number of dimensions for embeddings (must match embedding model)'
-        })
-        dimensions: number = 768;
-
-        @ClientSettings({
-            label: 'Auto Vacuum',
-            category: 'Vector DB',
-            type: 'boolean',
-            description: 'Enable automatic database vacuuming to optimize storage'
-        })
-        autoVacuum: boolean = true;
-
-        @ClientSettings({
-            label: 'Journal Mode',
-            category: 'Vector DB',
-            type: 'select',
-            options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
-            description: 'SQLite journal mode (WAL recommended for better concurrency)'
-        })
-        journalMode: string = 'WAL';
-    } = {
-        dimensions: 768,
-        autoVacuum: true,
-        journalMode: 'WAL'
-    };
+    sqliteVec: SQLiteVecSettings = new SQLiteVecSettings();
 
     @ClientSettings({
         label: 'DuckDuckGo Settings',
