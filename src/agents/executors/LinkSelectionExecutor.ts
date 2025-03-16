@@ -1,6 +1,4 @@
-import Logger from "src/helpers/logger";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from "src/llm/modelHelpers";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { WebSearchResponse } from "src/schemas/WebSearchResponse";
@@ -11,11 +9,9 @@ import { StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResult } from "../interfaces/StepResult";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { LinkRef } from "src/helpers/scrapeHelper";
-import { prev } from "cheerio/dist/commonjs/api/traversing";
 import { Settings } from "src/tools/settings";
 import { StringUtils } from "src/utils/StringUtils";
 import { OutputType } from "src/llm/promptBuilder";
-import { ModelMessageResponse } from "src/schemas/ModelResponse";
 
 @StepExecutorDecorator(ExecutorType.SELECT_LINKS, 'Analyzes and selects relevant links to follow')
 export class LinkSelectionExecutor implements StepExecutor<StepResponse> {

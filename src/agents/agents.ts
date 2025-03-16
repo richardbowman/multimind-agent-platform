@@ -112,6 +112,8 @@ export abstract class Agent {
     protected abstract handlerThread(params: HandlerParams): Promise<void>;
     protected abstract handleChannel(params: HandlerParams): Promise<void>;
 
+    public abstract onReady?(): Promise<void>;
+
     constructor(params: AgentConstructorParams) {
         this.chatClient = params.chatClient;
         this.llmService = params.llmService;

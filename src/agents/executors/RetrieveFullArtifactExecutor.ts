@@ -33,10 +33,22 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
         this.artifactManager = params.artifactManager;
         this.modelHelpers = params.modelHelpers;
 
-        globalRegistry.stepResponseRenderers.set(StepResponseType.FullArtifact, async (response : StepResponse) => {
-            const artifactIds = response.data?.selectedArtifactIds;
-            const artifacts : Artifact[] = artifactIds && await this.artifactManager.bulkLoadArtifacts(artifactIds);
-            return (artifacts?.length||0>0 ? artifacts?.map((a, index) => `LOADED FULL ARTIFACT ${index} of ${artifacts.length}\n<content>\n${a.content.toString()}</content>\n`)?.join("\n") : undefined) ?? "[NO LOADED ARTIFACTS]";
+        globalRegistry.stepResponseRenderers.set(StepResponseType.FullArtifact, async (untypedResponse : StepResponse, allSteps: StepResponse[]) => {
+            const response = untypedResponse as FullArtifactStepResponse;
+            const pastSteps = allSteps.filter(r => r?.type === StepResponseType.FullArtifact) as FullArtifactStepResponse[];
+            const lastGenArtifactStep = pastSteps[pastSteps.length-1];
+            const isLast = response === lastGenArtifactStep;
+            if (isLast) {
+                const allArtifactIds = pastSteps.map(r => r.data?.selectedArtifactIds).flat().filter(a => a !== undefined);
+
+                const artifactIds = response.data?.selectedArtifactIds;
+                const artifacts : Artifact[] = (artifactIds && (await this.artifactManager.bulkLoadArtifacts(allArtifactIds)).filter(a => !!a)) ?? [];
+                return (artifacts?.length||0>0 ? artifacts?.map((a, index) => `ARTIFACT CONTENT ${index+1} of ${artifacts.length}
+    Link: [${a.metadata?.title||"Unknown title"}(${a.id})
+    \'\'\'\n${a.content.toString()}\'\'\'\n`)?.join("\n") : undefined) ?? "[NO LOADED ARTIFACTS]";
+            } else {
+                return "[out of date step]";
+            }
         });
     }
 
@@ -47,9 +59,10 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
         if (!allArtifacts.length) {
             return {
                 finished: true,
+                replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.FullArtifact,
-                    message: 'No artifacts available to retrieve',
+                    status: 'No artifacts available to retrieve',
                     data: {
                         selectedArtifactIds: [],
                         selectionReason: 'No artifacts available'

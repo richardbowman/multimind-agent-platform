@@ -46,6 +46,8 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
               // Only update if version is newer
               if (newArtifact.metadata.version > updatedArtifacts[existingIndex]?.metadata?.version) {
                 updatedArtifacts[existingIndex] = newArtifact;
+              } else {
+                console.debug("Skipping updating artifact - not a newer version");
               }
             } else {
               updatedArtifacts.push(newArtifact);

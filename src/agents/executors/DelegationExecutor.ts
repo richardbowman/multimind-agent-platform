@@ -1,19 +1,18 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Task, TaskManager, TaskType } from '../../tools/taskManager';
+import { Project, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
-import { Agent } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { DelegationResponse as DelegationResponse, DelegationSchema } from 'src/schemas/DelegationSchema';
 import { StringUtils } from 'src/utils/StringUtils';
-import { json } from 'sequelize';
+import { TaskStatus } from 'src/schemas/TaskStatus';
+import { StepTask } from '../interfaces/ExecuteStepParams';
 
 @StepExecutorDecorator(ExecutorType.DELEGATION, 'Create projects with tasks delegated to agents in the channel')
 export class DelegationExecutor extends BaseStepExecutor<StepResponse> {

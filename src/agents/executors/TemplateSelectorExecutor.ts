@@ -1,17 +1,14 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { TemplateSelectionResponse } from '../../schemas/TemplateSelectionResponse';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { OnboardingConsultant } from '../onboardingConsultant';
 import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact, ArtifactType, DocumentSubtype } from 'src/tools/artifact';

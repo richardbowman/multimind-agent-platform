@@ -13,7 +13,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { Artifact } from 'src/tools/artifact';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
 
 /**
@@ -53,6 +53,7 @@ export class KnowledgeCheckExecutor extends BaseStepExecutor<StepResponse> {
         const queryInstructions = this.startModel(params);
         queryInstructions.addContext({contentType: ContentType.ABOUT});
         queryInstructions.addContext({contentType: ContentType.OVERALL_GOAL, goal});
+        queryInstructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema: querySchema});
 
         const queryModelResponse = await queryInstructions.generate({
             message: goal,

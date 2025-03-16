@@ -1,7 +1,7 @@
 import { ClientOptions, OpenAI } from "openai";
 import { ModelInfo } from "./types";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { ModelSearchParams, VisionContent } from "./ILLMService";
+import { LLMContext, ModelSearchParams, VisionContent } from "./ILLMService";
 import JSON5 from 'json5';
 import { BaseLLMService } from "./BaseLLMService";
 import { IEmbeddingFunction, LLMRequestParams } from "./ILLMService";
@@ -170,9 +170,8 @@ export class OpenAIService extends BaseLLMService {
         }
     }
 
-    async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
-        params: LLMRequestParams & { context?: LLMContext }
-    ): Promise<GenerateOutputParams<T>> {
+    async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
+        let response;
         try {
             const messages = params.messages.map(m => ({
                 role: m.role,
@@ -222,7 +221,7 @@ export class OpenAIService extends BaseLLMService {
             const model = this.settings?.models[modelType][this.settings?.providers.chat];
 
             const startTime = Date.now();
-            const response = await this.client.chat.completions.create({
+            response = await this.client.chat.completions.create({
                 model: model,
                 messages,
                 tools,
@@ -267,7 +266,7 @@ export class OpenAIService extends BaseLLMService {
                 messages: params.messages,
                 systemPrompt: params.systemPrompt,
                 opts: params.opts
-            }, null, error);
+            }, response||"", error);
             throw error;
         }
     }

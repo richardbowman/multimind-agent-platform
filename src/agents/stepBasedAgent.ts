@@ -69,6 +69,10 @@ export abstract class StepBasedAgent extends Agent {
         return executorParams;
     }
 
+    public async onReady(): Promise<void> {
+        await this.processTaskQueue();
+    }
+
     protected async initializeFromConfig(config: AgentConfig): Promise<void> {
         // Set agent instructions
         this.modelHelpers.setPurpose(config.purpose);
@@ -725,6 +729,7 @@ export abstract class StepBasedAgent extends Agent {
                 await this.executeNextStep({
                     projectId,
                     userPost,
+                    projectTask,
                     context: {
                         ...params.context,
                         artifacts: stepArtifacts

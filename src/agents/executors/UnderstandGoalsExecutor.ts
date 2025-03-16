@@ -1,23 +1,17 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import crypto from 'crypto';
-import { StructuredOutputPrompt } from "../../llm/ILLMService";
-import { TaskManager, TaskType } from '../../tools/taskManager';
+import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
+import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
-import Logger from '../../helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { Artifact } from '../../tools/artifact';
-import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
-import { attr } from 'cheerio/dist/commonjs/api/attributes';
-import { response } from 'express';
 
 /**
  * Executor that generates targeted questions to understand user requirements.

@@ -5,6 +5,7 @@ import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { PromptBuilder } from 'src/llm/promptBuilder';
 import { ArtifactType } from 'src/tools/artifact';
 import { ModelConversation } from '../interfaces/StepExecutor';
+import { OperationTypes } from 'src/schemas/ArtifactGenerationResponse';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_SPREADSHEET, 'Create/revise CSV spreadsheets (that you can fit into context, not for large spreadsheets)')
 export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
@@ -23,5 +24,10 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
 
     getArtifactType(codeBlockType: string): ArtifactType {
         return ArtifactType.Spreadsheet;
+    }
+
+    protected getInstructionByOperation(operation: OperationTypes): string {
+        const baseInstructions = super.getInstructionByOperation(operation);
+        return (operation === 'append' || operation === 'patch') ? baseInstructions + "You must use the same columns as the original document." : baseInstructions;
     }
 }

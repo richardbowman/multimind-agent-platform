@@ -1,25 +1,20 @@
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from '../../tools/artifactManager';
-import { Project, TaskManager } from '../../tools/taskManager';
+import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { OnboardingConsultant, OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
-import { CreateArtifact, ModelMessageResponse } from '../../schemas/ModelResponse';
+import { OnboardingConsultant, OnboardingProject } from '../onboardingConsultant';
 import { DocumentPlanResponse } from '../../schemas/DocumentPlanResponse';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
-import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { AnswerMetadata } from './AnswerQuestionsExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { IntakeQuestion } from 'src/schemas/IntakeQuestionsResponse';
 import { QAAnswers } from 'src/schemas/AnswerAnalysisResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactType } from 'src/tools/artifact';
-import { ContentType, OutputType, PromptBuilder } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 
 /**
  * Executor that creates and revises operational business guides based on user requirements.

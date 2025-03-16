@@ -53,5 +53,7 @@ export enum SchemaType {
     MergePlanResponse = "MergePlanResponse",
     CreateChannelResponse = "CreateChannelResponse",
     WritingSection = "WritingSection",
-    DelegationResponse = "DelegationResponse"
+    DelegationResponse = "DelegationResponse",
+    CSVProcessingResponse = "CSVProcessingResponse",
+    ExtractColumnsResponse = "ExtractColumnsResponse"
 }

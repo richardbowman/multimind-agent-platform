@@ -1,11 +1,10 @@
 import { Worker } from 'worker_threads';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResponse, StepResponseData, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ILLMService } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { CodeExecutionResponse } from 'src/schemas/CodeExecutionResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
@@ -15,9 +14,8 @@ import { CodeBlock, StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { app } from 'electron';
 import { ModelType } from 'src/llm/LLMServiceFactory';
-import { Artifact, ArtifactType } from 'src/tools/artifact';
+import { Artifact } from 'src/tools/artifact';
 import { ContentType } from 'src/llm/promptBuilder';
-import { ids } from 'webpack';
 import { UUID } from 'src/types/uuid';
 
 export class ConsoleError extends Error {

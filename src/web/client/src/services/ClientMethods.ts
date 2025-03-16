@@ -14,6 +14,7 @@ import { LogParam } from '../../../../llm/LLMLogger';
 import { ChannelData } from '../../../../shared/channelTypes';
 import { TaskEventType } from "../../../../shared/TaskEventType";
 import { TaskContextType } from '../contexts/TaskContext';
+import { UUID } from '../../../../types/uuid';
 
 
 // Initialize TTS system
@@ -164,10 +165,7 @@ class ClientMethodsImplementation implements ClientMethods {
         };
 
         // Get all unique artifact IDs from messages
-        const artifactIds = messages
-            .flatMap(m => m.props?.artifactIds || [])
-            .filter((a, index, self) => self.findIndex(b => b.id === a.id) === index)
-            .map(a => a.id);
+        const artifactIds : UUID[] = messages.flatMap(m => m.props?.artifactIds || []).filter(a => !!a);
             
         if (artifactIds.length > 0) {
             this.artifactProvider.updateSpecificArtifacts(artifactIds);
@@ -231,7 +229,7 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     onTaskUpdate(task: Task, type: TaskEventType) {
-        console.log('Task ${type} event occured', task);
+        console.log(`Task ${type} event occured`, task);
         this.tasksContext.replaceTask(task);
     }
 

@@ -6,10 +6,14 @@ export interface RetryOptions {
     minDelayBetweenTasksMs?: number; // Minimum time between any task executions
 }
 
+export class RetryError extends Error {
+    retryRequested: boolean = true;    
+}
+
 let lastTaskTime = 0;
 
 export async function withRetry<T>(
-    fn: () => Promise<T>,
+    fn: () => Promise<T>|T,
     validate: (result: T) => Promise<boolean>|boolean,
     options: RetryOptions = {}
 ): Promise<T> {

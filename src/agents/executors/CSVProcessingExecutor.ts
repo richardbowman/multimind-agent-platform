@@ -2,7 +2,6 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { CSVProcessingSchema, CSVResultSchema } from "../../schemas/CSVProcessingSchema";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
@@ -20,8 +19,11 @@ import { ChatClient } from 'src/chat/chatClient';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { response } from 'express';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { CSVProcessingResponse, ExtractColumnsResponse } from 'src/schemas/CSVProcessingSchema';
 
-interface CSVProcessingResponse extends StepResponse {
+interface CSVProcessingStepResponse extends StepResponse {
     data?: {
         csvArtifactId?: UUID;
         processedArtifactId?: UUID;
@@ -29,7 +31,7 @@ interface CSVProcessingResponse extends StepResponse {
 }
 
 @StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
-export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingResponse> {
+export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
@@ -43,7 +45,9 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         this.chatClient = params.chatClient;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<CSVProcessingResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<CSVProcessingStepResponse>> {
+        const schema = await getGeneratedSchema(SchemaType.CSVProcessingResponse);
+
         // Find the first CSV artifact
         const csvArtifact = params.context?.artifacts?.find(a => a.type === ArtifactType.Spreadsheet && a.metadata?.subtype !== SpreadsheetSubType.EvaluationCriteria && a.metadata?.subtype !== SpreadsheetSubType.Template);
         if (!csvArtifact) {
@@ -83,21 +87,23 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         // Create schema for agent selection
         const supportedAgents = [{...params.self, messagingHandle: "@self"} as Agent, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
 
-        const schema = {
-            ...CSVProcessingSchema,
-            properties: {
-                ...CSVProcessingSchema.properties,
-                assignedAgent: {
-                    type: 'string',
-                    enum: supportedAgents.map(a => a.messagingHandle) ?? []
-                }
+        // Get CSV headers from the artifact
+        let csvHeaders: string[] = [];
+        try {
+            if (csvArtifact) {
+                // Parse just the first row to get headers
+                const firstRow = CSVUtils.getColumnHeaders(csvArtifact.content.toString());
+                csvHeaders = firstRow;
             }
-        };
+        } catch (error) {
+            Logger.error('Error reading CSV headers:', error);
+        }
 
+                
         // Create prompt for agent selection
         const instructions = this.startModel(params);
         instructions.addInstruction(`Select the most appropriate agent to perform processing on the data in the spreadsheet for the desired goal.
-            The CSV contains ${rows.length} rows of data.
+            The CSV contains ${rows.length} rows of data and contains these columns: ${csvHeaders.join(", ")}.
             Consider the agents' capabilities and the nature of the data when making your selection.
             JSON Output should include:
             - projectName: A short overall project name
@@ -105,6 +111,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
                 each specific row.
                 Your description might start with "The overall goals is ... For the provided data, generate..."
             - assignedAgent: The handle of the selected agent
+            - resultColumns: An explanation of the columns you want filled by the task
 
             Also respond with a message explaining the selection to the user.`);
         
@@ -122,11 +129,10 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
                 message: params.stepGoal
             });
 
-            const responseJSON = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
+            const responseJSON = StringUtils.extractAndParseJsonBlock<CSVProcessingResponse>(rawResponse.message, schema);
             const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
-
-            const { projectName, taskDescription, assignedAgent: selectedAgentHandle } = responseJSON;
+            const { projectName, taskDescription, assignedAgent: selectedAgentHandle, resultColumns } = responseJSON;
 
             // Find the assigned agent (self or delegated)
             const assignedAgent = selectedAgentHandle === '@self' 
@@ -189,6 +195,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
                         csvArtifactId: csvArtifact.id,
                         processedArtifactId: processedArtifact.id,
                         rowData: row,
+                        resultColumns: resultColumns,
                         attachedArtifactIds: [
                             // Exclude spreadsheets other than eval criteria/templates
                             ...(params.context?.artifacts
@@ -282,38 +289,18 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
             : null;
         const originalGoal = parentTask?.description || '';
 
-        // Get CSV headers from the artifact
-        let csvHeaders: string[] = [];
-        try {
-            if (csvArtifact) {
-                // Parse just the first row to get headers
-                const firstRow = CSVUtils.getColumnHeaders(csvArtifact.content.toString());
-                csvHeaders = firstRow;
-            }
-        } catch (error) {
-            Logger.error('Error reading CSV headers:', error);
-        }
-
         // Use the predefined schema for result extraction
-        const schema = CSVResultSchema;
+        const schema = await getGeneratedSchema(SchemaType.ExtractColumnsResponse);
 
         // Create prompt for result processing
         const instructions = this.startModel(params, "processTaskResult");
         instructions.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
-            The original goal for this project was: ${originalGoal}
+The original goal for this project was: ${originalGoal}
             
-            The CSV file currently has these columns: ${csvHeaders.join(', ')}
-            
-            For each task, identify the most relevant data points that should be preserved in the spreadsheet.
-            Pay special attention to any specific columns or data types mentioned in the original goal.
-            Consider how the new columns will relate to the existing ones.
-            
-            'columns' key: Return an array of key value pairs to add as new columns
-            
-            To add a link to an artifact created by the tasks, use a Markdown link with the link format of [Title](/artifact/XXXX-XXXX). Also, include the word Link in the column name for clarity.
-
+You are expected to populate the following new result columns: 
+${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\n")}
             `);
-        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema, specialInstructions: "'resultColumns' key: Return an array of key value pairs to add as new columns. To add a link to an artifact created by the tasks, use a Markdown link with the link format of [Title](/artifact/XXXX-XXXX)."});
 
         // Get the task's response data
         const responseData = task.props?.result || {};
@@ -326,11 +313,11 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
                 message: `Task Description: ${task.description}\n\nTask Response Data: ${responseData.response?.message}`
             });
         
-            const response = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
-            if (response && Array.isArray(response.columns)) {
+            const response = StringUtils.extractAndParseJsonBlock<ExtractColumnsResponse>(rawResponse.message, schema);
+            if (response && Array.isArray(response.resultColumns)) {
                 return {
                     rowIndex: task.props?.rowIndex,
-                    data: response.columns.reduce((acc, insight) => {
+                    data: response.resultColumns.reduce((acc, insight) => {
                         acc[insight.name] = insight.value;
                         return acc;
                     }, {
@@ -347,7 +334,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         return {};
     }
 
-    async onChildProjectComplete(stepTask: StepTask<CSVProcessingResponse>, project: Project): Promise<StepResult<CSVProcessingResponse>> {
+    async onChildProjectComplete(stepTask: StepTask<CSVProcessingStepResponse>, project: Project): Promise<StepResult<CSVProcessingStepResponse>> {
         // Get the final processed CSV columns
         const artifactId = stepTask.props.result?.response.data?.processedArtifactId;
         const artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
@@ -407,7 +394,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
 
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
         const { task, childTask, eventType, statusPost } = notification;
-        const artifactId = (task as StepTask<CSVProcessingResponse>).props.result?.response.data?.processedArtifactId;
+        const artifactId = (task as StepTask<CSVProcessingStepResponse>).props.result?.response.data?.processedArtifactId;
         
         // Cancel all child tasks if we get a cancellation
         if (eventType === TaskEventType.Cancelled && task.props?.childProjectId) {

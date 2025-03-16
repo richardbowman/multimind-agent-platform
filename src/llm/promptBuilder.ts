@@ -16,7 +16,7 @@ export interface ContentRenderer<T> {
 }
 
 export interface StepResponseRenderer<T extends StepResponse> {
-    (content: T): Promise<string> | string;
+    (content: T, allSteps: StepResponse[]): Promise<string> | string;
 }
 
 export enum ContentType {
@@ -287,7 +287,7 @@ ${this.modelHelpers.getPurpose()}
             if (stepResult.response.type) {
                 const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
                 if (typeRenderer) {
-                    body = await typeRenderer(stepResult.response, steps.map(s => s.response));
+                    body = await typeRenderer(stepResult.response, steps.map(s => s.props?.result?.response).filter(r => !!r));
                 }
             }
             return `- STEP ${index + 1} of ${filteredSteps.length} ${index + 1 == filteredSteps.length ? "[LAST COMPLETED STEP]" : ""}:
@@ -302,7 +302,8 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
     }
 
     private async renderStepResponses({ responses }: StepResponseContent): Promise<string> {
-        const resolvedResponses = await Promise.all(responses.filter(r => r).map(async (stepResponse, index) => {
+        const filtered = responses.filter(r => r);
+        const resolvedResponses = await Promise.all(filtered.map(async (stepResponse, index) => {
             let body;
             if (stepResponse.type) {
                 const typeRenderer = this.stepResponseRenderers.get(stepResponse.type!)||globalRegistry.stepResponseRenderers.get(stepResponse.type);;
@@ -311,7 +312,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
                 }
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResponse.type ?? ""}):\n<stepInformation>${body || stepResponse.message || stepResponse.reasoning || stepResponse.status}</stepInformation>`;
+            return `Step ${index + 1} of ${filtered.length}${index + 1 == filtered.length ? "[LAST STEP]":""} (${stepResponse.type ?? ""}):\n<stepInformation>${body || stepResponse.message || stepResponse.reasoning || stepResponse.status}</stepInformation>`;
         }));
         return "📝 Past Step Responses:\n" + resolvedResponses.join('\n') + "\n";
     }
@@ -360,7 +361,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
             if (contentType === ContentType.ARTIFACTS_FULL) {
                 wrappedContent += `\`\`\`${artifact.metadata.blockType}\n${artifact.content, 1000}\n\`\`\``; 
             } else if (artifact.metadata?.summary) {
-                wrappedContent += ` - High-Level Overview: ${artifact.metadata.summary}`;
+                wrappedContent += ` - High-Level Overview: ${artifact.metadata.summary.trim()}`;
             } else {
                 wrappedContent += `\`\`\`${artifact.metadata.blockType}\n${StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`)}\n\`\`\``;
             }

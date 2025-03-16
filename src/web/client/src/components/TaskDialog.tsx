@@ -1,26 +1,21 @@
 import React from 'react';
-import { ScrollView } from './shared/ScrollView';
-import { 
+import {
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button,
-    Stack,
-    Typography,
-    Box,
-    List,
-    ListItem,
-    ListItemText
+    Button, Typography,
+    Box
 } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { useTasks } from '../contexts/TaskContext';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
-import { TaskCard } from './TaskCard';
 import { AttachmentCard } from './shared/AttachmentCard';
 import { useArtifacts } from '../contexts/ArtifactContext';
 import { useIPCService } from '../contexts/IPCContext';
+import { TaskListPanel } from './TaskListPanel';
+import { TaskDetailsPanel } from './TaskDetailsPanel';
 
 interface TaskDialogProps {
     open: boolean;
@@ -51,16 +46,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         const fetchProjectDetails = async () => {
             if (!selectedTask) return;
             const projectId = selectedTask.projectId;
-            if (!projectId) return;
 
             try {
-                // Reset project details while loading
-                setProjectDetails(null);
-
-                // Fetch project details
-                const project = await ipcService.getRPC().getProject(projectId);
-                setProjectDetails(project);
-
                 // Get tasks for this project from context
                 const projectTasks = allTasks.filter(t => t.projectId === projectId);
                 setProjectTasks(projectTasks);
@@ -69,6 +56,25 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 if (!selectedTask && projectTasks.length > 0) {
                     setSelectedTask(projectTasks[0]);
                 }
+            } catch (error) {
+                console.error('Failed to fetch project tasks:', error);
+                setProjectTasks([]);
+            }
+        };
+
+        fetchProjectDetails();
+    }, [allTasks]);
+
+    useEffect(() => {
+        const fetchProjectDetails = async () => {
+            if (!selectedTask) return;
+            const projectId = selectedTask.projectId;
+            if (!projectId) return;
+
+            try {
+                // Fetch project details
+                const project = await ipcService.getRPC().getProject(projectId);
+                setProjectDetails(project);
             } catch (error) {
                 console.error('Failed to fetch project details:', error);
                 setProjectDetails({
@@ -84,7 +90,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         };
 
         fetchProjectDetails();
-    }, [ipcService, selectedTask?.projectId, allTasks]);
+    }, [ipcService, selectedTask?.projectId]);
 
     return (
         <Dialog 
@@ -122,192 +128,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                             }
                         }}
                     />
-                                {(selectedTask.projectId || selectedTask.props?.childProjectId) && (
-                                    <Box sx={{ 
-                                        p: 2,
-                                        mb: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider'
-                                    }}>
-                                        {projectDetails?.metadata?.parentTaskId && (
-                                            <>
-                                                <Typography variant="h6" sx={{ mb: 1 }}>
-                                                    Parent Project
-                                                </Typography>
-                                                <Button
-                                                    variant="outlined"
-                                                    size="small"
-                                                    sx={{ mt: 1, alignSelf: 'flex-start' }}
-                                                    onClick={async () => {
-                                                        const parentTask = tasks.find(t => t.id === projectDetails.metadata.parentTaskId);
-                                                        if (parentTask) {
-                                                            setSelectedTask(parentTask);
-                                                        }
-                                                    }}
-                                                >
-                                                    View Parent Project
-                                                </Button>
-                                            </>
-                                        )}
-                                        {selectedTask.props?.childProjectId && (
-                                            <>
-                                                <Typography variant="h6" sx={{ mb: 1 }}>
-                                                    Child Project
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                                                    This task has a linked child project.
-                                                </Typography>
-                                                <Button
-                                                    variant="contained"
-                                                    size="small"
-                                                    sx={{ alignSelf: 'flex-start' }}
-                                                    onClick={async () => {
-                                                        const childTasks = tasks.filter(t => t.projectId === selectedTask.props.childProjectId);
-                                                        if (childTasks.length > 0) {
-                                                            setSelectedTask(childTasks[0]);
-                                                            setProjectTasks(childTasks);
-                                                        }
-                                                    }}
-                                                >
-                                                    View Child Project
-                                                </Button>
-                                            </>
-                                        )}
-                                    </Box>
-                                )}
-                                {projectDetails && (
-                                    <Box sx={{ 
-                                        p: 2,
-                                        mb: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider'
-                                    }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Project: {projectDetails.name}
-                                        </Typography>
-                                        {projectDetails.description && (
-                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                {projectDetails.description}
-                                            </Typography>
-                                        )}
-                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
-                                            Project ID: {projectDetails.id}
-                                        </Typography>
-                                        {projectDetails.metadata?.status && (
-                                            <Typography variant="caption" sx={{ display: 'block' }}>
-                                                Status: {projectDetails.metadata.status}
-                                            </Typography>
-                                        )}
-                                        {projectDetails.metadata?.priority && (
-                                            <Typography variant="caption" sx={{ display: 'block' }}>
-                                                Priority: {projectDetails.metadata.priority}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                )}
-                                <Typography variant="body1">
-                                    <strong>Description:</strong> {selectedTask.description}
-                                </Typography>
-                                <Typography variant="body1">
-                                    <strong>Status:</strong> {selectedTask.status === 'cancelled' ? 'Cancelled' : 
-                                        selectedTask.status === 'completed' ? 'Complete' : 
-                                        selectedTask.status === 'inProgress' ? 'In Progress' : 
-                                        'Not Started'}
-                                </Typography>
-                                <Typography variant="body1">
-                                    <strong>Created At:</strong> {new Date(selectedTask.props?.createdAt).toLocaleString()}
-                                </Typography>
-                                <Typography variant="body1">
-                                    <strong>Last Updated:</strong> {new Date(selectedTask.props?.updatedAt).toLocaleString()}
-                                </Typography>
-                                {selectedTask.props?.dueDate && (
-                                    <Typography variant="body1">
-                                        <strong>Due Date:</strong> {new Date(selectedTask.props?.dueDate).toLocaleString()}
-                                    </Typography>
-                                )}
-                                <Typography variant="body1">
-                                    <strong>Type:</strong> {selectedTask.type}
-                                    {selectedTask.props?.stepType && ` (${selectedTask.props?.stepType})`}
-                                </Typography>
-                                <Typography variant="body1">
-                                    <strong>Assignee:</strong> {selectedTask.assignee ? (handles.find(h => h.id === selectedTask.assignee)?.handle || selectedTask.assignee) : 'Unassigned'}
-                                </Typography>
-                                {selectedTask.dependsOn && (
-                                    <Typography variant="body1">
-                                        <strong>Depends On:</strong> {selectedTask.dependsOn}
-                                    </Typography>
-                                )}
-                                {(selectedTask.props?.attachedArtifactIds?.length > 0 || 
-                                  selectedTask.props?.artifactIds?.length > 0 ||
-                                  selectedTask.props?.result?.artifactIds?.length > 0) && (
-                                    <Box sx={{ 
-                                        p: 2,
-                                        mb: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider'
-                                    }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Attached Artifacts
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                            {[
-                                              ...(selectedTask.props?.attachedArtifactIds || []),
-                                              ...(selectedTask.props?.artifactIds || []),
-                                              ...(selectedTask.props?.result?.artifactIds || [])
-                                            ].filter((id): id is string => !!id).map((artifactId: string) => {
-                                                const artifact = artifacts.find(a => a.id === artifactId);
-                                                return (
-                                                    <AttachmentCard
-                                                        key={artifactId}
-                                                        type="artifact"
-                                                        title={artifact?.metadata?.title || `Artifact ${artifactId.slice(0, 6)}`}
-                                                        subtitle={artifact?.type}
-                                                        onRemove={() => {
-                                                            // TODO: Implement artifact removal
-                                                            console.log('Remove artifact', artifactId);
-                                                        }}
-                                                        onClick={() => {
-                                                            // TODO: Implement artifact viewing
-                                                            console.log('View artifact', artifactId);
-                                                        }}
-                                                    />
-                                                );
-                                            })}
-                                        </Box>
-                                    </Box>
-                                )}
-                                {selectedTask.props && Object.entries(selectedTask.props).map(([key, value]) => (
-                                    <Box key={key} sx={{ 
-                                        p: 1,
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        mb: 1
-                                    }}>
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                            {key}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ 
-                                            whiteSpace: 'pre-wrap',
-                                            wordBreak: 'break-word'
-                                        }}>
-                                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                                        </Typography>
-                                    </Box>
-                                ))}
                 </Box>
             </DialogContent>
             <DialogActions>

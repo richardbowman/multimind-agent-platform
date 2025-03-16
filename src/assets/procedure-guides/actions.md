@@ -8,7 +8,6 @@ description: "A list of all supported actions that agents can perform."
 |----------|------------|-------------|
 | `process-answers` | `AnswerQuestionsExecutor` | Processes and answers user questions |
 | `check-knowledge` | `CheckKnowledgeExecutor` | Validates and verifies knowledge |
-| `code-execution` | `CodeExecutionExecutor` | Executes code snippets |
 | `create-revise-plan` | `CreatePlanExecutor` | Creates and revises plans |
 | `editing` | `EditingExecutor` | Handles content editing tasks |
 | `final-response` | `FinalResponseExecutor` | Generates final responses |

@@ -193,6 +193,14 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         })
         tasks.startScheduler();
 
+        // Initialize all agents
+        for (const [name, agent] of agentObjects.entries()) {
+            if (agent.onReady) {
+                await agent.onReady();
+                Logger.info(`Initialized agent: ${name}`);
+            }
+        }
+
         return {
             chatClient: userClient,
             taskManager: tasks,

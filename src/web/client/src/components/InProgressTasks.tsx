@@ -3,6 +3,7 @@ import { Paper, Typography, List } from '@mui/material';
 import { Task } from '../../../../tools/taskManager';
 import { TaskCard } from './TaskCard';
 import { TaskDialog } from './TaskDialog';
+import { Box } from '@mui/system';
 
 interface InProgressTasksProps {
     tasks: Task[];

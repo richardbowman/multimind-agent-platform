@@ -3,10 +3,10 @@ title: "Supported Spreadsheet Artifact Sub-types"
 artifactType: spreadsheet
 subtype: "Artifact Subtypes"
 ---
-Subtype,Description
-User Stories,"List of user stories"
-Search Results,"List of Web Search Results"
-Evaluation Criteria,"Criteria for evaluating a scientific paper"
-Literature Review,"List of scientific papers"
-Templates,"CSV files with only headers and front-matter to provide structure"
-General,"Other kinds of spreadsheets"
+"Subtype","Description"
+"Product Features","User stories or product features"
+"Search Results","Search Results"
+"Evaluation Criteria","Criteria for evaluating a scientific paper"
+"Literature Review","Scientific papers"
+"Templates","Blank templates (only headers and front-matter)"
+"General","Other kinds of spreadsheets"

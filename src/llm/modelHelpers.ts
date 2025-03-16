@@ -42,7 +42,7 @@ export class ModelHelpers {
     protected userId: string;
     protected finalInstructions?: string;
     readonly messagingHandle?: string;
-    
+
     constructor(params: ModelHelpersParams) {
         this.userId = params.userId;
         this.llmService = params.llmService;
@@ -52,9 +52,9 @@ export class ModelHelpers {
         if (params.purpose) this.purpose = params.purpose;
         this.finalInstructions = params.finalInstructions;
         this.context = params.context;
-        this.promptRegistry = params.promptRegistry||new PromptRegistry(this);
+        this.promptRegistry = params.promptRegistry || new PromptRegistry(this);
     }
-    
+
     createPrompt() {
         const prompt = new PromptBuilder(this.promptRegistry);
 
@@ -62,7 +62,7 @@ export class ModelHelpers {
         const date = now.toISOString().split('T')[0];
         const time = now.toTimeString().split(' ')[0];
         const agentIdentity = this.messagingHandle ? `🤖 Agent Handle: ${this.messagingHandle}\n` : '';
-        
+
         prompt.addContext(`${agentIdentity}Current date: ${date}\nCurrent time: ${time}\nLanguage: US English\n`);
         return prompt;
     }
@@ -204,7 +204,7 @@ export class ModelHelpers {
         const prompt = await structure.getPrompt();
         let augmentedInstructions;
         let response: T;
-        
+
         // Augment instructions with context and generate a response
         const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
 
@@ -251,10 +251,10 @@ export class ModelHelpers {
         }
     }
 
-   
+
     public async generateMessage(params: GenerateInputParams): Promise<WithTokens<ModelMessageResponse>> {
         const instructions = params.instructions;
-        let augmentedInstructions : string;
+        let augmentedInstructions: string;
         if (typeof instructions === "string") {
             augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
         } else if (instructions instanceof Promise) {
@@ -264,16 +264,18 @@ export class ModelHelpers {
         } else {
             augmentedInstructions = await instructions.getInstructions();
         }
-       
+
         // Augment instructions with context and generate a response
         const history = params.threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.llmService.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
-            modelType: params.modelType,
-            context: {
-                ...this.context,
-                ...params.context
-            }
-        });
+        const response = withRetry(() => {
+            return this.llmService.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
+                modelType: params.modelType,
+                context: {
+                    ...this.context,
+                    ...params.context
+                }
+            });
+        }, () => true, { maxRetries: 2, timeoutMs: 180000 });
 
         // Ensure response is an object with message property
         const formattedResponse: ModelMessageResponse = typeof response === "string"
