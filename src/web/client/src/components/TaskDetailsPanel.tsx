@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
     Box,
     Typography,
     Stack,
@@ -7,8 +7,6 @@ import {
 } from '@mui/material';
 import { ScrollView } from './shared/ScrollView';
 import { AttachmentCard } from './shared/AttachmentCard';
-import { useDataContext } from '../contexts/DataContext';
-import { useArtifacts } from '../contexts/ArtifactContext';
 
 interface TaskDetailsPanelProps {
     selectedTask: any;
@@ -144,7 +142,7 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                         {selectedTask.props?.stepType && ` (${selectedTask.props?.stepType})`}
                     </Typography>
                     <Typography variant="body1">
-                        <strong>Assignee:</strong> {selectedTask.assignee ? (handles.find(h => h.id === selectedTask.assignee)?.handle || selectedTask.assignee : 'Unassigned'}
+                        <strong>Assignee:</strong> {selectedTask.assignee ? (handles.find(h => h.id === selectedTask.assignee)?.handle) || selectedTask.assignee : 'Unassigned'}
                     </Typography>
                     {selectedTask.dependsOn && (
                         <Typography variant="body1">
