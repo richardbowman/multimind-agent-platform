@@ -62,11 +62,8 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             const transaction = this.db!.transaction((items) => {
                 for (let i = 0; i < items.length; i++) {
                     const { id, vector, metadata, text } = items[i];
-                    // Convert UUID to a safe SQLite integer
-                    const hash = crypto.createHash('sha1').update(id).digest();
-                    const numericId = hash.readUInt32LE(0); // Use first 4 bytes for 32-bit integer
                     insertStmt.run(
-                        numericId,
+                        null, // Let SQLite auto-assign rowid
                         new Float32Array(vector),
                         text,
                         JSON.stringify(metadata)
@@ -102,7 +99,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
             const query = `
                 SELECT 
-                    rowid as id,
+                    rowid,
                     text,
                     metadata,
                     distance
@@ -117,7 +114,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             const results = stmt.all([new Float32Array(queryVector), ...params, nResults]);
 
             return results.map(result => ({
-                id: result.id,
+                id: result.rowid.toString(), // Convert numeric rowid to string
                 text: result.text,
                 metadata: JSON.parse(result.metadata),
                 score: result.distance
