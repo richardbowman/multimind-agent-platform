@@ -5,6 +5,8 @@ import {
     Stack,
     Button
 } from '@mui/material';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { ScrollView } from './shared/ScrollView';
 import { AttachmentCard } from './shared/AttachmentCard';
 
@@ -55,16 +57,14 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                                         bgcolor: 'background.default',
                                         borderRadius: 1
                                     }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Parent Project
-                                        </Typography>
                                         <Button
                                             variant="outlined"
                                             size="small"
                                             fullWidth
+                                            startIcon={<ArrowUpwardIcon />}
                                             onClick={() => onViewParentTask(projectDetails.metadata.parentTaskId)}
                                         >
-                                            View Parent Project
+                                            Parent Project
                                         </Button>
                                     </Box>
                                 )}
@@ -74,19 +74,14 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
                                         bgcolor: 'background.default',
                                         borderRadius: 1
                                     }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Child Project
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                                            This task has a linked child project.
-                                        </Typography>
                                         <Button
                                             variant="contained"
                                             size="small"
                                             fullWidth
+                                            startIcon={<ArrowDownwardIcon />}
                                             onClick={() => onViewChildTask(selectedTask.props.childProjectId)}
                                         >
-                                            View Child Project
+                                            Child Project
                                         </Button>
                                     </Box>
                                 )}
