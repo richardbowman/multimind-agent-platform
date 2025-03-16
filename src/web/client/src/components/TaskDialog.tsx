@@ -43,8 +43,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const ipcService = useIPCService();
     const { tasks, markTaskComplete, saveTask } = useTasks();
     const [projectDetails, setProjectDetails] = useState<any>(null);
-    const [projectTasks, setProjectTasks] = useState<any[]>([]);
     const { artifacts } = useArtifacts();
+    const { tasks: allTasks } = useTasks();
+    const [projectTasks, setProjectTasks] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -60,13 +61,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 const project = await ipcService.getRPC().getProject(projectId);
                 setProjectDetails(project);
 
-                // Fetch tasks for this project
-                const tasks = project.tasks || [];
-                setProjectTasks(tasks);
+                // Get tasks for this project from context
+                const projectTasks = allTasks.filter(t => t.projectId === projectId);
+                setProjectTasks(projectTasks);
 
                 // If no selected task yet, select the first task
-                if (!selectedTask && tasks.length > 0) {
-                    setSelectedTask(tasks[0]);
+                if (!selectedTask && projectTasks.length > 0) {
+                    setSelectedTask(projectTasks[0]);
                 }
             } catch (error) {
                 console.error('Failed to fetch project details:', error);
@@ -83,7 +84,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         };
 
         fetchProjectDetails();
-    }, [ipcService, selectedTask?.projectId]);
+    }, [ipcService, selectedTask?.projectId, allTasks]);
 
     return (
         <Dialog 
