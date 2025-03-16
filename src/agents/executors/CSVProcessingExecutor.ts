@@ -1,8 +1,8 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, StepExecutor, TaskNotification } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { JSONSchema, StructuredOutputPrompt } from "../../llm/ILLMService";
+import { JSONSchema } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
@@ -15,12 +15,11 @@ import { Artifact, ArtifactType, SpreadsheetSubType } from '../../tools/artifact
 import { CSVUtils } from 'src/utils/CSVUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ChatClient } from 'src/chat/chatClient';
 import { TaskStatus } from 'src/schemas/TaskStatus';
-import { StepBasedAgent } from '../stepBasedAgent';
 import { StepTask } from '../interfaces/ExecuteStepParams';
+import { response } from 'express';
 
 interface CSVProcessingResponse extends StepResponse {
     data?: {
@@ -256,20 +255,18 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         return savedArtifact;
     }
 
-    async updateCSVWithResults(currentContent: string, results: any[]): Promise<string> {
+    async updateCSVWithResults(currentContent: string, result: any): Promise<string> {
         const csv = await CSVUtils.fromCSV(currentContent);
 
         // Merge results with existing rows
-        for (const result of results) {
-            const rowIndex = result.rowIndex;
-            if (rowIndex >= 0 && rowIndex < csv.rows.length) {
-                // Add new columns while preserving existing data
-                csv.rows[rowIndex] = { 
-                    ...csv.rows[rowIndex], 
-                    ...result.data,
-                    __processedAt: new Date().toISOString() 
-                };
-            }
+        const rowIndex = result.rowIndex;
+        if (rowIndex >= 0 && rowIndex < csv.rows.length) {
+            // Add new columns while preserving existing data
+            csv.rows[rowIndex] = { 
+                ...csv.rows[rowIndex], 
+                ...result.data,
+                __processedAt: new Date().toISOString() 
+            };
         }
 
         return CSVUtils.toCSV(csv);
@@ -339,12 +336,14 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         // Get the task's response data
         const responseData = task.props?.result || {};
         
-        const rawResponse = await instructions.generate({
-            message: `Task Description: ${task.description}\n\nTask Response Data: ${JSON.stringify(responseData, null, 2)}`
-        });
-
+        const artifacts = responseData.artifactIds && await this.artifactManager.bulkLoadArtifacts(responseData.artifactIds);
+        artifacts && instructions.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts});
 
         try {
+            const rawResponse = await instructions.generate({
+                message: `Task Description: ${task.description}\n\nTask Response Data: ${responseData.response?.message}`
+            });
+        
             const response = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
             if (response && Array.isArray(response.columns)) {
                 return {
@@ -355,6 +354,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
                     }, {
                         rowIndex: task.props?.rowIndex
                     }),
+                    artifacts: responseData.artifactIds,
                     traceId: rawResponse.metadata?._id
                 };
             }
@@ -362,7 +362,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
             Logger.error('Error processing task result:', error);
         }
 
-        return [];
+        return {};
     }
 
     async onChildProjectComplete(stepTask: StepTask<CSVProcessingResponse>, project: Project): Promise<StepResult<CSVProcessingResponse>> {
@@ -392,7 +392,15 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
 
         prompt.addContext({
             contentType: ContentType.TASKS,
-            tasks: Object.values(project.tasks)
+            tasks: Object.values(project.tasks).map(t => ({
+                ...t,
+                props: t.props && {
+                    ...t.props,
+                    response: {
+                        message: t.props.response.message
+                    }
+                }
+            }))
         });
 
         const rawResponse = await this.modelHelpers.generateMessage({
@@ -490,14 +498,14 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
 
         // Process results when a task completes
         if (eventType === TaskEventType.Completed && childTask) {
-            const results = await this.processTaskResult({
+            const result = await this.processTaskResult({
                 step: ExecutorType.CSV_PROCESSOR,
                 agentId: this.params.userId,
                 goal: task.description
             }, childTask, csvArtifact);
 
-            if (results.length > 0) {
-                newContent = await this.updateCSVWithResults(newContent||csvArtifact.content.toString(), results);
+            if (result.rowIndex) {
+                newContent = await this.updateCSVWithResults(newContent||csvArtifact.content.toString(), result);
             }
         }
 
