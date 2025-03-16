@@ -90,12 +90,8 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             const queryEmbeddings = await embedder.generate(queryTexts);
             const queryVector = queryEmbeddings[0];
 
-            // Convert where clause to SQL conditions
-            const conditions = Object.entries(where)
-                .map(([key, value]) => `json_extract(metadata, '$.${key}') = ?`)
-                .join(' AND ');
-
-            const params = Object.values(where);
+            // Convert MongoDB-style where clause to SQL conditions
+            const { conditions, params } = this.convertMongoWhere(where);
 
             const query = `
                 SELECT 
@@ -120,6 +116,77 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                 score: result.distance
             }));
         });
+    }
+
+    private convertMongoWhere(where: Record<string, any>): { conditions: string, params: any[] } {
+        if (!where) return { conditions: '', params: [] };
+
+        const conditions: string[] = [];
+        const params: any[] = [];
+
+        for (const [key, value] of Object.entries(where)) {
+            if (typeof value === 'object' && !Array.isArray(value)) {
+                // Handle operators like $eq, $ne, $gt, etc.
+                for (const [op, opValue] of Object.entries(value)) {
+                    switch (op) {
+                        case '$eq':
+                            conditions.push(`json_extract(metadata, '$.${key}') = ?`);
+                            params.push(opValue);
+                            break;
+                        case '$ne':
+                            conditions.push(`json_extract(metadata, '$.${key}') != ?`);
+                            params.push(opValue);
+                            break;
+                        case '$gt':
+                            conditions.push(`json_extract(metadata, '$.${key}') > ?`);
+                            params.push(opValue);
+                            break;
+                        case '$gte':
+                            conditions.push(`json_extract(metadata, '$.${key}') >= ?`);
+                            params.push(opValue);
+                            break;
+                        case '$lt':
+                            conditions.push(`json_extract(metadata, '$.${key}') < ?`);
+                            params.push(opValue);
+                            break;
+                        case '$lte':
+                            conditions.push(`json_extract(metadata, '$.${key}') <= ?`);
+                            params.push(opValue);
+                            break;
+                        case '$in':
+                            conditions.push(`json_extract(metadata, '$.${key}') IN (${opValue.map(() => '?').join(',')})`);
+                            params.push(...opValue);
+                            break;
+                        case '$nin':
+                            conditions.push(`json_extract(metadata, '$.${key}') NOT IN (${opValue.map(() => '?').join(',')})`);
+                            params.push(...opValue);
+                            break;
+                        case '$exists':
+                            if (opValue) {
+                                conditions.push(`json_extract(metadata, '$.${key}') IS NOT NULL`);
+                            } else {
+                                conditions.push(`json_extract(metadata, '$.${key}') IS NULL`);
+                            }
+                            break;
+                        case '$regex':
+                            conditions.push(`json_extract(metadata, '$.${key}') REGEXP ?`);
+                            params.push(opValue);
+                            break;
+                        default:
+                            throw new Error(`Unsupported operator: ${op}`);
+                    }
+                }
+            } else {
+                // Simple equality
+                conditions.push(`json_extract(metadata, '$.${key}') = ?`);
+                params.push(value);
+            }
+        }
+
+        return {
+            conditions: conditions.join(' AND '),
+            params
+        };
     }
 
     computeHash(content: string): string {
