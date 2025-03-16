@@ -17,7 +17,8 @@ import { CSVUtils } from 'src/utils/CSVUtils';
 
 
 export interface ArtifactGenerationStepData {
-
+    requestFullContent?: boolean;
+    artifactIndex?: number;
 }
 
 export interface ArtifactGenerationStepResponse extends StepResponse {
@@ -71,7 +72,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         });
     }
 
-    protected getInstructionByOperation(operation: OperationTypes) : string {
+    protected getInstructionByOperation(operation: OperationTypes | 'requestFullContent') : string {
         return operation === "create" ? `Create a NEW document.` :
             operation === "patch" ? `Update specific parts of an EXISTING document using merge conflict style syntax. Use merge conflict syntax to specify changes:
 \<<<<<<< SEARCH
@@ -90,9 +91,10 @@ new replacement text
         promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
         promptBuilder.addInstruction(`# AVAILABLE OPERATIONS:
 1. create: ${this.getInstructionByOperation('create')}
-2. replace: ${this.getInstructionByOperation('create')}
+2. replace: ${this.getInstructionByOperation('replace')}
 3. patch: ${this.getInstructionByOperation('patch')}
 4. append: ${this.getInstructionByOperation('append')}
+5. requestFullContent: Request the full content of an existing artifact to determine the best edit operation
 `);
 
         promptBuilder.addContext({contentType: ContentType.ABOUT})
@@ -121,6 +123,18 @@ new replacement text
 
 
     async execute(params: ExecuteParams, modelType?: ModelType): Promise<StepResult<ArtifactGenerationStepResponse>> {
+        // Handle requestFullContent operation
+        if (params.context?.stepResponse?.data?.requestFullContent) {
+            const artifactIndex = params.context.stepResponse.data.artifactIndex;
+            if (artifactIndex != null && params.context?.artifacts?.[artifactIndex]) {
+                const artifact = await this.artifactManager.loadArtifact(params.context.artifacts[artifactIndex].id);
+                if (artifact) {
+                    // Add the full content to the context
+                    params.context.artifacts[artifactIndex] = artifact;
+                }
+            }
+        }
+
         const conversation = await this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
@@ -216,6 +230,22 @@ new replacement text
 
                 // Save the artifact
                 const artifact = await this.artifactManager.saveArtifact(artifactUpdate);
+
+                // Handle requestFullContent operation
+                if (result.operation === 'requestFullContent' && result.artifactIndex != null) {
+                    return {
+                        type: StepResultType.GenerateArtifact,
+                        finished: false,
+                        needsUserInput: false,
+                        response: {
+                            type: StepResponseType.GeneratedArtifact,
+                            data: {
+                                requestFullContent: true,
+                                artifactIndex: result.artifactIndex
+                            }
+                        }
+                    };
+                }
 
                 return {
                     type: StepResultType.GenerateArtifact,
