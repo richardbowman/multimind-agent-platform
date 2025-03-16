@@ -60,28 +60,55 @@ export class ClientLogger {
     public interceptConsole(): void {
         if (this.isConsoleIntercepted) return;
 
+        const serializeArgs = (args: any[]): string => {
+            return args.map(arg => {
+                if (typeof arg === 'object' && arg !== null) {
+                    try {
+                        return JSON.stringify(arg, (key, value) => {
+                            // Handle circular references
+                            if (typeof value === 'object' && value !== null) {
+                                if (value instanceof Error) {
+                                    return {
+                                        message: value.message,
+                                        stack: value.stack
+                                    };
+                                }
+                                if (key && value === args) {
+                                    return '[Circular]';
+                                }
+                            }
+                            return value;
+                        }, 2);
+                    } catch (e) {
+                        return `[Object: ${arg.toString()}]`;
+                    }
+                }
+                return arg;
+            }).join(' ');
+        };
+
         console.log = (...args: any[]) => {
-            this.info('[console.log] ' + args.join(' '));
+            this.info('[console.log] ' + serializeArgs(args));
             this.originalConsole.log(...args);
         };
 
         console.info = (...args: any[]) => {
-            this.info('[console.info] ' + args.join(' '));
+            this.info('[console.info] ' + serializeArgs(args));
             this.originalConsole.info(...args);
         };
 
         console.warn = (...args: any[]) => {
-            this.warn('[console.warn] ' + args.join(' '));
+            this.warn('[console.warn] ' + serializeArgs(args));
             this.originalConsole.warn(...args);
         };
 
         console.error = (...args: any[]) => {
-            this.error('[console.error] ' + args.join(' '));
+            this.error('[console.error] ' + serializeArgs(args));
             this.originalConsole.error(...args);
         };
 
         console.debug = (...args: any[]) => {
-            this.debug('[console.debug] ' + args.join(' '));
+            this.debug('[console.debug] ' + serializeArgs(args));
             this.originalConsole.debug(...args);
         };
 
