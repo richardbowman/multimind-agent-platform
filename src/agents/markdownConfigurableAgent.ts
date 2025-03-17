@@ -33,37 +33,41 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
 
     private async parseMarkdownConfig(content: string): Promise<Record<string, any>> {
         const config: Record<string, any> = {};
-        const lines = content.split('\n');
+        const { marked } = await import('marked');
+        const tokens = marked.lexer(content);
 
         let currentSection: string | null = null;
-        
-        for (const line of lines) {
-            // Parse section headers
-            const sectionMatch = line.match(/^#+\s*(.+)/);
-            if (sectionMatch) {
-                currentSection = sectionMatch[1].toLowerCase().replace(/\s+/g, '_');
+
+        for (const token of tokens) {
+            if (token.type === 'heading') {
+                // Convert heading text to section key
+                currentSection = token.text.toLowerCase().replace(/\s+/g, '_');
                 continue;
             }
 
-            // Parse key-value pairs
-            const kvMatch = line.match(/^\s*-\s*(.+?):\s*(.+)/);
-            if (kvMatch && currentSection) {
-                const key = kvMatch[1].trim();
-                const value = kvMatch[2].trim();
-                
+            if (token.type === 'list' && currentSection) {
                 if (!config[currentSection]) {
                     config[currentSection] = {};
                 }
-                
-                // Try to parse numbers/booleans
-                if (/^\d+$/.test(value)) {
-                    config[currentSection][key] = parseInt(value, 10);
-                } else if (/^\d+\.\d+$/.test(value)) {
-                    config[currentSection][key] = parseFloat(value);
-                } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
-                    config[currentSection][key] = value.toLowerCase() === 'true';
-                } else {
-                    config[currentSection][key] = value;
+
+                for (const item of token.items) {
+                    const text = item.text.trim();
+                    const kvMatch = text.match(/^(.+?):\s*(.+)/);
+                    if (kvMatch) {
+                        const key = kvMatch[1].trim();
+                        const value = kvMatch[2].trim();
+                        
+                        // Try to parse numbers/booleans
+                        if (/^\d+$/.test(value)) {
+                            config[currentSection][key] = parseInt(value, 10);
+                        } else if (/^\d+\.\d+$/.test(value)) {
+                            config[currentSection][key] = parseFloat(value);
+                        } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+                            config[currentSection][key] = value.toLowerCase() === 'true';
+                        } else {
+                            config[currentSection][key] = value;
+                        }
+                    }
                 }
             }
         }
