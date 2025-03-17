@@ -7,7 +7,6 @@ import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPl
 import { TRANSFORMERS } from '@lexical/markdown';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { Box, Paper } from '@mui/material';
-import { Toolbar } from './MarkdownToolbar';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
@@ -31,7 +30,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   readOnly = false
 }) => {
   const [editorState, setEditorState] = useState(initialContent);
-  const { registerActions } = useToolbarActions();
+  const { registerActions, unregisterActions } = useToolbarActions();
 
   const initialConfig = {
     namespace: 'MarkdownEditor',
@@ -62,13 +61,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       // Cleanup toolbar actions
       unregisterActions('markdown-editor');
     };
-  }, [registerActions]);
+  }, [registerActions, unregisterActions]);
 
   return (
     <Box sx={{ p: 2 }}>
       <Paper elevation={3} sx={{ p: 2 }}>
         <LexicalComposer initialConfig={initialConfig}>
-          {!readOnly && <Toolbar />}
           <RichTextPlugin
             contentEditable={
               <ContentEditable 
