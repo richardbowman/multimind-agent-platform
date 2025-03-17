@@ -8,6 +8,8 @@ import { TRANSFORMERS } from '@lexical/markdown';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { Box, Paper } from '@mui/material';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
+import { $convertToMarkdownString } from '@lexical/markdown';
+import { $getRoot, $createParagraphNode, $createTextNode } from 'lexical';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface MarkdownEditorProps {
@@ -37,12 +39,16 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     theme,
     onError,
     editable: !readOnly,
-    editorState: initialContent
+    nodes: [
+      // Add any custom nodes here
+    ]
   };
 
-  const handleChange = (editorState: string) => {
-    setEditorState(editorState);
-    onChange?.(editorState);
+  const handleChange = (editorState: any) => {
+    // Convert Lexical editor state to markdown
+    const markdown = $convertToMarkdownString(editorState);
+    setEditorState(markdown);
+    onChange?.(markdown);
   };
 
   useEffect(() => {
@@ -66,7 +72,19 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   return (
     <Box sx={{ p: 2 }}>
       <Paper elevation={3} sx={{ p: 2 }}>
-        <LexicalComposer initialConfig={initialConfig}>
+        <LexicalComposer 
+          initialConfig={{
+            ...initialConfig,
+            editorState: (editor) => {
+              // Initialize editor with markdown content
+              const root = $getRoot();
+              const paragraph = $createParagraphNode();
+              const text = $createTextNode(initialContent);
+              paragraph.append(text);
+              root.append(paragraph);
+            }
+          }}
+        >
           <RichTextPlugin
             contentEditable={
               <ContentEditable 
