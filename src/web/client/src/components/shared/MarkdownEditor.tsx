@@ -10,6 +10,9 @@ import { Box, Paper } from '@mui/material';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { $convertToMarkdownString } from '@lexical/markdown';
 import { $getRoot, $createParagraphNode, $createTextNode } from 'lexical';
+import { HeadingNode, QuoteNode } from '@lexical/rich-text';
+import { ListNode, ListItemNode } from '@lexical/list';
+import { CodeNode } from '@lexical/code';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface MarkdownEditorProps {
@@ -40,7 +43,11 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     onError,
     editable: !readOnly,
     nodes: [
-      // Add any custom nodes here
+      HeadingNode,
+      ListNode,
+      ListItemNode,
+      QuoteNode,
+      CodeNode
     ]
   };
 
