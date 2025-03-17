@@ -10,9 +10,12 @@ import { Box, Paper } from '@mui/material';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { $convertToMarkdownString } from '@lexical/markdown';
 import { $getRoot, $createParagraphNode, $createTextNode } from 'lexical';
-import { HeadingNode, QuoteNode } from '@lexical/rich-text';
-import { ListNode, ListItemNode } from '@lexical/list';
-import { CodeNode } from '@lexical/code';
+import { AutoLinkNode, LinkNode } from "@lexical/link";
+import { ListNode, ListItemNode } from "@lexical/list";
+import { TableNode, TableCellNode, TableRowNode } from "@lexical/table";
+import { CodeNode } from "@lexical/code";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface MarkdownEditorProps {
@@ -43,11 +46,20 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     onError,
     editable: !readOnly,
     nodes: [
+      LinkNode,
+      AutoLinkNode,
+      ListNode,
+      ListItemNode,
+      TableNode,
+      TableCellNode,
+      TableRowNode,
+      HorizontalRuleNode,
+      CodeNode,
       HeadingNode,
+      LinkNode,
       ListNode,
       ListItemNode,
       QuoteNode,
-      CodeNode
     ]
   };
 
