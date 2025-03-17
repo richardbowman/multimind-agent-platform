@@ -302,6 +302,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     </Box>
                 )}
                 <ContentRenderer 
+                    artifact={artifact}
                     content={artifact.content}
                     type={artifact.type}
                     metadata={artifact.metadata}

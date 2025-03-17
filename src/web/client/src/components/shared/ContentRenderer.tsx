@@ -8,11 +8,13 @@ import { Box, Paper, Typography } from '@mui/material';
 import { CalendarRenderer } from './CalendarRenderer';
 import { PDFRenderer } from './PDFRenderer';
 import { SlideRenderer } from './SlideRenderer';
-import { ArtifactType } from '../../../../../tools/artifact';
+import { MarkdownEditor } from './MarkdownEditor';
+import { ArtifactItem, ArtifactType } from '../../../../../tools/artifact';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import { BarChartData } from '../../../../../schemas/BarChartData';
 
 interface ContentRendererProps {
+    artifact?: ArtifactItem;
     content: any;
     type?: string;
     mimeType?: string;
@@ -20,6 +22,7 @@ interface ContentRendererProps {
 }
 
 export const ContentRenderer: React.FC<ContentRendererProps> = ({
+    artifact,
     content,
     type,
     metadata
@@ -123,10 +126,11 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
     // Handle markdown content
     if (content.length < 1024 * 150 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
-        if (metadata?.editable) {
-            return <MarkdownEditor initialContent={content} />;
+        if (metadata?.readonly) {
+            return <MarkdownRenderer content={content} />;
+        } else {
+            return <MarkdownEditor artifact={artifact} initialContent={content} />;
         }
-        return <MarkdownRenderer content={content} />;
     } else {
         return <Box sx={{overflow: "auto", p: 2}}><pre>{content}</pre></Box>;
     }

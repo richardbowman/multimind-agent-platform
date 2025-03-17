@@ -554,7 +554,7 @@ export class ArtifactManager {
       try {
         results = await this.vectorDb.query([query], where, limit);
       } catch (e) {
-        const message = `Vectra search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
+        const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
         Logger.error(message, e)
         throw new Error(message);
       }

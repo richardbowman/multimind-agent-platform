@@ -486,11 +486,11 @@ export class Settings {
     chromadbUrl: string = 'http://localhost:8001';
 
     @ClientSettings({
-        label: 'Chroma Collection',
+        label: 'Database Collection Name',
         category: 'Vector DB',
         type: 'string'
     })
-    chromaCollection: string = 'webpage_scrapes';
+    chromaCollection: string = 'core';
 
     @ClientSettings({
         label: 'Max Link Selections',
