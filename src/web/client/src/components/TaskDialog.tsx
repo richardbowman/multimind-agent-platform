@@ -42,28 +42,28 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const { tasks: allTasks } = useTasks();
     const [projectTasks, setProjectTasks] = useState<any[]>([]);
 
-    useEffect(() => {
-        const fetchProjectDetails = async () => {
-            if (!selectedTask) return;
-            const projectId = selectedTask.projectId;
+    const fetchTasks = async () => {
+        if (!selectedTask) return;
+        const projectId = selectedTask.projectId;
 
-            try {
-                // Get tasks for this project from context
-                const projectTasks = allTasks.filter(t => t.projectId === projectId);
-                setProjectTasks(projectTasks);
+        try {
+            // Get tasks for this project from context
+            const projectTasks = allTasks.filter(t => t.projectId === projectId);
+            setProjectTasks(projectTasks);
 
-                // If no selected task yet, select the first task
-                if (!selectedTask && projectTasks.length > 0) {
-                    setSelectedTask(projectTasks[0]);
-                }
-            } catch (error) {
-                console.error('Failed to fetch project tasks:', error);
-                setProjectTasks([]);
+            // If no selected task yet, select the first task
+            if (!selectedTask && projectTasks.length > 0) {
+                setSelectedTask(projectTasks[0]);
             }
-        };
+        } catch (error) {
+            console.error('Failed to fetch project tasks:', error);
+            setProjectTasks([]);
+        }
+    };
 
-        fetchProjectDetails();
-    }, [allTasks]);
+    useEffect(() => {
+        fetchTasks();
+    }, [allTasks, selectedTask]);
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
