@@ -123,7 +123,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     - Review the STEP HISTORY to see what you've already done, don't keep repeating your action.
     - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
     - Explain each step and why it would or would not make sense to be the next action.
-    - If you have acheived the goal or need to reply to the user with questions, set the Action Type to ${completionAction}.
+    - If you have acheived the goal or need to reply to the user with questions, set the Action Type to ${completionAction}. You MUST provide your response to the user when selecting this. Respond in a friendly and concise chat message.
     - If you need to continue working, determine the next Action Type from the AVAILABLE ACTION TYPES to continue to achieve the goal.
     - Consider Procedure Guides for help on step order required to be successful. If you use a guide, use the 'procedureGuideTitle' field to share the title.`);
 

@@ -323,7 +323,7 @@ export abstract class Agent {
                 if (!post.getRootId() && (handle && post.message.startsWith(handle + " ") || (!post.message.startsWith("@") && autoRespond))) {
                     let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
 
-                    const allArtifacts = [...new Set([...requestedArtifacts, ...post.props.artifactIds || []].flat())];
+                    const allArtifacts = [...new Set([...requestedArtifacts, ...post.props.artifactIds || []].flat().filter(a => !!a))];
                     const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));
 
                     await this.handleChannel({ userPost: post, artifacts: artifacts, agents: this.agents });
@@ -345,8 +345,8 @@ export abstract class Agent {
 
                         let requestedArtifacts: UUID[] = [], searchResults: SearchResult[] = [];
 
-                        const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifactIds"] || [])].flat())];
-                        const artifacts = await this.mapRequestedArtifacts(allArtifacts.filter(a => a).map(a => asUUID(a)));
+                        const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifactIds"])].flat().flat().filter(a => !!a))];
+                        const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));
 
                         this.handlerThread({
                             userPost: post,

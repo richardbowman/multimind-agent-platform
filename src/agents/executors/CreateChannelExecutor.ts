@@ -60,9 +60,15 @@ ${templates.map(t =>
         prompt.addInstruction(`You are a function that creates a chat channel for the user and appropriate agents. In the JSON attributes,
 provide information for the system to create the desired channel. Your channel name must be in the format "#channel-name". Then, respond to the user
 explaining that you've created a channel, which agents are a part of the channel, and how to get started.`)
-            .addContext({contentType: ContentType.GOALS_FULL, params})
-            .addContext(templatePrompt)
-            .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+        .addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]})
+        .addContext({contentType: ContentType.ARTIFACTS_FULL, artifacts: params.context?.artifacts||[]});
+
+        prompt.addInstruction(`# CURRENT CHANNELS: (You may not duplicate or change an existing channel)
+${(await this.chatClient.getChannels()).map(c => ` - ${c.name}: ${c.description}`).join('\n')}\n`);
+
+        prompt.addContext({contentType: ContentType.GOALS_FULL, params})
+        .addContext(templatePrompt)
+        .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
           
         const rawResponse = await prompt.generate({
             message: params.stepGoal||params.message
@@ -92,6 +98,8 @@ explaining that you've created a channel, which agents are a part of the channel
             defaultResponder: templates.find(t => t.id === channelData.templateId)?.defaultResponder,
             artifactIds: artifactIds
         });
+
+        await this.chatClient.createChannel(channel);
 
         return {
             finished: true,
