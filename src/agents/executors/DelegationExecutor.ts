@@ -71,8 +71,32 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
             throw new Error("No agents with delegation enabled in channel.");
         }
 
+        // Search for delegation-specific procedure guides
+        const delegationGuides = await this.artifactManager.searchArtifacts(
+            params.stepGoal,
+            {
+                type: ArtifactType.Document,
+                subtype: DocumentSubtype.Procedure,
+                tags: ['delegation']
+            },
+            3 // Limit to top 3 most relevant
+        );
+
         const prompt = this.startModel(params);
         const schema = await DelegationSchema;
+        
+        // Add delegation guides context if found
+        if (delegationGuides.length > 0) {
+            const loadedGuides = await this.artifactManager.bulkLoadArtifacts(
+                delegationGuides.map(g => g.artifact.id)
+            );
+            prompt.addContext({
+                contentType: ContentType.PROCEDURE_GUIDES,
+                guideType: "delegation",
+                guides: loadedGuides
+            });
+        }
+
         prompt.addInstruction( `Create a project with tasks that should be delegated to all agents in the channel. 
             For each task, specify which agent should handle it based on their capabilities.
             Output should include:
@@ -88,6 +112,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
             - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the research manager AND the research assistant)
             - Instead of making multiple tasks for the same agent, combine them into one complete task.
             - MAKE SURE THE TASK DESCRIPTION is completely stand-alone and contains ALL details provided.
+            - Review any available delegation procedure guides for best practices on task delegation and assignment.
             - The agent will not receive any other information except for what is in the task description so the task description
             should not refer back to the message or goals, it should be self-contained. For instance, if the goal contains an artifact name or URL, make sure to restate it.`);
         prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
