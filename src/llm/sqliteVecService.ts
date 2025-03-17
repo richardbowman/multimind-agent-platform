@@ -45,13 +45,13 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     text TEXT,
                     type TEXT,
                     projectId TEXT,
-                    url TEXT,
-                    task TEXT,
-                    title TEXT,
-                    docId TEXT,
-                    chunkId INTEGER,
-                    chunkTotal INTEGER,
-                    artifactId TEXT,
+                    url TEXT NULL,
+                    task TEXT NULL,
+                    title TEXT NULL,
+                    docId TEXT NULL,
+                    chunkId INTEGER NULL,
+                    chunkTotal INTEGER NULL,
+                    artifactId TEXT NULL,
                     +metadata TEXT  // Additional metadata as auxiliary column
                 )
             `);
@@ -90,15 +90,15 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     insertStmt.run(
                         new Float32Array(vector),
                         text,
-                        metadata.type,
-                        metadata.projectId,
-                        metadata.url,
-                        metadata.task,
-                        metadata.title,
-                        metadata.docId,
-                        metadata.chunkId,
-                        metadata.chunkTotal,
-                        metadata.artifactId,
+                        metadata.type || null,
+                        metadata.projectId || null,
+                        metadata.url || null,
+                        metadata.task || null,
+                        metadata.title || null,
+                        metadata.docId || null,
+                        metadata.chunkId || null,
+                        metadata.chunkTotal || null,
+                        metadata.artifactId || null,
                         JSON.stringify(metadata) // Store full metadata as auxiliary column
                     );
                 }
