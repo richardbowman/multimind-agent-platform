@@ -503,10 +503,20 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
     }
 
     private renderProcedureGuides({ guideType, guides }: ProcedureGuideContent) : string {
+        // De-duplicate guides by artifact ID
+        const uniqueGuides = guides.reduce((acc, guide) => {
+            if (guide && !acc.has(guide.id)) {
+                acc.set(guide.id, guide);
+            }
+            return acc;
+        }, new Map<string, any>());
+
+        const uniqueGuideList = Array.from(uniqueGuides.values());
+
         // Format in-use guides for prompt
-        return guides.length > 0 ?
+        return uniqueGuideList.length > 0 ?
             `# ${guideType === "in-use" ? "IN-USE PROCEDURE GUIDES" : "SEARCHED PROCEDURE GUIDES"}:\n` +
-            guides.map((guide, i) => {
+            uniqueGuideList.map((guide, i) => {
                 return guide ? 
                     `## Guide ${i+1}:\n` +
                     `###: ${guide.metadata?.title}\n` +
