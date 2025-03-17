@@ -441,7 +441,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         }}
                                     />
                                 );})}
-                            {uniqueArtifacts.length > 3 && (
+                            {uniqueArtifacts.length > 6 && (
                                 <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
                                     and {uniqueArtifacts.length - 6} more...
                                 </Typography>

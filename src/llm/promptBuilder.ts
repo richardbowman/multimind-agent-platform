@@ -359,11 +359,11 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
             // Use summary from metadata if available
             let wrappedContent = `[${artifact.metadata?.title || 'Untitled'}](/artifact/${artifact.id})\n`;
             if (contentType === ContentType.ARTIFACTS_FULL) {
-                wrappedContent += `\`\`\`${artifact.metadata.blockType}\n${artifact.content, 1000}\n\`\`\``; 
+                wrappedContent += `\`\`\`${artifact.metadata?.blockType??""}\n${artifact.content}\n\`\`\``; 
             } else if (artifact.metadata?.summary) {
                 wrappedContent += ` - High-Level Overview: ${artifact.metadata.summary.trim()}`;
             } else {
-                wrappedContent += `\`\`\`${artifact.metadata.blockType}\n${StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`)}\n\`\`\``;
+                wrappedContent += `\`\`\`${artifact.metadata?.blockType??""}\n${StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`)}\n\`\`\``;
             }
 
             let metadataInfo = '';
