@@ -233,10 +233,10 @@ ${this.modelHelpers.getPurpose()}
                 
                 const stepInfo = `- STEP [${step.props.stepType}]:
   Description: ${step.description}
-  Result: ${body && `<toolResult>${body}</toolResult>` || 
-            stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>` ||
-            stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>` || 
-            stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`}`;
+  Result: ${body && `<toolResult>${body}</toolResult>`}
+${stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`}
+${stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`}
+${stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`}`;
                 
                 // If step has a threadId, add to corresponding post
                 if (step.props.userPostId) {
@@ -256,7 +256,7 @@ ${this.modelHelpers.getPurpose()}
                     output += `## POST ${index + 1}:\n`;
                     output += `- User: ${handles?.[post.user_id] ?? "(unknown)"}\n`;
                     output += `- Message: ${post.message}\n`;
-                    output += `### Steps for this post:\n`;
+                    output += `### STEPS YOU'VE ALREADY PERFORMED FOR THIS POST:\n`;
                     output += postSteps.join('\n') + '\n\n';
                 }
             });
