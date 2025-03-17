@@ -22,6 +22,7 @@ import { response } from 'express';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { CSVProcessingResponse, ExtractColumnsResponse } from 'src/schemas/CSVProcessingSchema';
+import { RetryError, withRetry } from 'src/helpers/retry';
 
 interface CSVProcessingStepResponse extends StepResponse {
     data?: {
@@ -309,11 +310,21 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
         artifacts && instructions.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts});
 
         try {
-            const rawResponse = await instructions.generate({
-                message: `Task Description: ${task.description}\n\nTask Response Data: ${responseData.response?.message}`
-            });
-        
-            const response = StringUtils.extractAndParseJsonBlock<ExtractColumnsResponse>(rawResponse.message, schema);
+            const { response, message, traceId } = await withRetry(async () => {
+                const rawResponse = await instructions.generate({
+                    message: `Task Description: ${task.description}\n\nTask Response Data: ${responseData.response?.message}`
+                });
+            
+                if (rawResponse?.message) throw new RetryError("Invalid model response - no message");
+
+                const response = StringUtils.extractAndParseJsonBlock<ExtractColumnsResponse>(rawResponse.message, schema);
+                return {
+                    response,
+                    message: rawResponse.message,
+                    traceId: rawResponse.metadata?._id
+                }
+            }, () => true, { timeoutMs: 180000, maxRetries: 2 });
+
             if (response && Array.isArray(response.resultColumns)) {
                 return {
                     rowIndex: task.props?.rowIndex,
@@ -324,7 +335,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                         rowIndex: task.props?.rowIndex
                     }),
                     artifacts: responseData.artifactIds,
-                    traceId: rawResponse.metadata?._id
+                    traceId
                 };
             }
         } catch (error) {
