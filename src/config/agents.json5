@@ -145,12 +145,6 @@
               "className": "WebScrapeExecutor"
             },
             {
-              "className": "ValidationExecutor"
-            },
-            {
-              "className": "CSVProcessingExecutor"
-            },
-            {
               "className": "KnowledgeCheckExecutor"
             },
             {

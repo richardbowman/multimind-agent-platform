@@ -57,8 +57,6 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
     }, [selectedTypes]);
 
     const filteredAssets = assets.filter(asset => {
-        console.log('Asset:', asset.metadata.title, 'Type:', asset.metadata.type);
-        
         const matchesSearch = asset.metadata.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
@@ -73,7 +71,6 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                 subtype.toLowerCase() === asset.metadata.subtype?.toLowerCase()
             ));
 
-        console.log('Matches search:', matchesSearch, 'Matches type:', matchesType);
         return matchesSearch && matchesType && matchesSubtype;
     });
 

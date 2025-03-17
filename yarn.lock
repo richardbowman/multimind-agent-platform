@@ -5764,6 +5764,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/better-sqlite3@npm:^7.6.12":
+  version: 7.6.12
+  resolution: "@types/better-sqlite3@npm:7.6.12"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/5367de7492e2c697aa20cc4024ba26210971d15f60c01ef691eddfbbfd39ccf9f80d5129fd7fd6c76c98804739325e23d2b156b0eac8f5a7665ba374a08ac1e7
+  languageName: node
+  linkType: hard
+
 "@types/blessed@npm:^0.1.25":
   version: 0.1.25
   resolution: "@types/blessed@npm:0.1.25"
@@ -15621,6 +15630,7 @@ __metadata:
     "@react-pdf/renderer": "npm:^4.1.6"
     "@types/babel__preset-env": "npm:^7"
     "@types/babel__standalone": "npm:^7"
+    "@types/better-sqlite3": "npm:^7.6.12"
     "@types/blessed": "npm:^0.1.25"
     "@types/chart.js": "npm:^2.9.41"
     "@types/dompurify": "npm:^3.2.0"

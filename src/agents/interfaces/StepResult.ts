@@ -42,7 +42,8 @@ export enum StepResponseType {
     ChannelTemplates = "ChannelTemplates",
     DocumentTemplate = "DocumentTemplate",
     GoalAssessment = "GoalAssessment",
-    DraftContent = "DraftContent"
+    DraftContent = "DraftContent",
+    Error = "Error"
 }
 
 export enum ReplanType {

@@ -46,6 +46,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const statusHandler = (log) => {
       // Update progress bar based on message
       if (log.details.percentComplete !== undefined && log.details.percentComplete >= 0) {
+        setOpen(true);
         setOptions(prev => {
           const existingMeters = prev.progressMeters || [];
           const meterIndex = existingMeters.findIndex(m => m.id === log.details.id);
@@ -87,6 +88,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           return prev;
         });
       } else {
+        setOpen(true);
         setOptions(prev => ({
           ...prev,
           message: log.message,

@@ -246,7 +246,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepRes
 
         // Create initial processed artifact
         const processedArtifact = {
-            ...originalArtifact,
+            type: originalArtifact.type,
             metadata: {
                 ...originalArtifact.metadata,
                 title: `${originalArtifact.metadata?.title || 'processed'} - Processing ${new Date().toISOString().split('T')[0]}`,
@@ -400,7 +400,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
         if (eventType === TaskEventType.Cancelled && task.props?.childProjectId) {
             const project = this.taskManager.getProject(task.props?.childProjectId);
             if (project) {
-                const taskList = Object.keys(project.tasks);
+                const taskList = Object.keys(project.tasks) as UUID[];
                 for (const taskId of taskList) {
                     if (project.tasks[taskId].status !== TaskStatus.Cancelled) {
                         await this.taskManager.cancelTask(taskId);
@@ -473,9 +473,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                 goal: task.description
             }, childTask, csvArtifact);
 
-            if (result.rowIndex) {
-                newContent = await this.updateCSVWithResults(newContent||csvArtifact.content.toString(), result);
-            }
+            newContent = await this.updateCSVWithResults(newContent||csvArtifact.content.toString(), result);
         }
 
         if (newContent) {

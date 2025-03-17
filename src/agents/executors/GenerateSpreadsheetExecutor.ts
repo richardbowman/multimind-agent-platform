@@ -15,7 +15,7 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
 - Include a header row with column names
 - Ensure consistent number of columns in each row
 - Every cell should be enclosed in double quotes
-- Use proper escaping for special characters`);
+- To escape double quotes, use two double quotes in a row ("")`);
     }
 
     protected getSupportedFormats(): string[] {

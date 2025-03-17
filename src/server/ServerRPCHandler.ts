@@ -23,6 +23,7 @@ import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle
 import JSON5 from 'json5';
 import { TaskEventType } from "src/shared/TaskEventType";
 import { LLMLogEntry } from "src/llm/LLMLogModel";
+import { asError } from "src/types/types";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -103,9 +104,17 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         Logger.info(`Reindexing collection: ${_s.chromaCollection}`);
         await this.services.vectorDB.reindexCollection(_s.chromaCollection);
 
-        await this.services.artifactManager.indexArtifacts(true);
+        const performIndexing = async () => {
+            try {
+                await this.services.artifactManager.indexArtifacts(true);
+                Logger.info('VectorDB rebuild complete');
+            } catch (error) {
+                Logger.error(`Indexing failed: ${asError(error).message}`, error);
+            }
+        }
         
-        Logger.info('VectorDB rebuild complete');
+        // don't await this, causes timeouts on rpc
+        performIndexing();
     }
 
     setupClientEvents(rpc: ClientMethods, autoUpdater: AppUpdater) {

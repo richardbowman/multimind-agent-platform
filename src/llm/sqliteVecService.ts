@@ -38,21 +38,19 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                 .get();
             
             // Create virtual table with metadata columns
-            this.db.exec(`
+            this.db.exec(`                
                 CREATE VIRTUAL TABLE IF NOT EXISTS vec_items 
                 USING vec0(
                     embedding float[${this.dimensions}],
                     text TEXT,
                     type TEXT,
                     projectId TEXT,
-                    url TEXT NULL,
-                    task TEXT NULL,
-                    title TEXT NULL,
-                    docId TEXT NULL,
-                    chunkId INTEGER NULL,
-                    chunkTotal INTEGER NULL,
-                    artifactId TEXT NULL,
-                    +metadata TEXT  // Additional metadata as auxiliary column
+                    url TEXT,
+                    task TEXT,
+                    title TEXT,
+                    docId TEXT,
+                    artifactId TEXT,
+                    +metadata TEXT
                 )
             `);
           
@@ -77,11 +75,9 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     task,
                     title,
                     docId,
-                    chunkId,
-                    chunkTotal,
                     artifactId,
                     metadata
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `);
 
             const transaction = this.db!.transaction((items) => {
@@ -90,15 +86,13 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     insertStmt.run(
                         new Float32Array(vector),
                         text,
-                        metadata.type || null,
-                        metadata.projectId || null,
-                        metadata.url || null,
-                        metadata.task || null,
-                        metadata.title || null,
-                        metadata.docId || null,
-                        metadata.chunkId || null,
-                        metadata.chunkTotal || null,
-                        metadata.artifactId || null,
+                        metadata.type,
+                        metadata.projectId || "",
+                        metadata.url || "",
+                        metadata.task || "",
+                        metadata.title || "",
+                        metadata.docId || "",
+                        metadata.artifactId || "",
                         JSON.stringify(metadata) // Store full metadata as auxiliary column
                     );
                 }
@@ -136,8 +130,6 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     task,
                     title,
                     docId,
-                    chunkId,
-                    chunkTotal,
                     artifactId,
                     metadata,
                     distance
@@ -148,23 +140,12 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
 
             const stmt = this.db!.prepare(query);
-            const results = stmt.run(new Float32Array(queryVector), nResults, ...params);
+            const results = stmt.all(new Float32Array(queryVector), nResults, ...params);
 
             return results.map(result => ({
                 id: result.rowid.toString(),
                 text: result.text,
-                metadata: {
-                    type: result.type,
-                    projectId: result.projectId,
-                    url: result.url,
-                    task: result.task,
-                    title: result.title,
-                    docId: result.docId,
-                    chunkId: result.chunkId,
-                    chunkTotal: result.chunkTotal,
-                    artifactId: result.artifactId,
-                    ...JSON.parse(result.metadata) // Merge with additional metadata
-                },
+                metadata: JSON.parse(result.metadata),
                 score: result.distance
             }));
         });
@@ -173,7 +154,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
     // List of defined metadata columns that should use direct column references
     private static readonly METADATA_COLUMNS = new Set([
         'type', 'projectId', 'url', 'task', 'title', 
-        'docId', 'chunkId', 'chunkTotal', 'artifactId'
+        'docId', 'artifactId'
     ]);
 
     private convertMongoWhere(where: Record<string, any>): { conditions: string, params: any[] } {
@@ -318,11 +299,6 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
             // Drop and recreate virtual table
             this.db!.prepare('DROP TABLE IF EXISTS vec_items').run();
-            this.db!.exec(`
-                CREATE VIRTUAL TABLE vec_items 
-                USING vec0(embedding float[${this.dimensions}], text TEXT, metadata TEXT)
-            `);
-            
             Logger.info("Cleared SQLite-vec collection");
         });
     }

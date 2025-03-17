@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -8,8 +8,8 @@ import { TRANSFORMERS } from '@lexical/markdown';
 import LexicalErrorBoundary from '@lexical/react/LexicalErrorBoundary';
 import { Box, Paper } from '@mui/material';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
-import { $convertToMarkdownString } from '@lexical/markdown';
-import { $getRoot, $createParagraphNode, $createTextNode } from 'lexical';
+import { $convertToMarkdownString, $convertFromMarkdownString } from '@lexical/markdown';
+import { $getRoot, $createParagraphNode, $createTextNode, LexicalCommand, createCommand, COMMAND_PRIORITY_LOW, $getSelection, FORMAT_TEXT_COMMAND, $isRangeSelection } from 'lexical';
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { TableNode, TableCellNode, TableRowNode } from "@lexical/table";
@@ -17,9 +17,17 @@ import { CodeNode } from "@lexical/code";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { CommandListenerPriority } from 'lexical'
+import { mergeRegister } from '@lexical/utils';
+import SaveIcon from '@mui/icons-material/Save';
+import FormatBoldIcon from '@mui/icons-material/FormatBold';
+import { useIPCService } from '../../contexts/IPCContext';
+import { ArtifactItem } from '../../../../../tools/artifact';
 
 interface MarkdownEditorProps {
   initialContent?: string;
+  artifact?: ArtifactItem;
   onChange?: (content: string) => void;
   readOnly?: boolean;
 }
@@ -32,13 +40,86 @@ function onError(error: Error) {
   console.error(error);
 }
 
-export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({ 
+type ActionPluginProps = {
+  artifact?: ArtifactItem
+};
+
+export function ActionsPlugin({ artifact }: ActionPluginProps) {
+  const [editor] = useLexicalComposerContext();
+  const ipcService = useIPCService();
+  const { registerActions, unregisterActions } = useToolbarActions();
+
+  function getActionSet() {
+    return editor.read(() => {
+      const selection = $getSelection();
+      return [
+        {
+          id: 'bold',
+          icon: <FormatBoldIcon />,
+          label: $isRangeSelection(selection) && selection?.hasFormat('bold') ? 'Unbold' : 'Bold',
+          onClick: () => {
+            editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+          }
+        },
+        // artifact-specific actions
+        ...(artifact && [
+          {
+            id: 'save',
+            icon: <SaveIcon />,
+            label: $isRangeSelection(selection) && selection?.hasFormat('bold') ? 'Unbold' : 'Bold',
+            onClick: () => {
+              if (ipcService.getRPC()) {
+                editor.read(() => {
+                  const markdown = $convertToMarkdownString(TRANSFORMERS);
+                  ipcService.getRPC().saveArtifact({
+                    ...artifact,
+                    content: markdown
+                  });
+                });
+              }
+            }
+          }
+        ] || [])
+      ]
+    });
+  };
+
+  useEffect(() => {
+    // Register markdown-specific toolbar actions
+    registerActions('markdown-editor', getActionSet());
+
+    return () => {
+      unregisterActions('markdown-editor');
+    };
+  }, [editor, registerActions, unregisterActions]);
+
+  React.useEffect(() => {
+    return mergeRegister(
+      editor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => {
+          registerActions('markdown-editor', getActionSet());
+        });
+      })
+    );
+  }, [editor]);
+
+  return null;
+}
+
+function RefPlugin({ editorRef } : { editorRef: any }) {
+  const [editor] = useLexicalComposerContext()
+  editorRef.current = editor
+  return null
+}
+
+export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
+  artifact,
   initialContent = '',
   onChange,
   readOnly = false
 }) => {
-  const [editorState, setEditorState] = useState(initialContent);
-  const { registerActions, unregisterActions } = useToolbarActions();
+  const editorStateRef = useRef(undefined);
+  const editorRef = useRef(undefined);
 
   const initialConfig = {
     namespace: 'MarkdownEditor',
@@ -64,49 +145,32 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   };
 
   const handleChange = (editorState: any) => {
-    // Convert Lexical editor state to markdown
-    const markdown = $convertToMarkdownString(editorState);
-    setEditorState(markdown);
-    onChange?.(markdown);
+    console.log(editorState);
+    editorStateRef.current = editorState;
   };
 
   useEffect(() => {
-    // Register markdown-specific toolbar actions
-    registerActions('markdown-editor', [
-      {
-        id: 'bold',
-        icon: <span>B</span>,
-        label: 'Bold',
-        onClick: () => {/* Bold action */}
-      },
-      // Add more toolbar actions here
-    ]);
-
-    return () => {
-      // Cleanup toolbar actions
-      unregisterActions('markdown-editor');
-    };
-  }, [registerActions, unregisterActions]);
+    if (editorRef.current) {
+      editorRef.current.update(() => {
+          console.log('update');
+          const root = $getRoot();
+          root.clear();
+          $convertFromMarkdownString(initialContent, TRANSFORMERS);
+      });
+    } else {
+      console.log('no editor state');
+    }
+  }, [initialContent]);
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Paper elevation={3} sx={{ p: 2 }}>
-        <LexicalComposer 
-          initialConfig={{
-            ...initialConfig,
-            editorState: (editor) => {
-              // Initialize editor with markdown content
-              const root = $getRoot();
-              const paragraph = $createParagraphNode();
-              const text = $createTextNode(initialContent);
-              paragraph.append(text);
-              root.append(paragraph);
-            }
-          }}
+    <Box sx={{ p: 2, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <Paper elevation={3} sx={{ p: 2, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <LexicalComposer
+          initialConfig={initialConfig}
         >
           <RichTextPlugin
             contentEditable={
-              <ContentEditable 
+              <ContentEditable
                 style={{
                   minHeight: '200px',
                   resize: 'vertical',
@@ -127,6 +191,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           <HistoryPlugin />
           <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
           <OnChangePlugin onChange={handleChange} />
+          <RefPlugin editorRef={editorRef} />
         </LexicalComposer>
       </Paper>
     </Box>
