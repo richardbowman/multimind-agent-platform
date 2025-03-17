@@ -15672,6 +15672,8 @@ __metadata:
     copy-webpack-plugin: "npm:^12.0.2"
     css-loader: "npm:^7.1.2"
     csv: "npm:^6.3.11"
+    csv-parse: "npm:^5.6.0"
+    csv-stringify: "npm:^6.5.2"
     dompurify: "npm:^3.2.3"
     dotenv: "npm:^16.4.7"
     electron: "npm:^34.0.0"
@@ -15709,6 +15711,7 @@ __metadata:
     nodemon: "npm:^3.1.9"
     onnxruntime-web: "npm:1.18"
     openai: "npm:^4.78.1"
+    package: "npm:^1.0.1"
     path: "npm:^0.12.7"
     pdf-parse: "npm:^1.1.1"
     pdfjs-dist: "npm:4.8.69"
@@ -15733,6 +15736,7 @@ __metadata:
     socket.io: "npm:^4.8.1"
     socket.io-client: "npm:^4.8.1"
     sqlite-vec: "npm:^0.1.7-alpha.2"
+    sqlite-vec-linux-x64: "npm:^0.1.7-alpha.2"
     sqlite3: "npm:^5.1.7"
     style-loader: "npm:^4.0.0"
     ts-jest: "npm:^29.2.5"
@@ -16789,6 +16793,13 @@ __metadata:
   version: 0.2.8
   resolution: "package-manager-detector@npm:0.2.8"
   checksum: 10c0/2d24dd6e50a196a0b1e3ce7bf6db8aff403bdbe333cf81383bec54fa441dac958ec87a7e6865cf86e614704f349c7effaf8d0c2474a6a50a164e6218689f02db
+  languageName: node
+  linkType: hard
+
+"package@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "package@npm:1.0.1"
+  checksum: 10c0/aff729a3d6a2208504447f4c03ad3feea3b2fd6dbc6ec5e877147b6472615701be470a651ed2d8eada2858eebc7e18f20a36e381248de7388d6bcde66e0ad3e6
   languageName: node
   linkType: hard
 
@@ -19391,9 +19402,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sqlite-vec-linux-x64@npm:0.1.7-alpha.2":
+"sqlite-vec-linux-x64@npm:0.1.7-alpha.2, sqlite-vec-linux-x64@npm:^0.1.7-alpha.2":
   version: 0.1.7-alpha.2
   resolution: "sqlite-vec-linux-x64@npm:0.1.7-alpha.2"
+  checksum: 10c0/ea5acbe5ffde29d990615d3251df0f7dbca8da1c694114b6f01250fcb8b92c37769a074f7073caf1dcb20c39f38e46292114c6e3c27f1d4c35a0dfbcb7e4afeb
   conditions: os=linux & cpu=x64
   languageName: node
   linkType: hard
