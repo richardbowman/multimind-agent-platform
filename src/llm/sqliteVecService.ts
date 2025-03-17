@@ -170,6 +170,12 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
         });
     }
 
+    // List of defined metadata columns that should use direct column references
+    private static readonly METADATA_COLUMNS = new Set([
+        'type', 'projectId', 'url', 'task', 'title', 
+        'docId', 'chunkId', 'chunkTotal', 'artifactId'
+    ]);
+
     private convertMongoWhere(where: Record<string, any>): { conditions: string, params: any[] } {
         if (!where) return { conditions: '', params: [] };
 
@@ -177,51 +183,58 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
         const params: any[] = [];
 
         for (const [key, value] of Object.entries(where)) {
+            // Use direct column reference for defined metadata columns
+            const columnRef = SQLiteVecService.METADATA_COLUMNS.has(key) ? key : `json_extract(metadata, '$.${key}')`;
+
             if (typeof value === 'object' && !Array.isArray(value)) {
                 // Handle operators like $eq, $ne, $gt, etc.
                 for (const [op, opValue] of Object.entries(value)) {
                     switch (op) {
                         case '$eq':
-                            conditions.push(`json_extract(metadata, '$.${key}') = ?`);
+                            conditions.push(`${columnRef} = ?`);
                             params.push(opValue);
                             break;
                         case '$ne':
-                            conditions.push(`json_extract(metadata, '$.${key}') != ?`);
+                            conditions.push(`${columnRef} != ?`);
                             params.push(opValue);
                             break;
                         case '$gt':
-                            conditions.push(`json_extract(metadata, '$.${key}') > ?`);
+                            conditions.push(`${columnRef} > ?`);
                             params.push(opValue);
                             break;
                         case '$gte':
-                            conditions.push(`json_extract(metadata, '$.${key}') >= ?`);
+                            conditions.push(`${columnRef} >= ?`);
                             params.push(opValue);
                             break;
                         case '$lt':
-                            conditions.push(`json_extract(metadata, '$.${key}') < ?`);
+                            conditions.push(`${columnRef} < ?`);
                             params.push(opValue);
                             break;
                         case '$lte':
-                            conditions.push(`json_extract(metadata, '$.${key}') <= ?`);
+                            conditions.push(`${columnRef} <= ?`);
                             params.push(opValue);
                             break;
                         case '$in':
-                            conditions.push(`json_extract(metadata, '$.${key}') IN (${opValue.map(() => '?').join(',')})`);
+                            conditions.push(`${columnRef} IN (${opValue.map(() => '?').join(',')})`);
                             params.push(...opValue);
                             break;
                         case '$nin':
-                            conditions.push(`json_extract(metadata, '$.${key}') NOT IN (${opValue.map(() => '?').join(',')})`);
+                            conditions.push(`${columnRef} NOT IN (${opValue.map(() => '?').join(',')})`);
                             params.push(...opValue);
                             break;
                         case '$exists':
                             if (opValue) {
-                                conditions.push(`json_extract(metadata, '$.${key}') IS NOT NULL`);
+                                conditions.push(`${columnRef} IS NOT NULL`);
                             } else {
-                                conditions.push(`json_extract(metadata, '$.${key}') IS NULL`);
+                                conditions.push(`${columnRef} IS NULL`);
                             }
                             break;
                         case '$regex':
-                            conditions.push(`json_extract(metadata, '$.${key}') REGEXP ?`);
+                            // Only allow regex on text columns
+                            if (SQLiteVecService.METADATA_COLUMNS.has(key) && !['text', 'type', 'url', 'task', 'title'].includes(key)) {
+                                throw new Error(`Regex operator not supported for column: ${key}`);
+                            }
+                            conditions.push(`${columnRef} REGEXP ?`);
                             params.push(opValue);
                             break;
                         default:
@@ -230,7 +243,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                 }
             } else {
                 // Simple equality
-                conditions.push(`json_extract(metadata, '$.${key}') = ?`);
+                conditions.push(`${columnRef} = ?`);
                 params.push(value);
             }
         }
