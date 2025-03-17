@@ -142,13 +142,13 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     metadata,
                     distance
                 FROM vec_items
-                WHERE embedding MATCH ?
+                WHERE embedding MATCH ? AND k = ?
                 ${conditions ? `AND ${conditions}` : ''}
-                ORDER BY distance ASC
-                LIMIT ${nResults}`;
+                ORDER BY distance ASC`;
+
 
             const stmt = this.db!.prepare(query);
-            const results = stmt.all(new Float32Array(queryVector), ...params);
+            const results = stmt.run(new Float32Array(queryVector), nResults, ...params);
 
             return results.map(result => ({
                 id: result.rowid.toString(),
