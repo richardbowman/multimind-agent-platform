@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack } from '@mui/material';
+import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Popover } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
 import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
+import TaskIcon from '@mui/icons-material/Task';
 import { useDataContext, DataProvider } from './contexts/DataContext';
 import { IPCProvider, useIPCService } from './contexts/IPCContext';
 import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
@@ -75,6 +76,8 @@ const AppContent: React.FC = () => {
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
     const [rightDrawerWidth, setRightDrawerWidth] = useState(300);
+    const [statusAnchorEl, setStatusAnchorEl] = useState<null | HTMLElement>(null);
+    const statusOpen = Boolean(statusAnchorEl);
 
     React.useEffect(() => {
         // wait for explicit answer, we start this as null
@@ -168,6 +171,14 @@ const AppContent: React.FC = () => {
                                 <DeveloperModeIcon />
                             </IconButton>
                         )}
+                        <IconButton
+                            color="inherit"
+                            edge="end"
+                            onClick={(event) => setStatusAnchorEl(event.currentTarget)}
+                            sx={{ ml: 2 }}
+                        >
+                            <TaskIcon />
+                        </IconButton>
                         <IconButton
                             color="inherit"
                             edge="end"
@@ -300,6 +311,23 @@ const AppContent: React.FC = () => {
                     <LogViewer logType={currentLogTab} />
                 ) : null}
             </Box>
+            
+            {/* Status Popover */}
+            <Popover
+                open={statusOpen}
+                anchorEl={statusAnchorEl}
+                onClose={() => setStatusAnchorEl(null)}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <TaskStatusPanel />
+            </Popover>
         </Box>
     );
 };
