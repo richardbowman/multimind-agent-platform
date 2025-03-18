@@ -88,8 +88,17 @@ export const TaskStatusPanel: React.FC = () => {
             overflow: 'hidden',
             minHeight: 0
         }}>
-            <AppBar position="static" elevation={0} sx={{ mb: 3 }}>
-                <Toolbar>
+            <AppBar 
+                position="static" 
+                elevation={0} 
+                sx={{ 
+                    mb: 2,
+                    borderRadius: 1,
+                    backgroundColor: 'background.paper',
+                    color: 'text.primary'
+                }}
+            >
+                <Toolbar variant="dense" sx={{ minHeight: 48 }}>
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Task Board
                     </Typography>
@@ -98,8 +107,9 @@ export const TaskStatusPanel: React.FC = () => {
                         color="inherit"
                         aria-label="close"
                         onClick={() => {/* Add close handler here */}}
+                        size="small"
                     >
-                        <CloseIcon />
+                        <CloseIcon fontSize="small" />
                     </IconButton>
                 </Toolbar>
             </AppBar>
