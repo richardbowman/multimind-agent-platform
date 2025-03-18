@@ -29,10 +29,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 mb: 1,
                 bgcolor: selected 
                     ? task.inProgress
-                        ? 'primary.dark'
+                        ? task.props?.isAsync
+                            ? 'warning.dark'
+                            : 'primary.dark'
                         : 'primary.dark'
                     : task.inProgress 
-                        ? 'action.selected'
+                        ? task.props?.isAsync
+                            ? 'warning.light'
+                            : 'action.selected'
                         : task.status === 'cancelled'
                             ? 'primary.disabledBackground'
                             : task.complete
@@ -42,10 +46,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 border: '1px solid',
                 borderColor: selected 
                     ? task.inProgress
-                        ? 'primary.dark'
+                        ? task.props?.isAsync
+                            ? 'warning.dark'
+                            : 'primary.dark'
                         : 'primary.main'
                     : task.inProgress
-                        ? 'primary.main'
+                        ? task.props?.isAsync
+                            ? 'warning.main'
+                            : 'primary.main'
                         : task.status === 'cancelled'
                             ? 'error.main'
                             : task.complete
@@ -56,7 +64,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     bgcolor: selected 
                         ? 'primary.disabledBackground' 
                         : task.inProgress
-                            ? 'action.hover'
+                            ? task.props?.isAsync
+                                ? 'warning.light'
+                                : 'action.hover'
                             : task.status === 'cancelled'
                                 ? 'error.light'
                                 : task.complete
@@ -68,20 +78,36 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             }}
             onClick={onClick}
         >
-            <Checkbox
-                checked={task.complete}
-                disabled={!task.complete && !task.inProgress}
-                sx={{ 
-                    mr: 1,
-                    color: task.inProgress ? 'primary.main' : 'action.disabled',
-                    '&.Mui-checked': {
-                        color: 'primary.main',
-                    },
-                    textDecoration: task.complete ? 'line-through' : 'none',
-                    opacity: task.complete ? 0.7 : 1
-                }}
-                onClick={onCheckboxClick}
-            />
+            <Box sx={{ position: 'relative', mr: 1 }}>
+                <Checkbox
+                    checked={task.complete}
+                    disabled={!task.complete && !task.inProgress}
+                    sx={{ 
+                        color: task.inProgress ? 'primary.main' : 'action.disabled',
+                        '&.Mui-checked': {
+                            color: 'primary.main',
+                        },
+                        textDecoration: task.complete ? 'line-through' : 'none',
+                        opacity: task.complete ? 0.7 : 1
+                    }}
+                    onClick={onCheckboxClick}
+                />
+                {task.inProgress && task.props?.isAsync && (
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            width: 8,
+                            height: 8,
+                            bgcolor: 'warning.main',
+                            borderRadius: '50%',
+                            border: '1px solid',
+                            borderColor: 'background.paper'
+                        }}
+                    />
+                )}
+            </Box>
             <ListItemText
                 primary={task.description}
                 primaryTypographyProps={{ 
