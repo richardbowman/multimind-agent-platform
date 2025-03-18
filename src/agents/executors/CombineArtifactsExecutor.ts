@@ -113,14 +113,18 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
                 }
             }
 
-            // Merge content into template
+            // Extract insertion points from template and merge content
             let finalContent = template;
-            if (json.insertionPoints) {
-                for (const [sourceId, sectionId] of Object.entries(json.insertionPoints)) {
-                    const content = sourceArtifacts.get(sourceId);
-                    if (content) {
-                        finalContent = finalContent.replace(`<<<INSERT:${sectionId}>>>`, content);
-                    }
+            const insertionPointRegex = /<<<INSERT:([^>]+)>>>/g;
+            let match;
+            const usedSources = new Set<string>();
+            
+            while ((match = insertionPointRegex.exec(template)) !== null) {
+                const [fullMatch, sourceId] = match;
+                const content = sourceArtifacts.get(sourceId);
+                if (content) {
+                    finalContent = finalContent.replace(fullMatch, content);
+                    usedSources.add(sourceId);
                 }
             }
 
