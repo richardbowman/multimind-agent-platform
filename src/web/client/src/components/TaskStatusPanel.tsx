@@ -77,16 +77,25 @@ export const TaskStatusPanel: React.FC = () => {
     return (
         <Box sx={{ 
             p: 2, 
-            width: '90vw',
-            maxWidth: 1200,
-            height: '80vh',
-            overflow: 'auto'
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
         }}>
             <Typography variant="h4" sx={{ mb: 3 }}>
                 Task Board
             </Typography>
             
-            <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
+            <Stack 
+                direction="row" 
+                spacing={2} 
+                sx={{ 
+                    flex: 1,
+                    minHeight: 0,
+                    overflow: 'hidden'
+                }}
+            >
                 {Object.entries(groupedTasks).map(([status, tasks]) => (
                     <Paper 
                         key={status}
@@ -103,11 +112,13 @@ export const TaskStatusPanel: React.FC = () => {
                         </Typography>
                         
                         <List sx={{ 
-                            height: 'calc(100% - 56px)', 
+                            flex: 1,
+                            minHeight: 0,
                             overflowY: 'auto',
                             '& > *:not(:last-child)': {
                                 mb: 1
-                            }
+                            },
+                            pr: 1 // Add some padding for scrollbar
                         }}>
                             {tasks.map(task => (
                                 <ListItem 
