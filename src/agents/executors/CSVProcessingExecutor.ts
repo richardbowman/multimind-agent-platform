@@ -432,8 +432,17 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
             // Parse the CSV
             const { rows } = await CSVUtils.fromCSV(csvArtifact.content.toString());
 
-            // Add status column if it doesn't exist
+            // Add ID column as first column if it doesn't exist
             const headers = Object.keys(rows[0] || {});
+            if (!headers.includes('ID')) {
+                headers.unshift('ID');
+                // Add IDs starting from 1
+                rows.forEach((row, index) => {
+                    row.ID = index + 1;
+                });
+            }
+
+            // Add status column if it doesn't exist
             if (!headers.includes('Status')) {
                 headers.push('Status');
             }
@@ -455,6 +464,10 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                 for (let i = 0; i < rows.length; i++) {
                     if (rowStatusMap.has(i)) {
                         rows[i].Status = rowStatusMap.get(i);
+                    }
+                    // Ensure ID column is maintained
+                    if (!rows[i].ID) {
+                        rows[i].ID = i + 1;
                     }
                 }
             }
