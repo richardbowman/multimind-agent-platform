@@ -135,8 +135,7 @@ jobs:
           yarn install --immutable
           
       - name: Build All App Components
-        env:
-          yarn build:app
+        run: yarn build:app
         
       - name: Ensure compiled components target Electron Node version
         run: |
@@ -213,10 +212,7 @@ jobs:
           yarn install --immutable
           
       - name: Build All App Components
-        env:
-          CI: ""
-        run: |
-          yarn build:app
+        run: yarn build:app
         
       - name: Build and Publish Linux Electron App
         env:
