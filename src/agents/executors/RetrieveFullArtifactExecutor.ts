@@ -93,10 +93,23 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
             const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);
             const thinking = StringUtils.extractXmlBlock(unstructuredResult.message, "thinking");
             
-            // Convert indexes to artifact content (indexes are 1-based)
+            // Handle both index and UUID selection
             const selectedArtifactIds = json?.artifactIndexes
-                .filter(index => index > 0 && index <= allArtifacts.length)
-                .map(index => allArtifacts[index - 1].id)||[];
+                .map(selection => {
+                    if (typeof selection === 'number') {
+                        // Handle 1-based index selection
+                        return selection > 0 && selection <= allArtifacts.length 
+                            ? allArtifacts[selection - 1].id 
+                            : null;
+                    } else if (typeof selection === 'string') {
+                        // Handle UUID selection
+                        return allArtifacts.some(a => a.id === selection)
+                            ? selection
+                            : null;
+                    }
+                    return null;
+                })
+                .filter(id => id !== null) as UUID[] || [];
 
             return {
                 finished: true,
