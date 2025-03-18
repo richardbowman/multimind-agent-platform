@@ -3,13 +3,14 @@ export const CustomScrollbarStyles = (theme) => ({
         width: '6px',
     },
     '&::-webkit-scrollbar-track': {
-        background: `${theme.palette.divider} ${theme.palette.background.paper}`,
+        background: 'transparent',
     },
     '&::-webkit-scrollbar-thumb': {
-        background: '#666',
+        background: 'rgba(0, 0, 0, 0.1)',
         borderRadius: '3px',
+        transition: 'background-color 0.2s ease',
     },
-    '&::-webkit-scrollbar-thumb:hover': {
-        background: '#888',
+    '&:hover::-webkit-scrollbar-thumb': {
+        background: theme.palette.divider,
     }
 });
