@@ -5,7 +5,7 @@ import {
     List,
     ListItem,
     Paper,
-    Stack,
+    Grid,
     keyframes
 } from '@mui/material';
 import { useTasks } from '../contexts/TaskContext';
@@ -88,27 +88,36 @@ export const TaskStatusPanel: React.FC = () => {
                 Task Board
             </Typography>
             
-            <Stack 
-                direction="row" 
-                spacing={2} 
-                sx={{ 
+            <Grid 
+                container 
+                spacing={2}
+                sx={{
                     flex: 1,
                     minHeight: 0,
                     overflow: 'hidden',
-                    alignItems: 'stretch'
+                    alignContent: 'flex-start'
                 }}
             >
                 {Object.entries(groupedTasks).map(([status, tasks]) => (
-                    <Paper 
+                    <Grid 
+                        item 
                         key={status}
-                        sx={{ 
-                            flex: 1,
-                            minWidth: 250,
-                            p: 2,
-                            bgcolor: statusColors[status as TaskStatus],
-                            borderRadius: 2
+                        xs={12}
+                        sm={6}
+                        md={3}
+                        sx={{
+                            height: '100%',
+                            minWidth: 250
                         }}
                     >
+                        <Paper 
+                            sx={{ 
+                                height: '100%',
+                                p: 2,
+                                bgcolor: statusColors[status as TaskStatus],
+                                borderRadius: 2
+                            }}
+                        >
                         <Typography variant="h6" sx={{ mb: 2 }}>
                             {statusLabels[status as TaskStatus]} ({tasks.length})
                         </Typography>
@@ -148,9 +157,10 @@ export const TaskStatusPanel: React.FC = () => {
                                 </ListItem>
                             ))}
                         </List>
-                    </Paper>
+                        </Paper>
+                    </Grid>
                 ))}
-            </Stack>
+            </Grid>
         </Box>
     );
 };
