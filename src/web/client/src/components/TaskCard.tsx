@@ -29,12 +29,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 mb: 1,
                 bgcolor: selected 
                     ? task.inProgress
-                        ? task.props?.isAsync
+                        ? task.props?.result?.async
                             ? 'warning.dark'
                             : 'primary.dark'
                         : 'primary.dark'
                     : task.inProgress 
-                        ? task.props?.isAsync
+                        ? task.props?.result?.async
                             ? 'warning.light'
                             : 'action.selected'
                         : task.status === 'cancelled'
@@ -64,7 +64,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     bgcolor: selected 
                         ? 'primary.disabledBackground' 
                         : task.inProgress
-                            ? task.props?.isAsync
+                            ? task.props?.result?.async
                                 ? 'warning.light'
                                 : 'action.hover'
                             : task.status === 'cancelled'
@@ -92,7 +92,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     }}
                     onClick={onCheckboxClick}
                 />
-                {task.inProgress && task.props?.isAsync && (
+                {task.inProgress && task.props?.result?.async && (
                     <Box
                         sx={{
                             position: 'absolute',
