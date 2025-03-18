@@ -81,7 +81,8 @@ export const TaskStatusPanel: React.FC = () => {
             height: '100%',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            minHeight: 0
         }}>
             <Typography variant="h4" sx={{ mb: 3 }}>
                 Task Board
@@ -93,7 +94,8 @@ export const TaskStatusPanel: React.FC = () => {
                 sx={{ 
                     flex: 1,
                     minHeight: 0,
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    alignItems: 'stretch'
                 }}
             >
                 {Object.entries(groupedTasks).map(([status, tasks]) => (
@@ -114,11 +116,19 @@ export const TaskStatusPanel: React.FC = () => {
                         <List sx={{ 
                             flex: 1,
                             minHeight: 0,
+                            height: '100%',
                             overflowY: 'auto',
                             '& > *:not(:last-child)': {
                                 mb: 1
                             },
-                            pr: 1 // Add some padding for scrollbar
+                            pr: 1, // Add some padding for scrollbar
+                            '&::-webkit-scrollbar': {
+                                width: '6px'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                backgroundColor: 'rgba(0,0,0,0.2)',
+                                borderRadius: '3px'
+                            }
                         }}>
                             {tasks.map(task => (
                                 <ListItem 
