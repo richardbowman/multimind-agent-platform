@@ -1,38 +1,69 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { 
     Box, 
-    Typography, 
-    List, 
-    IconButton,
-    Tooltip,
-    ToggleButtonGroup,
-    ToggleButton
+    Typography,
+    List,
+    ListItem
 } from '@mui/material';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
 import { useDataContext } from '../contexts/DataContext';
+import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
 export const TaskStatusPanel: React.FC = () => {
     const { tasks } = useTasks();
     const { handles } = useDataContext();
-    const taskListRef = useRef<HTMLUListElement>(null);
+    const listRef = useRef<FixedSizeList>(null);
+
+    // Sort tasks by status priority
+    const sortedTasks = useMemo(() => {
+        return tasks.sort((a, b) => {
+            const statusPriority = {
+                'inProgress': 0,
+                'notStarted': 1,
+                'cancelled': 2,
+                'completed': 3
+            };
+            
+            const aPriority = statusPriority[a.status] || 1;
+            const bPriority = statusPriority[b.status] || 1;
+            
+            if (aPriority < bPriority) return -1;
+            if (aPriority > bPriority) return 1;
+            return 0;
+        });
+    }, [tasks]);
 
     // Auto-scroll to first in-progress task
     useEffect(() => {
-        if (taskListRef.current) {
-            const inProgressTask = taskListRef.current.querySelector('[data-status="inProgress"]');
-            if (inProgressTask) {
-                inProgressTask.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (listRef.current) {
+            const inProgressIndex = sortedTasks.findIndex(t => t.status === 'inProgress');
+            if (inProgressIndex > -1) {
+                listRef.current.scrollToItem(inProgressIndex, 'center');
             }
         }
-    }, [tasks]);
+    }, [sortedTasks]);
+
+    const renderRow = ({ index, style }: ListChildComponentProps) => {
+        const task = sortedTasks[index];
+        return (
+            <ListItem style={style} key={task.id} sx={{ p: 0 }}>
+                <TaskCard 
+                    task={task}
+                    data-status={task.status}
+                    onClick={() => {}}
+                    onCheckboxClick={() => {}}
+                />
+            </ListItem>
+        );
+    };
 
     return (
         <Box sx={{ 
             p: 2, 
             width: 400,
-            maxHeight: 600,
-            overflowY: 'hidden', 
+            height: 600,
             display: 'flex', 
             flexDirection: 'column' 
         }}>
@@ -40,43 +71,22 @@ export const TaskStatusPanel: React.FC = () => {
                 System Task Status
             </Typography>
             
-            <List 
-                ref={taskListRef}
-                sx={{ 
-                    flex: 1,
-                    overflowY: 'auto',
-                    '& > *:not(:last-child)': {
-                        mb: 1
-                    }
-                }}
-            >
-                {tasks
-                    .sort((a, b) => {
-                        // Status priority: in-progress > not started > cancelled > completed
-                        const statusPriority = {
-                            'inProgress': 0,
-                            'notStarted': 1,
-                            'cancelled': 2,
-                            'completed': 3
-                        };
-                        
-                        const aPriority = statusPriority[a.status] || 1;
-                        const bPriority = statusPriority[b.status] || 1;
-                        
-                        if (aPriority < bPriority) return -1;
-                        if (aPriority > bPriority) return 1;
-                        return 0;
-                    })
-                    .map(task => (
-                        <TaskCard 
-                            key={task.id}
-                            task={task}
-                            data-status={task.status}
-                            onClick={() => {}}
-                            onCheckboxClick={() => {}}
-                        />
-                    ))}
-            </List>
+            <Box sx={{ flex: 1 }}>
+                <AutoSizer>
+                    {({ height, width }) => (
+                        <FixedSizeList
+                            ref={listRef}
+                            height={height}
+                            width={width}
+                            itemSize={100} // Adjust based on your TaskCard height
+                            itemCount={sortedTasks.length}
+                            overscanCount={5}
+                        >
+                            {renderRow}
+                        </FixedSizeList>
+                    )}
+                </AutoSizer>
+            </Box>
         </Box>
     );
 };
