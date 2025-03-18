@@ -1,18 +1,42 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { 
     Box, 
     Typography,
     List,
     ListItem,
     Paper,
-    Stack
+    Stack,
+    keyframes
 } from '@mui/material';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
 
+const fadeIn = keyframes`
+  0% {
+    opacity: 0;
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.6);
+  }
+  100% {
+    background-color: transparent;
+  }
+`;
+
 export const TaskStatusPanel: React.FC = () => {
     const { tasks } = useTasks();
+    const [prevTaskIds, setPrevTaskIds] = useState<Set<string>>(new Set());
+    
+    // Track new tasks for animation
+    useEffect(() => {
+        const currentIds = new Set(tasks.map(t => t.id));
+        setPrevTaskIds(currentIds);
+    }, [tasks]);
+
+    const isNewTask = (taskId: string) => !prevTaskIds.has(taskId);
 
     // Group tasks by status with most recent first
     const groupedTasks = useMemo(() => {
@@ -86,7 +110,15 @@ export const TaskStatusPanel: React.FC = () => {
                             }
                         }}>
                             {tasks.map(task => (
-                                <ListItem key={task.id} sx={{ p: 0 }}>
+                                <ListItem 
+                                    key={task.id} 
+                                    sx={{ 
+                                        p: 0,
+                                        animation: isNewTask(task.id) ? 
+                                            `${fadeIn} 1s ease-in-out` : 
+                                            'none'
+                                    }}
+                                >
                                     <TaskCard 
                                         task={task}
                                         onClick={() => {}}
