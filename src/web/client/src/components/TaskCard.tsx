@@ -30,12 +30,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 bgcolor: selected 
                     ? task.inProgress
                         ? task.props?.result?.async
-                            ? 'warning.dark'
+                            ? 'action.disabledBackground'
                             : 'primary.dark'
                         : 'primary.dark'
                     : task.inProgress 
                         ? task.props?.result?.async
-                            ? 'warning.light'
+                            ? 'action.disabledBackground'
                             : 'action.selected'
                         : task.status === 'cancelled'
                             ? 'primary.disabledBackground'
@@ -65,7 +65,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                         ? 'primary.disabledBackground' 
                         : task.inProgress
                             ? task.props?.result?.async
-                                ? 'warning.light'
+                                ? 'action.disabledBackground'
                                 : 'action.hover'
                             : task.status === 'cancelled'
                                 ? 'error.light'
@@ -100,7 +100,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                             right: 0,
                             width: 8,
                             height: 8,
-                            bgcolor: 'warning.main',
+                            bgcolor: 'text.secondary',
                             borderRadius: '50%',
                             border: '1px solid',
                             borderColor: 'background.paper'
