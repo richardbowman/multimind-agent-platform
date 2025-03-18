@@ -115,7 +115,7 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
 
             // Extract insertion points from template and merge content
             let finalContent = template;
-            const insertionPointRegex = /<<<INSERT:([^>]+)>>>/g;
+            const insertionPointRegex = /<<<INSERT:([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}):[^>]+>>>/g;
             let match;
             const usedSources = new Set<string>();
             
