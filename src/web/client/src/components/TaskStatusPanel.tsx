@@ -6,8 +6,12 @@ import {
     ListItem,
     Paper,
     Grid,
-    keyframes
+    keyframes,
+    AppBar,
+    Toolbar,
+    IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
@@ -84,9 +88,21 @@ export const TaskStatusPanel: React.FC = () => {
             overflow: 'hidden',
             minHeight: 0
         }}>
-            <Typography variant="h4" sx={{ mb: 3 }}>
-                Task Board
-            </Typography>
+            <AppBar position="static" elevation={0} sx={{ mb: 3 }}>
+                <Toolbar>
+                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                        Task Board
+                    </Typography>
+                    <IconButton
+                        edge="end"
+                        color="inherit"
+                        aria-label="close"
+                        onClick={() => {/* Add close handler here */}}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </Toolbar>
+            </AppBar>
             
             <Grid 
                 container 
