@@ -2,7 +2,6 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { 
     Box, 
     Typography,
-    List,
     ListItem,
     Paper,
     Grid,
@@ -11,6 +10,7 @@ import {
     Toolbar,
     IconButton
 } from '@mui/material';
+import { ScrollView } from './shared/ScrollView';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
@@ -138,23 +138,17 @@ export const TaskStatusPanel: React.FC = () => {
                             {statusLabels[status as TaskStatus]} ({tasks.length})
                         </Typography>
                         
-                        <List sx={{ 
-                            flex: 1,
-                            minHeight: 0,
-                            height: '100%',
-                            overflowY: 'auto',
-                            '& > *:not(:last-child)': {
-                                mb: 1
-                            },
-                            pr: 1, // Add some padding for scrollbar
-                            '&::-webkit-scrollbar': {
-                                width: '6px'
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                                backgroundColor: 'rgba(0,0,0,0.2)',
-                                borderRadius: '3px'
-                            }
-                        }}>
+                        <ScrollView 
+                            sx={{ 
+                                flex: 1,
+                                minHeight: 0,
+                                height: '100%',
+                                '& > *:not(:last-child)': {
+                                    mb: 1
+                                },
+                                pr: 1
+                            }}
+                        >
                             {tasks.map(task => (
                                 <ListItem 
                                     key={task.id} 
@@ -172,7 +166,7 @@ export const TaskStatusPanel: React.FC = () => {
                                     />
                                 </ListItem>
                             ))}
-                        </List>
+                        </ScrollView>
                         </Paper>
                     </Grid>
                 ))}
