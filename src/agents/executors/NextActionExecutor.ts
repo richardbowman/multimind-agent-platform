@@ -110,24 +110,29 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f) });
             prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f) });
 
-            const completionAction = params.executionMode === 'conversation' ? 'REPLY' : 'DONE';
+            const isConversation = params.executionMode === 'conversation'
+            const completionAction = isConversation ? 'REPLY' : 'DONE';
 
             prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
                 .filter(metadata => metadata.planner)
                 .map(({ key, description }) => `[${key}]: ${description}`)
-                .join("\n")}\n[${completionAction}]: ${params.executionMode === 'conversation' ? 'Send your reply message to the user' : 'Mark the task as complete with your message containing the final data.'}`);
-
-
-            prompt.addInstruction(`
-    - IN YOUR REASONING, describe this process:
-    - Review the STEP HISTORY to see what you've already done, don't keep repeating your action.
-    - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
-    - Explain each step and why it would or would not make sense to be the next action.
-    - If you have acheived the goal or need to reply to the user with questions, set the Action Type to ${completionAction}. You MUST provide your response to the user when selecting this. Respond in a friendly and concise chat message.
-    - If you need to continue working, determine the next Action Type from the AVAILABLE ACTION TYPES to continue to achieve the goal.
-    - Consider Procedure Guides for help on step order required to be successful. If you use a guide, use the 'procedureGuideTitle' field to share the title.`);
+                .join("\n")}\n[${completionAction}]: ${isConversation ? 'Send your provided message to the user' : 'Mark the task as complete with your message containing the final data.'}`);
 
             prompt.addContext({ contentType: ContentType.FINAL_INSTRUCTIONS });
+
+            prompt.addInstruction(`
+    IN <thinking>, describe this process:
+    - Review the STEP HISTORY to see what you've already done.
+    - Consider the best Action Type from the AVAILABLE ACTION TYPES to achieve the goal.
+    - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
+    - Explain each step and why it would or would not make sense to be the next action.
+    - Consider Procedure Guides for help on step order required to be successful. 
+    THEN:
+    - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
+    - Provide a response message to the user outside of <thinking> and the code block. Respond in a friendly and concise chat message.
+    - If you need to continue working, set the next Action Type to one of the other tools.
+    - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.`);
+
 
             prompt.addOutputInstructions({ outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema });
 
