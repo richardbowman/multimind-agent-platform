@@ -4,11 +4,11 @@ import {
     Typography,
     ListItem,
     Paper,
-    Grid,
     keyframes,
     AppBar,
     Toolbar,
-    IconButton
+    IconButton,
+    Grid2 as Grid
 } from '@mui/material';
 import { ScrollView } from './shared/ScrollView';
 import CloseIcon from '@mui/icons-material/Close';
@@ -81,8 +81,6 @@ export const TaskStatusPanel: React.FC = () => {
     return (
         <Box sx={{ 
             p: 2, 
-            width: '100%',
-            height: '100%',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -114,32 +112,30 @@ export const TaskStatusPanel: React.FC = () => {
                 </Toolbar>
             </AppBar>
             
-            <Grid 
-                container 
-                spacing={2}
+            <Box 
                 sx={{
-                    flex: 1,
-                    minHeight: 0,
+                    flexDirection: 'row',
+                    display: 'flex',
+                    height: '100%',
                     overflow: 'hidden',
-                    alignContent: 'flex-start'
                 }}
             >
                 {Object.entries(groupedTasks).map(([status, tasks]) => (
-                    <Grid 
-                        item 
-                        key={status}
-                        xs={12}
-                        sm={6}
-                        md={3}
+                    <Box 
                         sx={{
+                            display: 'flex',
+                            overflow: 'hidden',
                             height: '100%',
                             minWidth: 250
                         }}
                     >
                         <Paper 
                             sx={{ 
-                                height: '100%',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                overflow: 'hidden',
                                 p: 2,
+                                m: 1,
                                 bgcolor: statusColors[status as TaskStatus],
                                 borderRadius: 2
                             }}
@@ -148,17 +144,7 @@ export const TaskStatusPanel: React.FC = () => {
                             {statusLabels[status as TaskStatus]} ({tasks.length})
                         </Typography>
                         
-                        <ScrollView 
-                            sx={{ 
-                                flex: 1,
-                                minHeight: 0,
-                                height: '100%',
-                                '& > *:not(:last-child)': {
-                                    mb: 1
-                                },
-                                pr: 1
-                            }}
-                        >
+                        <ScrollView>
                             {tasks.map(task => (
                                 <ListItem 
                                     key={task.id} 
@@ -178,9 +164,9 @@ export const TaskStatusPanel: React.FC = () => {
                             ))}
                         </ScrollView>
                         </Paper>
-                    </Grid>
+                    </Box>
                 ))}
-            </Grid>
+            </Box>
         </Box>
     );
 };
