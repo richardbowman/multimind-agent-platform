@@ -5,7 +5,7 @@ import { StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { ModelHelpers } from "src/llm/modelHelpers";
-import { ContentType, globalRegistry } from "src/llm/promptBuilder";
+import { ContentType, globalRegistry, OutputType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
@@ -81,12 +81,6 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
 
         const schema = await getGeneratedSchema(SchemaType.ArtifactSelectionResponse);
         
-        prompt.addInstruction(`OUTPUT INSTRUCTIONS:
-1. Include a JSON object in your response, enclosed in a \`\`\`json code block matching this schema:
-${JSON.stringify(schema, null, 2)}
-2. The artifactIndexes field should contain the list numbers (1-N) from the ARTIFACTS EXCERPTS above
-3. Include a clear selectionReason explaining why these artifacts were chosen`);
-
         try {
             const unstructuredResult = await this.modelHelpers.generate({
                 message: params.message || params.stepGoal,
@@ -94,8 +88,10 @@ ${JSON.stringify(schema, null, 2)}
                 threadPosts: params.context?.threadPosts,
                 modelType: ModelType.REASONING
             });
+            prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);
+            const thinking = StringUtils.extractXmlBlock(unstructuredResult.message, "thinking");
             
             // Convert indexes to artifact content (indexes are 1-based)
             const selectedArtifactIds = json?.artifactIndexes
@@ -107,10 +103,10 @@ ${JSON.stringify(schema, null, 2)}
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.FullArtifact,
-                    status: `Retrieved ${selectedArtifactIds.length} artifacts:\n${json?.selectionReason}`,
+                    status: `Retrieved ${selectedArtifactIds.length} artifacts:\n${thinking}`,
                     data: {
                         selectedArtifactIds,
-                        selectionReason: json?.selectionReason||"[Unknown reason]"
+                        selectionReason: thinking||"[Unknown reason]"
                     }
                 }
             };
