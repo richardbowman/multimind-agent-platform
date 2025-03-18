@@ -28,8 +28,40 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
 
     async onTaskNotification(task: Task): Promise<void> {
         if (task.status === TaskStatus.Completed && task.type === TaskType.Step) {
-            // when my step tasks complete, i want to take any artifacts and the status message from the former task
-            // and move it over to the upcoming task.
+            // Get the project containing this task
+            const project = this.taskManager.getProject(task.projectId);
+            if (!project) return;
+
+            // Find the next task in sequence
+            const taskIds = Object.keys(project.tasks);
+            const currentIndex = taskIds.indexOf(task.id);
+            if (currentIndex === -1 || currentIndex === taskIds.length - 1) return;
+
+            const nextTaskId = taskIds[currentIndex + 1];
+            const nextTask = project.tasks[nextTaskId];
+
+            // Transfer artifacts
+            if (task.props?.attachedArtifactIds?.length) {
+                await this.taskManager.updateTask(nextTaskId, {
+                    props: {
+                        ...nextTask.props,
+                        attachedArtifactIds: [
+                            ...(nextTask.props?.attachedArtifactIds || []),
+                            ...task.props.attachedArtifactIds
+                        ]
+                    }
+                });
+            }
+
+            // Transfer status message if present
+            if (task.props?.statusMessage) {
+                await this.taskManager.updateTask(nextTaskId, {
+                    props: {
+                        ...nextTask.props,
+                        statusMessage: task.props.statusMessage
+                    }
+                });
+            }
         }
     }
 
