@@ -8,8 +8,10 @@ import {
     AppBar,
     Toolbar,
     IconButton,
-    Grid2 as Grid
+    Grid2 as Grid,
+    Tooltip
 } from '@mui/material';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { ScrollView } from './shared/ScrollView';
 import CloseIcon from '@mui/icons-material/Close';
 import { useTasks } from '../contexts/TaskContext';
@@ -36,6 +38,7 @@ interface TaskStatusPanelProps {
 
 export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => {
     const { tasks } = useTasks();
+    const ipcService = useIPCService();
     const [prevTaskIds, setPrevTaskIds] = useState<Set<string>>(new Set());
     
     // Track new tasks for animation
@@ -104,15 +107,40 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
                     <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                         Task Board
                     </Typography>
-                    <IconButton
-                        edge="end"
-                        color="inherit"
-                        aria-label="close"
-                        onClick={onClose}
-                        size="small"
-                    >
-                        <CloseIcon fontSize="small" />
-                    </IconButton>
+                    <Tooltip title="Cancel all outstanding tasks">
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            aria-label="cancel-all"
+                            size="small"
+                            onClick={async () => {
+                                const outstandingTasks = tasks.filter(t => 
+                                    (t.status === TaskStatus.Pending || t.status === TaskStatus.InProgress)
+                                );
+                                for (const task of outstandingTasks) {
+                                    try {
+                                        await ipcService.getRPC().cancelTask(task.id);
+                                    } catch (error) {
+                                        console.error('Failed to cancel task:', error);
+                                    }
+                                }
+                            }}
+                            sx={{ mr: 1 }}
+                        >
+                            <CancelIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Close panel">
+                        <IconButton
+                            edge="end"
+                            color="inherit"
+                            aria-label="close"
+                            onClick={onClose}
+                            size="small"
+                        >
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
                 </Toolbar>
             </AppBar>
             
