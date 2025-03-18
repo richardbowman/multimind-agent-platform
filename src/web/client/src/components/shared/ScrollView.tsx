@@ -111,12 +111,7 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
           height: '100%',
           overflowY: 'auto',
           ...CustomScrollbarStyles(theme),
-          ...sx,
-          '&:hover': {
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: theme.palette.divider
-            }
-          }
+          ...sx
         }}
         onScroll={checkScrollPosition}
       >

@@ -90,7 +90,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     type: ArtifactType.Document,
                     subtype: DocumentSubtype.Procedure
                 },
-                10,
+                50,
                 0
             )).filter(guide => !pastGuideIds.includes(guide.artifact.id));
 
@@ -130,7 +130,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     THEN:
     - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
     - Provide a response message to the user outside of <thinking> and the code block. Respond in a friendly and concise chat message.
-    - If you need to continue working, set the next Action Type to one of the other tools.
+    - If you need to continue working, set the next Action Type to one of the other tools. When generating the associated 'taskDescription' make sure it is stand-alone, repeating all necessary information the step needs including the details of the user's message.
     - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.`);
 
 

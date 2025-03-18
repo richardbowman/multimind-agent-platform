@@ -1,6 +1,6 @@
 import { Task, Project } from 'src/tools/taskManager';
 import { ExecuteParams } from './ExecuteParams';
-import { StepResponse, StepResult } from './StepResult';
+import { StepResponse, StepResponseType, StepResult } from './StepResult';
 import { GenerateInputParams } from '../agents';
 import { TaskEventType } from "../../shared/TaskEventType";
 import { ChatPost } from 'src/chat/chatClient';
@@ -43,6 +43,24 @@ export interface ModelConversation extends InputPrompt {
 export abstract class BaseStepExecutor<R extends StepResponse> implements StepExecutor<R> {
     constructor(protected params: ExecutorConstructorParams) {
         
+    }
+
+    async handleTaskNotification(notification: TaskNotification): Promise<void> {
+        return;
+    }
+
+    async onChildProjectComplete(stepTask: StepTask<R>, project: Project): Promise<StepResult<R>> {
+        return {
+            finished: true,
+            response: {
+                type: StepResponseType.Error,
+                status: `Un-implemented 'onchildProjectComplete'`
+            } as R
+        };
+    }
+
+    async onProjectCompleted(project: Project): Promise<void> {
+        return;
     }
 
     protected getBaseLLMContext() : LLMContext {

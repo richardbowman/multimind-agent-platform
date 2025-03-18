@@ -7,7 +7,9 @@ export * as ReactDOMClient from 'react-dom/client';
 export * as MaterialUI from '@mui/material';
 export * as MaterialIcons from '@mui/icons-material';
 
-export { ThemeProvider, createTheme } from '@mui/material/styles';
+export { ThemeProvider, createTheme, alpha } from '@mui/material/styles';
+
+window.appContainer = {};
 
 export const getTheme = (themeName) => {
     switch(themeName) {

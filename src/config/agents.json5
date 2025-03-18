@@ -61,16 +61,19 @@
             },
             {
               "className": "GoalProgressExecutor"
+            },
+            {
+              "className": "ListAgentCapabilitiesExecutor"
             }
           ]
         }
       },  
-      "CoderAssistant": {
+      "CoderManager": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
-        "userId": "6a7d97f9-e262-4cda-92c6-7a7b2cf8268d",
-        "handle": "@coder",
-        "description": "An agent who specializes in coding (use code to extract, filter, combine CSV files).",
+        "userId": "6e3a8f1d-221e-43f0-98cb-b43e933797f9",
+        "handle": "@coding-manager",
+        "description": "A coding supervisor who specializes in coding architecture and managing the developer",
         "enabled": true,
         "config": {
           "purpose": "My name is Sentry. My job is to help make write code to automate tasks.",
@@ -88,6 +91,37 @@
               "className": "RetrieveFullArtifactExecutor"
             },
             {
+              "className": "GenerateDocumentExecutor"
+            },
+            {
+              "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "CSVProcessingExecutor"
+            },
+            {
+              "className": "DelegationExecutor"
+            }
+          ]
+        }
+      },  
+      "CoderAssistant": {
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
+        "userId": "6a7d97f9-e262-4cda-92c6-7a7b2cf8268d",
+        "handle": "@coding-assistant",
+        "description": "An agent who specializes in coding (use code to extract, filter, combine CSV files).",
+        "enabled": true,
+        "config": {
+          "purpose": "My name is Sentry. My job is to help make write code to automate tasks.",
+          "finalInstructions": "",
+          "supportsDelegation": true,
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "RetrieveFullArtifactExecutor"
+            },
+            {
               "className": "WebsiteExecutor"
             },
             {
@@ -95,9 +129,6 @@
             },
             {
               "className": "NodeExecutorExecutor"
-            },
-            {
-              "className": "ReplyExecutor"
             }
           ]
         }
@@ -387,6 +418,9 @@
           "executors": [
             {
               "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "RetrieveFullArtifactExecutor"
             },
             {
               "className": "GenerateDocumentExecutor",

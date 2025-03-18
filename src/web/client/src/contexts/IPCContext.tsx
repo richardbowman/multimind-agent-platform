@@ -12,8 +12,9 @@ export const IPCProvider: React.FC<{
 
   if (!ipcService.current) {
     ipcService.current = (window as any).electron
-      ? new ElectronIPCService()
-      : new WebSocketService();
+      ? new ElectronIPCService() :
+      (window as any).appContainer ? null : 
+      new WebSocketService();
     console.log('IPC service initializing');
   }
 

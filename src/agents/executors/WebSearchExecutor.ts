@@ -11,6 +11,7 @@ import { SchemaType } from "src/schemas/SchemaTypes";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { OutputType } from "src/llm/promptBuilder";
 import { StringUtils } from "src/utils/StringUtils";
+import { withRetry } from "src/helpers/retry";
 
 @StepExecutorDecorator(ExecutorType.WEB_SEARCH, 'Performs web searches and generates search queries')
 export class WebSearchExecutor extends BaseStepExecutor<StepResponse> {
@@ -25,7 +26,9 @@ export class WebSearchExecutor extends BaseStepExecutor<StepResponse> {
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { search, message } = await this.generateSearchQuery(params);
-        const searchResults = await this.searchHelper.search(search.searchQuery, search.category);
+        const searchResults = await withRetry(() => {
+            return this.searchHelper.search(search.searchQuery, search.category);
+        }, () => true, { timeoutMs: 180000, maxRetries: 2});
 
         return {
             finished: true,

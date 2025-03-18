@@ -638,7 +638,7 @@ export abstract class StepBasedAgent extends Agent {
         // Store the result in task props
         await this.projects.updateTask(task.id, {
             props: {
-                ...(task.projectId && {
+                ...(stepResult.projectId && {
                     ...task.props,
                     childProjectId: stepResult.projectId
                 }) ?? task.props,

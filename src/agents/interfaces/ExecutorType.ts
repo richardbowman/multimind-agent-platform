@@ -48,5 +48,6 @@ export enum ExecutorType {
     PUBMED_SEARCH = "pubmed-search",
     CSV_MERGE = "csv-merge",
     SEARCH_ARTIFACT = "artifact-excerpts",
-    SUGGESTED_RESPONSES = "suggested-responses"
+    SUGGESTED_RESPONSES = "suggested-responses",
+    LIST_AGENT_CAPABILITIES = "list-agents"
 }

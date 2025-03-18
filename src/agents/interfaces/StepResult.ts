@@ -44,7 +44,8 @@ export enum StepResponseType {
     GoalAssessment = "GoalAssessment",
     DraftContent = "DraftContent",
     SuggestedResponses = "SuggestedResponses",
-    Error = "Error"
+    Error = "Error",
+    AgentCapabilities = "AgentCapabilities"
 }
 
 export enum ReplanType {

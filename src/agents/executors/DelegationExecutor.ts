@@ -1,12 +1,12 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
-import { createUUID } from 'src/types/uuid';
+import { createUUID, UUID } from 'src/types/uuid';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { DelegationResponse as DelegationResponse, DelegationSchema } from 'src/schemas/DelegationSchema';
@@ -14,6 +14,7 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { withRetry } from 'src/helpers/retry';
 
 @StepExecutorDecorator(ExecutorType.DELEGATION, 'Create projects with tasks delegated to agents in the channel')
 export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
@@ -26,41 +27,32 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         this.taskManager = params.taskManager!;
     }
 
-    async onTaskNotification(task: Task): Promise<void> {
-        if (task.status === TaskStatus.Completed && task.type === TaskType.Step) {
-            // Get the project containing this task
-            const project = this.taskManager.getProject(task.projectId);
-            if (!project) return;
+    async handleTaskNotification(notification: TaskNotification): Promise<void> {
+        const { task, childTask } = notification;
+        if (childTask.status === TaskStatus.Completed && task.type === TaskType.Step) {
+            const project = await this.params.taskManager.getProject(childTask.projectId);
+            const taskIds = Object.keys(project.tasks) as UUID[];
+            const currentIndex = taskIds.indexOf(childTask.id);
 
-            // Find the next task in sequence
-            const taskIds = Object.keys(project.tasks);
-            const currentIndex = taskIds.indexOf(task.id);
-            if (currentIndex === -1 || currentIndex === taskIds.length - 1) return;
+            if (currentIndex === -1) throw new Error("Invalid task list");
 
-            const nextTaskId = taskIds[currentIndex + 1];
-            const nextTask = project.tasks[nextTaskId];
+            if (currentIndex < taskIds.length - 1) {
+                const nextTaskId = taskIds[currentIndex + 1];
+                const nextTask = project.tasks[nextTaskId];
 
-            // Transfer artifacts
-            if (task.props?.attachedArtifactIds?.length) {
-                await this.taskManager.updateTask(nextTaskId, {
-                    props: {
-                        ...nextTask.props,
-                        attachedArtifactIds: [
-                            ...(nextTask.props?.attachedArtifactIds || []),
-                            ...task.props.attachedArtifactIds
-                        ]
-                    }
-                });
-            }
-
-            // Transfer status message if present
-            if (task.props?.statusMessage) {
-                await this.taskManager.updateTask(nextTaskId, {
-                    props: {
-                        ...nextTask.props,
-                        statusMessage: task.props.statusMessage
-                    }
-                });
+                // Transfer artifacts
+                if (childTask.props?.result?.artifactIds?.length) {
+                    await this.taskManager.updateTask(nextTaskId, {
+                        props: {
+                            ...nextTask.props,
+                            attachedArtifactIds: [
+                                ...new Set([...(nextTask.props?.artifactIds || []),
+                                ...childTask.props.result.artifactIds])
+                            ],
+                            priorStepStatus: childTask.props?.result?.response?.message||childTask.props?.result?.response?.status
+                        }
+                    });
+                }
             }
         }
     }
@@ -83,8 +75,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
 
         // Generate a summary of the completed delegation
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Summarize the results of the completed delegation in a concise status message for the agent. 
-            Include statistics about the results (tasks completed, success rate, etc).`);
+        prompt.addInstruction(`Summarize the results of the completed delegation in a thorough status message for the agent that explains the tasks completed and the results.`);
 
         prompt.addContext({
             contentType: ContentType.TASKS,
@@ -96,9 +87,12 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
             instructions: prompt
         });
 
+        const artifactIds = completedTasks.map(t => t.props?.result?.artifactIds).flat().filter(a => !!a);
+
         return {
             finished: true,
             replan: ReplanType.Allow,
+            artifactIds,
             async: false,
             response: {
                 status: rawResponse.message
@@ -161,12 +155,14 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
 
         try {
-            const rawResponse = await prompt.generate({
-                message: params.stepGoal
-            });
+            const { projectName, projectGoal, tasks, responseMessage } = await withRetry(async () => {
+                const rawResponse = await prompt.generate({
+                    message: params.stepGoal
+                });
+                const response = StringUtils.extractAndParseJsonBlock<DelegationResponse>(rawResponse, schema);
+                return response;
+            }, (r) => r.projectGoal.length > 0 && r.tasks.length > 0, { maxRetries: 2, timeoutMs: 180000} );
 
-            const json = StringUtils.extractAndParseJsonBlock<DelegationResponse>(rawResponse, schema);
-            const { projectName, projectGoal, tasks, responseMessage }: DelegationResponse = json;
 
             // Create the project
             const project = await this.taskManager.createProject({

@@ -551,16 +551,16 @@ export class PromptBuilder implements InputPrompt {
 
     addOutputInstructions({ outputType, schema, specialInstructions, type = 'markdown' }: OutputInstructionsParams) : PromptBuilder {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
-            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n 
+            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n 
             Then, provide a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
-            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schema) {
             this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with a user-friendly message.
-3. After your message, provide the requested structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+3. After your message, provide the requested structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.MULTIPLE_JSON_WITH_MESSAGE && schema) {
-            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and one or more fenced code blocks \`\`\`json each containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and one or more fenced code blocks \`\`\`json each containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
         }
         return this;
     }

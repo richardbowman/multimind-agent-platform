@@ -17,6 +17,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
+import { useIPCService } from '../contexts/IPCContext';
 
 const fadeIn = keyframes`
   0% {

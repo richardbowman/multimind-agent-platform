@@ -10,9 +10,13 @@ interface ArtifactAttributes {
   tokenCount?: number;
   mimeType?: string;
   subtype?: string;
-  metadata?: Record<string, any>;
+  metadata?: ArtifactMetadata;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+interface ArtifactMetadata extends Record<string, any> {
+  summary?: string;
 }
 
 interface ArtifactCreationAttributes extends Optional<ArtifactAttributes, 'id'> {}

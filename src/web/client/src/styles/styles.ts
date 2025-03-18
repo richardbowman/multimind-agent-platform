@@ -1,16 +1,23 @@
+import { margin, minHeight, padding } from "@mui/system";
+
 export const CustomScrollbarStyles = (theme) => ({
     '&::-webkit-scrollbar': {
-        width: '6px',
+        width: '8px',
     },
     '&::-webkit-scrollbar-track': {
         background: 'transparent',
     },
     '&::-webkit-scrollbar-thumb': {
-        background: 'rgba(0, 0, 0, 0.1)',
-        borderRadius: '3px',
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        minHeight: '100px',
+        borderRadius: '8px',
         transition: 'background-color 0.2s ease',
     },
+    '&:hover::-webkit-scrollbar': {
+    },
     '&:hover::-webkit-scrollbar-thumb': {
-        background: theme.palette.divider,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        border: 'rgba(100, 100, 100, 1)',
+        transition: 'background-color 0.2s ease',
     }
 });

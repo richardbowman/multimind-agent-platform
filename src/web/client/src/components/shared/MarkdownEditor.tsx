@@ -145,7 +145,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   };
 
   const handleChange = (editorState: any) => {
-    console.log(editorState);
+    // console.log(editorState);
     editorStateRef.current = editorState;
   };
 

@@ -14,7 +14,7 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ModelType } from 'src/llm/LLMServiceFactory';
 import { CSVUtils } from 'src/utils/CSVUtils';
-import { UUID } from 'src/types/uuid';
+import { asUUID, isUUID, UUID } from 'src/types/uuid';
 import { RetryError, withRetry } from 'src/helpers/retry';
 
 
@@ -200,10 +200,18 @@ new replacement text
                         // Handle both numeric index and UUID string
                         if (typeof result.artifactIndex === 'number' && result.artifactIndex > 0) {
                             artifactUpdate.id = params.context.artifacts[result.artifactIndex - 1].id;
+                        } else if (typeof result.artifactIndex === 'string' && isUUID(result.artifactIndex)) {
+                            artifactUpdate.id = asUUID(result.artifactIndex);
                         } else if (typeof result.artifactIndex === 'string') {
-                            artifactUpdate.id = result.artifactIndex;
+                            try {
+                                artifactUpdate.id = params.context.artifacts[parseInt(result.artifactIndex)-1].id;
+                            } catch (error) {
+                                Logger.error(`Failed to parse artifact index ${result.artifactIndex} during generation.`);
+                            }
                         }
-                        const existingArtifact = await this.artifactManager.loadArtifact(artifactUpdate.id);
+
+
+                        const existingArtifact = artifactUpdate.id && await this.artifactManager.loadArtifact(artifactUpdate.id);
 
                         // If types don't match, force create new artifact instead
                         const newType = this.getArtifactType(md[0].type?.toLowerCase());
