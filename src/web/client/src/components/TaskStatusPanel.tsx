@@ -1,92 +1,103 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { 
     Box, 
     Typography,
     List,
-    ListItem
+    ListItem,
+    Paper,
+    Stack
 } from '@mui/material';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
-import { useDataContext } from '../contexts/DataContext';
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
+import { TaskStatus } from '../../schemas/TaskStatus';
 
 export const TaskStatusPanel: React.FC = () => {
     const { tasks } = useTasks();
-    const { handles } = useDataContext();
-    const listRef = useRef<FixedSizeList>(null);
 
-    // Sort tasks by status priority
-    const sortedTasks = useMemo(() => {
-        return tasks.sort((a, b) => {
-            const statusPriority = {
-                'inProgress': 0,
-                'notStarted': 1,
-                'cancelled': 2,
-                'completed': 3
-            };
-            
-            const aPriority = statusPriority[a.status] || 1;
-            const bPriority = statusPriority[b.status] || 1;
-            
-            if (aPriority < bPriority) return -1;
-            if (aPriority > bPriority) return 1;
-            return 0;
+    // Group tasks by status with most recent first
+    const groupedTasks = useMemo(() => {
+        const groups: Record<TaskStatus, typeof tasks> = {
+            [TaskStatus.Pending]: [],
+            [TaskStatus.InProgress]: [],
+            [TaskStatus.Completed]: [],
+            [TaskStatus.Cancelled]: []
+        };
+
+        // Sort by creation date (newest first)
+        const sortedTasks = [...tasks].sort((a, b) => 
+            new Date(b.create_at).getTime() - new Date(a.create_at).getTime()
+        );
+
+        // Group by status
+        sortedTasks.forEach(task => {
+            groups[task.status].push(task);
         });
+
+        return groups;
     }, [tasks]);
 
-    // Auto-scroll to first in-progress task
-    useEffect(() => {
-        if (listRef.current) {
-            const inProgressIndex = sortedTasks.findIndex(t => t.status === 'inProgress');
-            if (inProgressIndex > -1) {
-                listRef.current.scrollToItem(inProgressIndex, 'center');
-            }
-        }
-    }, [sortedTasks]);
+    const statusColors = {
+        [TaskStatus.Pending]: 'warning.light',
+        [TaskStatus.InProgress]: 'info.light',
+        [TaskStatus.Completed]: 'success.light',
+        [TaskStatus.Cancelled]: 'error.light'
+    };
 
-    const renderRow = ({ index, style }: ListChildComponentProps) => {
-        const task = sortedTasks[index];
-        return (
-            <ListItem style={style} key={task.id} sx={{ p: 0 }}>
-                <TaskCard 
-                    task={task}
-                    data-status={task.status}
-                    onClick={() => {}}
-                    onCheckboxClick={() => {}}
-                />
-            </ListItem>
-        );
+    const statusLabels = {
+        [TaskStatus.Pending]: 'Pending',
+        [TaskStatus.InProgress]: 'In Progress',
+        [TaskStatus.Completed]: 'Completed',
+        [TaskStatus.Cancelled]: 'Cancelled'
     };
 
     return (
         <Box sx={{ 
             p: 2, 
-            width: 400,
-            height: 600,
-            display: 'flex', 
-            flexDirection: 'column' 
+            width: '90vw',
+            maxWidth: 1200,
+            height: '80vh',
+            overflow: 'auto'
         }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-                System Task Status
+            <Typography variant="h4" sx={{ mb: 3 }}>
+                Task Board
             </Typography>
             
-            <Box sx={{ flex: 1 }}>
-                <AutoSizer>
-                    {({ height, width }) => (
-                        <FixedSizeList
-                            ref={listRef}
-                            height={height}
-                            width={width}
-                            itemSize={100} // Adjust based on your TaskCard height
-                            itemCount={sortedTasks.length}
-                            overscanCount={5}
-                        >
-                            {renderRow}
-                        </FixedSizeList>
-                    )}
-                </AutoSizer>
-            </Box>
+            <Stack direction="row" spacing={2} sx={{ height: '100%' }}>
+                {Object.entries(groupedTasks).map(([status, tasks]) => (
+                    <Paper 
+                        key={status}
+                        sx={{ 
+                            flex: 1,
+                            minWidth: 250,
+                            p: 2,
+                            bgcolor: statusColors[status as TaskStatus],
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography variant="h6" sx={{ mb: 2 }}>
+                            {statusLabels[status as TaskStatus]} ({tasks.length})
+                        </Typography>
+                        
+                        <List sx={{ 
+                            height: 'calc(100% - 56px)', 
+                            overflowY: 'auto',
+                            '& > *:not(:last-child)': {
+                                mb: 1
+                            }
+                        }}>
+                            {tasks.map(task => (
+                                <ListItem key={task.id} sx={{ p: 0 }}>
+                                    <TaskCard 
+                                        task={task}
+                                        onClick={() => {}}
+                                        onCheckboxClick={() => {}}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Paper>
+                ))}
+            </Stack>
         </Box>
     );
 };
