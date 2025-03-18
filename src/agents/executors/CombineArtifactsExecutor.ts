@@ -70,13 +70,13 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
         conversation.addOutputInstructions({
             outputType: OutputType.JSON_AND_MARKDOWN,
             schema,
-            specialInstructions: "Provide both the template with insertion points and the final combined document",
+            specialInstructions: "Provide a template with insertion points and a mapping of which content goes where",
             type: "markdown"
         });
 
         try {
             const unstructuredResult = await conversation.generate({
-                message: params.message || "Combine these documents into one cohesive document",
+                message: params.message || "Create a template for combining these documents",
                 modelType: modelType || ModelType.DOCUMENT
             });
 
@@ -89,14 +89,33 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
                 throw new Error(`No code block found in the response: ${unstructuredResult.message}`);
             }
 
-            // Process the template and insertion points
-            let finalContent = md[0].code;
-            if (json.insertionPoints) {
-                // Replace insertion points with actual content
-                for (const [sourceId, content] of Object.entries(json.insertionPoints)) {
-                    finalContent = finalContent.replace(`<<<INSERT:${sourceId}>>>`, content);
+            // Get the template with insertion points
+            const template = md[0].code;
+            
+            // Load all source artifacts
+            const sourceArtifacts = new Map<string, string>();
+            if (params.context?.artifacts) {
+                for (const artifactRef of params.context.artifacts) {
+                    const artifact = await this.artifactManager.loadArtifact(artifactRef.id);
+                    if (artifact) {
+                        sourceArtifacts.set(artifactRef.id, artifact.content);
+                    }
                 }
             }
+
+            // Merge content into template
+            let finalContent = template;
+            if (json.insertionPoints) {
+                for (const [sourceId, sectionId] of Object.entries(json.insertionPoints)) {
+                    const content = sourceArtifacts.get(sourceId);
+                    if (content) {
+                        finalContent = finalContent.replace(`<<<INSERT:${sectionId}>>>`, content);
+                    }
+                }
+            }
+
+            // Clean up any remaining insertion points
+            finalContent = finalContent.replace(/<<<INSERT:[^>]+>>>/g, '');
 
             // Create the combined artifact
             const artifact = await this.artifactManager.saveArtifact({
@@ -106,7 +125,9 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
                     title: json.title || "Combined Document",
                     operation: 'combine',
                     projectId: params.projectId,
-                    sourceArtifactIds: params.context?.artifacts?.map(a => a.id) || []
+                    sourceArtifacts: Object.fromEntries(sourceArtifacts.entries()),
+                    templateUsed: template,
+                    insertionPoints: json.insertionPoints
                 }
             });
 
