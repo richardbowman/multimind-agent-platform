@@ -314,10 +314,8 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                 const rawResponse = await instructions.generate({
                     message: `Task Description: ${task.description}\n\nTask Response Data: ${responseData.response?.message}`
                 });
-            
-                if (rawResponse?.message) throw new RetryError("Invalid model response - no message");
 
-                const response = StringUtils.extractAndParseJsonBlock<ExtractColumnsResponse>(rawResponse.message, schema);
+                const response = StringUtils.extractAndParseJsonBlock<ExtractColumnsResponse>(rawResponse, schema);
                 return {
                     response,
                     message: rawResponse.message,
