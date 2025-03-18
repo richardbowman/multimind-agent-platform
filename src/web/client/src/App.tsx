@@ -15,6 +15,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
 import { TaskPanel } from './components/TaskPanel';
+import { TaskStatusPanel } from './components/TaskStatusPanel';
 import { ArtifactChatPanel } from './components/ArtifactChatPanel';
 import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
@@ -311,7 +312,7 @@ const AppContent: React.FC = () => {
                     <LogViewer logType={currentLogTab} />
                 ) : null}
             </Box>
-            
+
             {/* Status Popover */}
             <Popover
                 open={statusOpen}
@@ -319,11 +320,21 @@ const AppContent: React.FC = () => {
                 onClose={() => setStatusAnchorEl(null)}
                 anchorOrigin={{
                     vertical: 'bottom',
-                    horizontal: 'right',
+                    horizontal: 'center',
                 }}
                 transformOrigin={{
-                    vertical: 'top',
+                    vertical: 'bottom',
                     horizontal: 'right',
+                }}
+                sx={{ height: '80%'}}
+                slotProps={{
+                    paper: {
+                        sx: {
+                            display: 'flex',
+                            flex: 1,
+                            overflow: 'hidden'
+                        }
+                    }
                 }}
             >
                 <TaskStatusPanel />
