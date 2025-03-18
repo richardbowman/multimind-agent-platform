@@ -65,10 +65,10 @@ export const TaskStatusPanel: React.FC = () => {
     }, [tasks]);
 
     const statusColors = {
-        [TaskStatus.Pending]: 'warning.50',
-        [TaskStatus.InProgress]: 'info.50',
-        [TaskStatus.Completed]: 'success.50',
-        [TaskStatus.Cancelled]: 'error.50'
+        [TaskStatus.Pending]: 'background.paper',
+        [TaskStatus.InProgress]: 'background.paper',
+        [TaskStatus.Completed]: 'background.paper',
+        [TaskStatus.Cancelled]: 'background.paper'
     };
 
     const statusLabels = {
@@ -125,6 +125,7 @@ export const TaskStatusPanel: React.FC = () => {
                         sx={{
                             display: 'flex',
                             overflow: 'hidden',
+                            flex: 1,
                             height: '100%',
                             minWidth: 250
                         }}
