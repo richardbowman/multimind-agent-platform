@@ -7,6 +7,7 @@ import {
     Checkbox
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import FolderIcon from '@mui/icons-material/Folder';
 import { useDataContext } from '../contexts/DataContext';
 
 interface TaskCardProps {
@@ -95,6 +96,21 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 />
                 {task.inProgress && task.props?.result?.async && (
                     <AccessTimeIcon
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            width: 16,
+                            height: 16,
+                            color: 'text.secondary',
+                            bgcolor: 'background.paper',
+                            borderRadius: '50%',
+                            p: 0.5
+                        }}
+                    />
+                )}
+                {task.inProgress && task.props?.childProjectId && (
+                    <FolderIcon
                         sx={{
                             position: 'absolute',
                             top: 0,
