@@ -337,7 +337,7 @@ const AppContent: React.FC = () => {
                     }
                 }}
             >
-                <TaskStatusPanel />
+                <TaskStatusPanel onClose={() => setStatusAnchorEl(null)} />
             </Popover>
         </Box>
     );
