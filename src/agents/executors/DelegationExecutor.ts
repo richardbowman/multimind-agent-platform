@@ -1,10 +1,10 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Project, TaskManager, TaskType } from '../../tools/taskManager';
+import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
@@ -13,6 +13,7 @@ import { DelegationResponse as DelegationResponse, DelegationSchema } from 'src/
 import { StringUtils } from 'src/utils/StringUtils';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import { StepTask } from '../interfaces/ExecuteStepParams';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 
 @StepExecutorDecorator(ExecutorType.DELEGATION, 'Create projects with tasks delegated to agents in the channel')
 export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
@@ -23,6 +24,13 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
+    }
+
+    async onTaskNotification(task: Task): Promise<void> {
+        if (task.status === TaskStatus.Completed && task.type === TaskType.Step) {
+            // when my step tasks complete, i want to take any artifacts and the status message from the former task
+            // and move it over to the upcoming task.
+        }
     }
 
     async onChildProjectComplete(stepTask: StepTask<StepResponse>, project: Project): Promise<StepResult<StepResponse>> {
@@ -58,12 +66,15 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
 
         return {
             finished: true,
+            replan: ReplanType.Allow,
             async: false,
             response: {
                 status: rawResponse.message
             }
         };
     }
+
+    
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
@@ -72,7 +83,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         }
 
         // Search for delegation-specific procedure guides
-        const delegationGuides = await this.artifactManager.searchArtifacts(
+        const delegationGuides = await this.params.artifactManager.searchArtifacts(
             params.stepGoal,
             {
                 type: ArtifactType.Document,
@@ -87,7 +98,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         
         // Add delegation guides context if found
         if (delegationGuides.length > 0) {
-            const loadedGuides = await this.artifactManager.bulkLoadArtifacts(
+            const loadedGuides = await this.params.artifactManager.bulkLoadArtifacts(
                 delegationGuides.map(g => g.artifact.id)
             );
             prompt.addContext({
