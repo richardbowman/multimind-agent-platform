@@ -233,10 +233,10 @@ ${this.modelHelpers.getPurpose()}
                 
                 const stepInfo = `- STEP [${step.props.stepType}]:
   Description: ${step.description}
-  Result: ${body && `<toolResult>${body}</toolResult>`}
-${stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`}
-${stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`}
-${stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`}`;
+${[body && `Result: <toolResult>${body}</toolResult>`,
+stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
+stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
+stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
                 
                 // If step has a threadId, add to corresponding post
                 if (step.props.userPostId) {
@@ -558,7 +558,7 @@ export class PromptBuilder implements InputPrompt {
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schema) {
             this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with a user-friendly message.
-3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+3. After your message, provide the requested structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.MULTIPLE_JSON_WITH_MESSAGE && schema) {
             this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and one or more fenced code blocks \`\`\`json each containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
