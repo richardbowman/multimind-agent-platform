@@ -30,7 +30,11 @@ const fadeIn = keyframes`
   }
 `;
 
-export const TaskStatusPanel: React.FC = () => {
+interface TaskStatusPanelProps {
+    onClose?: () => void;
+}
+
+export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => {
     const { tasks } = useTasks();
     const [prevTaskIds, setPrevTaskIds] = useState<Set<string>>(new Set());
     
@@ -104,7 +108,7 @@ export const TaskStatusPanel: React.FC = () => {
                         edge="end"
                         color="inherit"
                         aria-label="close"
-                        onClick={() => {/* Add close handler here */}}
+                        onClick={onClose}
                         size="small"
                     >
                         <CloseIcon fontSize="small" />
