@@ -136,6 +136,11 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
             prompt.addOutputInstructions({ outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema });
 
+            const validActions = new Set([
+                ...executorMetadata.map(m => m.key),
+                completionAction
+            ]);
+
             const response: WithReasoning<Partial<NextActionResponse>> = await withRetry(
                 async () => {
                     const result = await prompt.generate({
@@ -144,13 +149,24 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                         modelType: ModelType.ADVANCED_REASONING
                     });
 
-                    return {
+                    const response = {
                         ...StringUtils.hasJsonBlock(result.message) && StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema) || {},
                         reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
                         message: StringUtils.extractNonCodeContent(result.message, ["thinking"], ["json"])
                     };
+
+                    // Validate nextAction is one of the available types
+                    if (response.nextAction && !validActions.has(response.nextAction)) {
+                        throw new Error(`Invalid nextAction: ${response.nextAction}. Must be one of: ${Array.from(validActions).join(', ')}`);
+                    }
+
+                    return response;
                 },
-                (result) => !!result && (!!result.nextAction || !!result.message), // Validate we got a proper response
+                (result) => {
+                    const hasValidResponse = !!result && (!!result.nextAction || !!result.message);
+                    const hasValidAction = !result.nextAction || validActions.has(result.nextAction);
+                    return hasValidResponse && hasValidAction;
+                },
                 {
                     maxRetries: 3,
                     initialDelayMs: 100,
