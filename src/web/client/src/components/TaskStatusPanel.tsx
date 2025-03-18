@@ -65,10 +65,10 @@ export const TaskStatusPanel: React.FC = () => {
     }, [tasks]);
 
     const statusColors = {
-        [TaskStatus.Pending]: 'warning.light',
-        [TaskStatus.InProgress]: 'info.light',
-        [TaskStatus.Completed]: 'success.light',
-        [TaskStatus.Cancelled]: 'error.light'
+        [TaskStatus.Pending]: 'warning.50',
+        [TaskStatus.InProgress]: 'info.50',
+        [TaskStatus.Completed]: 'success.50',
+        [TaskStatus.Cancelled]: 'error.50'
     };
 
     const statusLabels = {
