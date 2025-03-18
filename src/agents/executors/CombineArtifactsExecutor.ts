@@ -1,22 +1,32 @@
-import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
+import { ArtifactGenerationStepResponse, GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResponseType, ReplanType } from '../interfaces/StepResult';
+import { StepResult, StepResponseType, ReplanType, StepResultType } from '../interfaces/StepResult';
 import { ArtifactType } from 'src/tools/artifact';
 import { ModelType } from 'src/llm/LLMServiceFactory';
-import { Logger } from '../../helpers/logger';
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { ModelConversation } from '../interfaces/StepExecutor';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import Logger from 'src/helpers/logger';
 
 export interface CombinedArtifactResponse extends ArtifactGenerationResponse {
     template: string;
     insertionPoints: Record<string, string>;
 }
 
+@StepExecutorDecorator(ExecutorType.COMBINE_DOCUMENTS, 'Generate Markdown documents by generating a structure template', true)
 export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
     constructor(params: ExecutorConstructorParams) {
         super(params);
+    }
+
+    protected getSupportedFormats(): string[] {
+        return ["markdown"];
     }
 
     getArtifactType(): ArtifactType {
@@ -98,7 +108,7 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
                 for (const artifactRef of params.context.artifacts) {
                     const artifact = await this.artifactManager.loadArtifact(artifactRef.id);
                     if (artifact) {
-                        sourceArtifacts.set(artifactRef.id, artifact.content);
+                        sourceArtifacts.set(artifactRef.id, artifact.content.toString());
                     }
                 }
             }
