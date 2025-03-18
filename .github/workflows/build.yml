@@ -230,16 +230,3 @@ jobs:
             dist/*.AppImage
           retention-days: 2
           if-no-files-found: ignore
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.os }}-build
-          path: |
-            dist/*.deb
-            dist/*.AppImage
-            dist/*.dmg
-            dist/*.exe
-            dist/*.zip
-          retention-days: 2  # Only keep artifacts for 5 days
-          if-no-files-found: ignore
