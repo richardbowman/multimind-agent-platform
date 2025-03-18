@@ -11,7 +11,7 @@ import { ExecutorType } from "../interfaces/ExecutorType";
 import { createUUID } from "src/types/uuid";
 import { Artifact, ArtifactType } from "src/tools/artifact";
 import { ModelHelpers, WithTokens } from "src/llm/modelHelpers";
-import { ContentType, OutputType } from "src/llm/promptBuilder";
+import { ContentType, globalRegistry, OutputType } from "src/llm/promptBuilder";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { StringUtils } from "src/utils/StringUtils";
@@ -49,6 +49,12 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         this.llmService = params.llmService;
         this.artifactManager = params.artifactManager;
         this.modelHelpers = params.modelHelpers;
+
+        globalRegistry.stepResponseRenderers.set(StepResponseType.WebPage, async (untypedResponse : StepResponse, allSteps: StepResponse[]) => {
+            const response = untypedResponse as ScrapeStepResponse;
+            const validSummaries = response.data.summaries?.filter(s => s.date && s.summary);
+            return validSummaries?.map((s, i) => `${i+1} of ${response.data.summaries.length}: Date: ${s.date}\nURL: ${s.url}\nSummary:\n\`\`\`\n${s.summary}\n\`\`\`\n`).join('\n') + "\n";
+        });
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<ScrapeStepResponse>> {

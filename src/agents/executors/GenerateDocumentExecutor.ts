@@ -7,7 +7,7 @@ import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ModelConversation } from '../interfaces/StepExecutor';
 
-@StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise Markdown a single document.')
+@StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise a single Markdown document.')
 export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
     protected addContentFormattingRules(prompt: ModelConversation) {
         prompt.addInstruction(`DOCUMENT FORMATTING RULES:

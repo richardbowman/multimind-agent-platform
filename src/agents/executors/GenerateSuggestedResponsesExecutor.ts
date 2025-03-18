@@ -4,23 +4,19 @@ import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorPara
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
 import { ModelHelpers } from "src/llm/modelHelpers";
-import { ContentType, globalRegistry } from "src/llm/promptBuilder";
+import { ContentType, globalRegistry, OutputType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
-
-export interface SuggestedResponse {
-    response: string;
-    intent: string;
-}
+import { SuggestedResponse, SuggestedResponses } from "../../schemas/SuggestedResponse";
 
 export interface SuggestedResponsesStepResponse extends StepResponse {
     type: StepResponseType.SuggestedResponses;
     data?: {
         suggestions: SuggestedResponse[];
-        reasoning: string;
+        reasoning?: string;
     };
 }
 
@@ -44,19 +40,13 @@ export class GenerateSuggestedResponsesExecutor implements StepExecutor<Suggeste
     async execute(params: ExecuteParams): Promise<StepResult<SuggestedResponsesStepResponse>> {
         // Generate structured prompt
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Your task is to generate 3-5 suggested responses a user might give based on the current conversation context.`);
-        prompt.addContext({contentType: ContentType.PURPOSE});
-        prompt.addContext({contentType: ContentType.GOALS_FULL, params});
-        prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
+        prompt.addInstruction(`Your task is to generate 3-5 suggested responses a user might give based on the current conversation context.`)
+        .addContext({contentType: ContentType.PURPOSE})
+        .addContext({contentType: ContentType.GOALS_FULL, params})
+        .addContext({contentType: ContentType.EXECUTE_PARAMS, params});
         
         const schema = await getGeneratedSchema(SchemaType.SuggestedResponses);
-        
-        prompt.addInstruction(`OUTPUT INSTRUCTIONS:
-1. Include a JSON object in your response, enclosed in a \`\`\`json code block matching this schema:
-${JSON.stringify(schema, null, 2)}
-2. Each response should be natural and conversational
-3. Include a clear intent for each suggested response
-4. Provide reasoning for why these responses were chosen`);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema, specialInstructions: `Each response should be natural and conversational`})
 
         try {
             const unstructuredResult = await this.modelHelpers.generate({
@@ -66,17 +56,18 @@ ${JSON.stringify(schema, null, 2)}
                 modelType: ModelType.CONVERSATION
             });
 
-            const json = StringUtils.extractAndParseJsonBlock<{suggestions: SuggestedResponse[], reasoning: string}>(unstructuredResult.message, schema);
+            const { suggestions } = StringUtils.extractAndParseJsonBlock<SuggestedResponses>(unstructuredResult.message, schema);
+            const reasoning = StringUtils.extractXmlBlock(unstructuredResult.message, "thinking");
             
             return {
                 finished: true,
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.SuggestedResponses,
-                    status: `Generated ${json?.suggestions.length || 0} suggested responses`,
+                    status: `Generated ${suggestions.length || 0} suggested responses`,
                     data: {
-                        suggestions: json?.suggestions || [],
-                        reasoning: json?.reasoning || "No reasoning provided"
+                        suggestions,
+                        reasoning
                     }
                 }
             };

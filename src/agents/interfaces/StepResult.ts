@@ -43,6 +43,7 @@ export enum StepResponseType {
     DocumentTemplate = "DocumentTemplate",
     GoalAssessment = "GoalAssessment",
     DraftContent = "DraftContent",
+    SuggestedResponses = "SuggestedResponses",
     Error = "Error"
 }
 
