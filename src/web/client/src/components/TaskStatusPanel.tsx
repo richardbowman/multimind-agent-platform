@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
-import { TaskStatus } from '../../schemas/TaskStatus';
+import { TaskStatus } from '../../../../schemas/TaskStatus';
 
 export const TaskStatusPanel: React.FC = () => {
     const { tasks } = useTasks();
