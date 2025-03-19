@@ -2,7 +2,7 @@ import JSON5 from "json5";
 import { ChatClient, ChatPost, ConversationContext, CreateMessage, Message, ProjectChainResponse } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
-import { ModelMessageResponse } from "src/schemas/ModelResponse";
+import { ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
@@ -269,7 +269,7 @@ export abstract class Agent {
         }
     }
 
-    protected async reply(post: ChatPost, response: ModelMessageResponse, postProps?: ConversationContext): Promise<ChatPost> {
+    protected async reply(post: ChatPost, response: RequestArtifacts, postProps?: ConversationContext): Promise<ChatPost> {
         if (!response || !response.message) {
             throw new Error("Invalid message provided in reply");
         }

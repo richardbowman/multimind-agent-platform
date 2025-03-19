@@ -4,13 +4,13 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
-import { message } from "blessed";
+import { StringUtils } from "src/utils/StringUtils";
 
 @StepExecutorDecorator(ExecutorType.DOCUMENT_RETRIEVAL, 'Retrieve requested documents from artifact store')
-export class DocumentRetrievalExecutor implements StepExecutor {
+export class DocumentRetrievalExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
     private vectorDB: IVectorDatabase;
@@ -27,6 +27,15 @@ export class DocumentRetrievalExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Extract the document request from the message
         const documentRequest = params.stepGoal || params.message;
+
+        if (StringUtils.isEmptyString(documentRequest)) {
+            return {
+                response: {
+                    type: StepResponseType.Error,
+                    status: "Could not find a document request goal in the step goal or message"
+                }
+            }
+        }
         
         // Search for relevant artifacts using the vector database
         const searchResults = await this.vectorDB.query(
@@ -36,19 +45,19 @@ export class DocumentRetrievalExecutor implements StepExecutor {
         );
 
         // Get artifact metadata for filtering
-        const artifactMetadatas = await Promise.all(
+        const artifactMetadatas = (await Promise.all(
             searchResults
                 .filter(result => result.metadata.artifactId)
                 .map(async result => {
                     const artifact = await this.artifactManager.loadArtifact(result.metadata.artifactId);
-                    return {
+                    return artifact && {
                         id: artifact.id,
                         title: artifact.metadata?.title || 'Untitled',
                         contentPreview: artifact.content.slice(0, 200) + '...',
                         score: result.score
                     };
                 })
-        );
+        )).defined();
 
         // Have LLM select the most relevant artifacts
         const selectionPrompt = `You are helping select the most relevant documents for this request:
@@ -80,10 +89,10 @@ Select the most relevant documents (1-3) and explain your choices.`;
 
         return {
             finished: true,
+            artifactIds: selectedIds,
             response: {
                 message: `Selected documents:\n\n${selectionResponse.message}\n\n` +
                     `Document Contents:\n${selectedArtifacts.map(a => `# ${a.metadata?.title || 'Untitled'}\n\n${a.content}`).join('\n\n')}`,
-                artifactIds: selectedIds,
                 data: {
                     searchQuery: documentRequest,
                     selectionReasoning: selectionResponse.message

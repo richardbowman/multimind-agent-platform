@@ -1,7 +1,7 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService, LLMContext } from "./ILLMService";
 import { ModelCache } from "./modelCache";
-import { ModelMessageResponse, ModelResponse } from "src/schemas/ModelResponse";
+import { ModelMessageResponse, ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
@@ -243,7 +243,7 @@ export class ModelHelpers {
         }
     }
 
-    public async generate<T extends WithTokens<ModelResponse>>(params: GenerateInputParams): Promise<T> {
+    public async generate<T extends WithTokens<RequestArtifacts>>(params: GenerateInputParams): Promise<T> {
         if (params.instructions instanceof StructuredOutputPrompt) {
             return this.generateStructured<T>(params.instructions, params);
         } else {
@@ -252,7 +252,7 @@ export class ModelHelpers {
     }
 
 
-    public async generateMessage(params: GenerateInputParams): Promise<WithTokens<ModelMessageResponse>> {
+    public async generateMessage(params: GenerateInputParams): Promise<WithTokens<RequestArtifacts>> {
         const instructions = params.instructions;
         let augmentedInstructions: string;
         if (typeof instructions === "string") {
@@ -267,7 +267,7 @@ export class ModelHelpers {
 
         // Augment instructions with context and generate a response
         const history = params.threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = withRetry(() => {
+        const response = await withRetry(() => {
             return this.llmService.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
                 modelType: params.modelType,
                 context: {
@@ -278,7 +278,7 @@ export class ModelHelpers {
         }, () => true, { maxRetries: 2, timeoutMs: 180000 });
 
         // Ensure response is an object with message property
-        const formattedResponse: ModelMessageResponse = typeof response === "string"
+        const formattedResponse: RequestArtifacts = typeof response === "string"
             ? { message: response }
             : response;
 

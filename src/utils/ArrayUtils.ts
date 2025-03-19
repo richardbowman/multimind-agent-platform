@@ -11,6 +11,10 @@ export namespace ArrayUtils {
     }
 
     export function isDefined(item: any) {
-        return item !== undefined;
+        return item !== undefined && item !== null;
     }
+}
+
+Array.prototype.defined = function() {
+    return this.filter(ArrayUtils.isDefined);
 }

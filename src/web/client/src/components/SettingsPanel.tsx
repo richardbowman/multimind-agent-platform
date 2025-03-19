@@ -1,26 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Paper,
-    Typography,
+    Box, Typography,
     TextField,
     Select,
     MenuItem,
     FormControl,
     InputLabel,
     Button,
-    Alert,
-    CircularProgress,
-    Drawer,
+    Alert, Drawer,
     List,
     ListItem,
     ListItemButton,
     ListItemText,
     IconButton,
-    Toolbar,
-    Chip,
-    Autocomplete,
-    Slider,
+    Toolbar, Slider,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -29,13 +22,10 @@ import {
     FormControlLabel,
     Checkbox
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
-import { IconButton } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
-import { ModelInfo } from '../../../../llm/types';
 import ModelSelector from './ModelSelector';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
@@ -45,8 +35,6 @@ import packageJson from '../../../../../package.json';
 import licenseText from '../../../../../docs/LICENSE.md';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { AgentBuilder } from './AgentBuilder';
-import { EmbedderModelInfo } from '../../../../llm/ILLMService';
-import { asError, isError } from '../../../../types/types';
 import { ScrollView } from './shared/ScrollView';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
@@ -56,8 +44,19 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const { getSettings, updateSettings } = useDataContext();
     const ipcService = useIPCService();
     const metadata = getClientSettingsMetadata(new Settings());
-    const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
-    const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
+    const [saveSuccess, setSaveSuccess] = useState(false);
+    const [aboutOpen, setAboutOpen] = useState(false);
+    const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
+    const [resetDialogOpen, setResetDialogOpen] = useState(false);
+    const [modelDialog, setModelDialog] = useState<{
+        open: boolean;
+        key: string;
+        provider: string;
+    }>({
+        open: false,
+        key: '',
+        provider: ''
+    });
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -101,34 +100,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             current[parts[parts.length - 1]] = processedValue;
             return newSettings;
         });
-
-        // If this is a provider change, fetch new models
-        if (key === 'providers.chat') {
-            try {
-                const models = await ipcService.getRPC().getAvailableModels(value as string);
-                setAvailableModels(prev => ({
-                    ...prev,
-                    [value as string]: models
-                }));
-            } catch (error) {
-                console.error('Failed to fetch available models:', error);
-            }
-        }
     };
-
-    const [saveSuccess, setSaveSuccess] = useState(false);
-    const [aboutOpen, setAboutOpen] = useState(false);
-    const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
-    const [resetDialogOpen, setResetDialogOpen] = useState(false);
-    const [modelDialog, setModelDialog] = useState<{
-        open: boolean;
-        key: string;
-        provider: string;
-    }>({
-        open: false,
-        key: '',
-        provider: ''
-    });
 
     const handleSave = async () => {
         console.log('Saving settings:', settings);
@@ -170,26 +142,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             setSuccessMessage('Settings saved successfully');
             setValidationMessage('');
             setSaveSuccess(true);
-
-            // Reload available models after successful save
-            try {
-                if (settings.providers?.chat) {
-                    const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
-                    setAvailableModels(prev => ({
-                        ...prev,
-                        [settings.providers!.chat]: models
-                    }));
-                }
-                if (settings.providers?.embeddings) {
-                    const embedders = await ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings);
-                    setAvailableEmbedders(prev => ({
-                        ...prev,
-                        [settings.providers!.embeddings]: embedders
-                    }));
-                }
-            } catch (error) {
-                console.error('Failed to reload models:', error);
-            }
 
             // Reset success state after animation
             setTimeout(() => {
@@ -360,11 +312,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         'LLM Settings', 
         'Embeddings',
         'Search Settings',
+        'Agents',
         'Vector DB',
         'Rate Limiting',
         'Server Settings',
         'UI Settings',
-        'Agent Builder'
     ];
 
     // Sort categories according to our defined order
@@ -428,10 +380,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     bottom: 0,
                     left: drawerOpen ? 250 : 0,
                     right: 0,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
                     p: 2,
-                    zIndex: 1,
                     display: 'flex',
                     justifyContent: 'space-between',
                     gap: 2,
@@ -462,11 +411,12 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     }}
                     >
                         {sortedCategories.map(([category, metadataList]) => {
-                            // Special handling for Agent Builder
-                            if (category === 'Agent Builder') {
+                            // Special handling for Agents
+                            if (category === 'Agents') {
                                 return (
                                     <AgentBuilder
                                         key={category}
+                                        id={category}
                                         settings={settings}
                                         onSettingsChange={setSettings}
                                     />
@@ -492,23 +442,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                 : metadataList;
 
                             return (
-                                <Paper
+                                <Box
                                     key={category}
                                     id={category}
-                                    sx={{
-                                        p: 3,
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 2,
-                                        boxShadow: 1,
-                                        mb: 3
-                                    }}
                                 >
-                                    <Typography variant="h6" gutterBottom sx={{
-                                        mb: 2,
-                                        pb: 1,
-                                        borderBottom: '1px solid',
-                                        borderColor: 'divider'
-                                    }}>
+                                    <Typography variant="h6" gutterBottom>
                                         {category}
                                     </Typography>
 
@@ -524,7 +462,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                             </FormControl>
                                         ))}
                                     </Box>
-                                </Paper>
+                                </Box>
                             );
                         })}
 

@@ -326,7 +326,7 @@ export class LLMSettings {
 export class AgentBuilderConfig {
     @ClientSettings({
         label: 'Agent Name',
-        category: 'Agent Builder',
+        category: 'Agents',
         type: 'string',
         required: true
     })
@@ -334,14 +334,14 @@ export class AgentBuilderConfig {
 
     @ClientSettings({
         label: 'Description',
-        category: 'Agent Builder',
+        category: 'Agentsf',
         type: 'string'
     })
     description: string = '';
 
     @ClientSettings({
         label: 'Purpose',
-        category: 'Agent Builder',
+        category: 'Agents',
         type: 'string',
         required: true
     })
@@ -349,7 +349,7 @@ export class AgentBuilderConfig {
 
     @ClientSettings({
         label: 'Final Instructions',
-        category: 'Agent Builder',
+        category: 'Agents',
         type: 'string',
         required: true
     })
@@ -357,7 +357,7 @@ export class AgentBuilderConfig {
 
     @ClientSettings({
         label: 'Planner Type',
-        category: 'Agent Builder',
+        category: 'Agents',
         type: 'select',
         options: ['nextStep'],
         defaultValue: 'nextStep'
@@ -366,7 +366,7 @@ export class AgentBuilderConfig {
 
     @ClientSettings({
         label: 'Auto Respond Channels',
-        category: 'Agent Builder',
+        category: 'Agents',
         type: 'string',
         description: 'Comma separated list of channel IDs to auto respond in'
     })
@@ -374,7 +374,7 @@ export class AgentBuilderConfig {
 
     @ClientSettings({
         label: 'Enabled',
-        category: 'Agent Builder',
+        category: 'Agents',
         type: 'boolean',
         defaultValue: true
     })
@@ -438,11 +438,11 @@ export class Settings {
     tts: TTSSettings = new TTSSettings();
 
     @ClientSettings({
-        label: 'Agent Builder',
-        category: 'Agent Builder',
+        label: 'Agents',
+        category: 'Agents',
         type: 'section'
     })
-    agentBuilder: Record<string, AgentBuilderConfig> = {};
+    agents: Record<string, AgentBuilderConfig> = {};
 
     scrapeTimeout(arg0: () => void, scrapeTimeout: any): void {
         throw new Error('Method not implemented.');

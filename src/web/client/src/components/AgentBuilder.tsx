@@ -34,11 +34,15 @@ import { useIPCService } from '../contexts/IPCContext';
 
 interface AgentBuilderProps {
     settings: Settings;
+    key: string;
+    id: string;
     onSettingsChange: (settings: Settings) => void;
 }
 
 export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     settings,
+    key,
+    id,
     onSettingsChange
 }) => {
     // Combine both agent sources
@@ -142,7 +146,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     };
 
     return (
-        <Box>
+        <Box id={id} key={key}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{
                 mb: 2,
                 pb: 1,
@@ -150,7 +154,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 borderColor: 'divider'
             }}>
                 <Typography variant="h6" gutterBottom>
-                    Agent Builder
+                    Agents
                 </Typography>
                 <IconButton
                     color="primary"

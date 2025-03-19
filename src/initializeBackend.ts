@@ -25,6 +25,12 @@ if (!global.crypto) {
     global.crypto = _crypto;
 }
 
+declare global {
+    interface Array<T> {
+        defined(): Array<T>;
+    }
+}
+
 export async function initializeBackend(settingsManager: SettingsManager, options: {
     reindex?: boolean
 } = {}): Promise<BackendServices> {

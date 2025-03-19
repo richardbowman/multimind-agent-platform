@@ -1,33 +1,15 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { LLMLogViewer } from './LLMLogViewer';
-import { 
-    Collapse, 
-    List, 
-    ListItem, 
-    ListItemText, 
-    ListItemButton, 
-    Table, 
-    TableBody, 
-    TableCell, 
-    TableContainer, 
-    TableHead, 
-    TableRow, 
-    Paper 
-} from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useDataContext } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
-import { 
-    AppBar, 
-    Toolbar, 
-    Tabs, 
-    Tab, 
-    TextField, 
-    Box, 
-    styled, 
-    FormControlLabel, 
-    Switch,
-    ToggleButtonGroup,
+import {
+    AppBar,
+    Toolbar,
+    Tabs,
+    Tab,
+    TextField,
+    Box,
+    styled, ToggleButtonGroup,
     ToggleButton,
     IconButton
 } from '@mui/material';
