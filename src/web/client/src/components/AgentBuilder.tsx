@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box,
     Paper,
@@ -11,9 +11,7 @@ import {
     MenuItem,
     InputLabel,
     FormControlLabel,
-    Checkbox,
-    Divider,
-    IconButton,
+    Checkbox, IconButton,
     Tooltip,
     Dialog,
     DialogTitle,
@@ -141,15 +139,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     };
 
     return (
-        <Paper
-            sx={{
-                p: 3,
-                bgcolor: 'background.paper',
-                borderRadius: 2,
-                boxShadow: 1,
-                mb: 3
-            }}
-        >
+        <Box>
             <Typography variant="h6" gutterBottom sx={{
                 mb: 2,
                 pb: 1,
@@ -574,6 +564,6 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                     Add New Agent
                 </Button>
             </Box>
-        </Paper>
+        </Box>
     );
 };
