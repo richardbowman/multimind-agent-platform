@@ -39,10 +39,8 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
-    public static mapToTask(taskModel: TaskModel | null | undefined): Task {
-        if (!taskModel) {
-            throw new Error('Cannot map null or undefined task model');
-        }
+    public static mapToTask(taskModel: TaskModel | null | undefined): Task|null|undefined {
+        if (!taskModel) return taskModel;
 
         try {
             return {
@@ -162,7 +160,9 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
-    public static mapToProject(projectModel: ProjectModel): Project {
+    public static mapToProject(projectModel: ProjectModel|null|undefined): Project|null|undefined {
+        if (!projectModel) return projectModel;
+
         // Convert TaskModel instances to Task objects
         const tasks = projectModel.tasks?.reduce((acc, task) => {
             acc[task.id] = TaskModel.mapToTask(task);
