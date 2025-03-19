@@ -40,9 +40,13 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         const migrationsDir = path.join(getDataPath(), 'migrations');
         this.migrator = new DatabaseMigrator(this.sequelize, migrationsDir);
 
-        // Initialize models - need to pass both models to each other for associations
-        ProjectModel.initialize(this.sequelize, TaskModel);
-        TaskModel.initialize(this.sequelize, ProjectModel);
+        // Initialize models first
+        ProjectModel.initialize(this.sequelize);
+        TaskModel.initialize(this.sequelize);
+        
+        // Then set up associations
+        ProjectModel.setupAssociations(TaskModel);
+        TaskModel.setupAssociations(ProjectModel);
     }
 
     async initialize(): Promise<void> {
