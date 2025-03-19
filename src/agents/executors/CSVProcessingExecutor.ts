@@ -329,8 +329,6 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                     data: response.resultColumns.reduce((acc, insight) => {
                         acc[insight.name] = insight.value;
                         return acc;
-                    }, {
-                        rowIndex: task.props?.rowIndex
                     }),
                     artifacts: responseData.artifactIds,
                     traceId
@@ -375,7 +373,10 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                 props: t.props && {
                     ...t.props,
                     response: {
-                        message: t.props.response.message
+                        ...t.props?.response,
+                        result: {
+                            message: t.props?.result?.response?.message||t.props?.result?.response?.status
+                        }
                     }
                 }
             }))
@@ -430,11 +431,10 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
         
         if (artifactId && statusPost && task.props?.childProjectId) {            
             // Parse the CSV
+            const headers = CSVUtils.getColumnHeaders(csvArtifact.content.toString())
             const { rows } = await CSVUtils.fromCSV(csvArtifact.content.toString());
 
-            // Add ID column as first column if it doesn't exist
-            const headers = Object.keys(rows[0] || {});
-            if (!headers.includes('ID')) {
+            if (headers.indexOf('ID') == -1) {
                 headers.unshift('ID');
                 // Add IDs starting from 1
                 rows.forEach((row, index) => {
@@ -473,7 +473,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
             }
 
             // Generate status update as a string
-            const statusUpdate = await CSVUtils.toCSV({ rows, metadata: {} });
+            const statusUpdate = await CSVUtils.toCSV({ rows, metadata: {} }, headers);
 
             // Update the progress message with CSV in code block
             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
