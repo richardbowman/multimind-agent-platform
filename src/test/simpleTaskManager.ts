@@ -60,11 +60,19 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             // Run migrations
             await this.migrator.migrate();
 
-            // Sync models with database
-            await this.sequelize.sync({ 
-                alter: true,
-                force: false // Don't drop tables on sync
-            });
+            // Sync models with database in correct order
+            try {
+                Logger.verbose('Syncing ProjectModel...');
+                await ProjectModel.sync({ alter: true });
+                
+                Logger.verbose('Syncing TaskModel...');
+                await TaskModel.sync({ alter: true });
+                
+                Logger.verbose('Database models synchronized successfully');
+            } catch (error) {
+                Logger.error('Error syncing database models:', error);
+                throw error;
+            }
 
             this.initialized = true;
             Logger.info('Task manager initialized successfully');

@@ -69,7 +69,11 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
             id: {
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
-                primaryKey: true
+                primaryKey: true,
+                allowNull: false,
+                validate: {
+                    isUUID: 4
+                }
             },
             description: {
                 type: DataTypes.TEXT,
@@ -89,7 +93,10 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
             },
             projectId: {
                 type: DataTypes.UUID,
-                allowNull: false
+                allowNull: false,
+                validate: {
+                    isUUID: 4
+                }
             },
             creator: {
                 type: DataTypes.STRING,
@@ -182,7 +189,11 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
             id: {
                 type: DataTypes.UUID,
                 defaultValue: DataTypes.UUIDV4,
-                primaryKey: true
+                primaryKey: true,
+                allowNull: false,
+                validate: {
+                    isUUID: 4
+                }
             },
             name: {
                 type: DataTypes.STRING,
