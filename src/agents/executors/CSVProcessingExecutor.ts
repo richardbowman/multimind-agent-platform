@@ -169,7 +169,6 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepRes
             
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
-                const taskId = createUUID();
                 
                 // Create task description with headers
                 const taskData = `The data from row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
@@ -186,8 +185,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepRes
                     return [];
                 });
 
-                await this.taskManager.addTask(project, {
-                    id: taskId,
+                const { id: taskId } = await this.taskManager.addTask(project, {
                     description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of data. Processing Context: ${taskDescription}. Data: ${taskData}`,
                     creator: params.agentId,
                     type: TaskType.Standard,
@@ -284,7 +282,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepRes
         }
 
         // Get the original goal from the parent task
-        const project = this.taskManager.getProject(task.projectId);
+        const project = await this.taskManager.getProject(task.projectId);
         const parentTask = project?.metadata?.parentTaskId 
             ? await this.taskManager.getTaskById(project.metadata.parentTaskId)
             : null;
@@ -408,7 +406,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
         
         // Cancel all child tasks if we get a cancellation
         if (eventType === TaskEventType.Cancelled && task.props?.childProjectId) {
-            const project = this.taskManager.getProject(task.props?.childProjectId);
+            const project = await this.taskManager.getProject(task.props?.childProjectId);
             if (project) {
                 const taskList = Object.keys(project.tasks) as UUID[];
                 for (const taskId of taskList) {
@@ -448,7 +446,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
             }
 
             // Get all tasks in the child project
-            const project = this.taskManager.getProject(task.props?.childProjectId);
+            const project = await this.taskManager.getProject(task.props?.childProjectId);
             if (project) {
                 // Create a map of rowIndex to task status
                 const rowStatusMap = new Map<number, TaskStatus>();

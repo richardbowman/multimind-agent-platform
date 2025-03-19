@@ -111,7 +111,7 @@ export abstract class StepBasedAgent extends Agent {
         const task = await projects.getTaskById(taskId);
         if (!task) return null;
 
-        const project = projects.getProject(task.projectId);
+        const project = await projects.getProject(task.projectId);
         if (!project.metadata.parentTaskId) {
             return task; // This is the root task
         }
@@ -132,7 +132,7 @@ export abstract class StepBasedAgent extends Agent {
             const executor = this.stepExecutors.get(stepTask.props?.stepType);
             if (executor && typeof executor.onChildProjectComplete === 'function') {
                 const statusPost =  posts?.find(p => p.props?.partial);
-                const childProject = this.projects.getProject(stepTask.props?.childProjectId);
+                const childProject = await this.projects.getProject(stepTask.props?.childProjectId);
                 const stepResult = await executor.onChildProjectComplete(stepTask, childProject);
                 const artifactIds = stepResult?.artifactIds;
                 
@@ -254,7 +254,7 @@ export abstract class StepBasedAgent extends Agent {
         }
 
         // Handle response to existing project
-        const task = this.projects.getNextTask(projectId, TaskType.Step);
+        const task = await this.projects.getNextTask(projectId, TaskType.Step);
 
         const execParams: ExecuteNextStepParams = {
             projectId,
@@ -347,7 +347,7 @@ export abstract class StepBasedAgent extends Agent {
     protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
         const { projectId } = params;
 
-        const task = this.projects.getNextTask(projectId, TaskType.Step) as StepTask<StepResponse>;
+        const task = await this.projects.getNextTask(projectId, TaskType.Step) as StepTask<StepResponse>;
 
         if (!task) {
             Logger.warn('No tasks found to execute');
@@ -516,7 +516,7 @@ export abstract class StepBasedAgent extends Agent {
 
                 Logger.info(`Executing step "${task.props.stepType}" for project "${projectId}"`);
 
-                const project = this.projects.getProject(projectId);
+                const project = await this.projects.getProject(projectId);
                 if (!project) {
                     throw new Error(`Project ${projectId} not found`);
                 }
@@ -527,7 +527,7 @@ export abstract class StepBasedAgent extends Agent {
                 if (context?.channelId) {
                     const channelData = await this.chatClient.getChannelData(context?.channelId);
                     const channelProject = channelData?.projectId
-                        ? this.projects.getProject(channelData.projectId)
+                        ? await this.projects.getProject(channelData.projectId)
                         : null;
                     channelGoals = [
                         ...channelGoals,
@@ -552,7 +552,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
 
                 // Get all prior completed tasks' results
-                const tasks = this.projects.getProjectTasks(projectId);
+                const tasks = await this.projects.getProjectTasks(projectId);
                 const priorSteps = tasks
                     .filter(t => t.type === "step")
                     .map(t => t as StepTask<StepResponse>)
@@ -612,7 +612,7 @@ export abstract class StepBasedAgent extends Agent {
     protected async handleStepCompletion(params: ExecuteStepParams<StepResponse>, stepResult: StepResult<StepResponse>) {
         const { task, userPost, projectTask } = params;
         const { projectId } = task;
-        const project = this.projects.getProject(projectId);
+        const project = await this.projects.getProject(projectId);
         
         let replyTo: ChatPost | undefined;
         if (userPost && isValidChatPost(userPost)) {
@@ -651,7 +651,7 @@ export abstract class StepBasedAgent extends Agent {
 
         
         if (stepResult.projectId) {
-            const newProject = this.projects.getProject(stepResult.projectId);
+            const newProject = await this.projects.getProject(stepResult.projectId);
             newProject.metadata.parentTaskId = task.id;
             //TODO need a way to update project to disk
         }
@@ -701,7 +701,7 @@ export abstract class StepBasedAgent extends Agent {
         }
         if (stepResult.finished || this.planner?.alwaysComplete) {
             // If this was the last planned task, add a validation step
-            const remainingTasks = this.projects.getProjectTasks(projectId).filter(t => !t.complete && t.type === "step" && t.id !== task.id);
+            const remainingTasks = (await this.projects.getProjectTasks(projectId)).filter(t => !t.complete && t.type === "step" && t.id !== task.id);
             const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
 
             if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
@@ -721,7 +721,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
             }
 
-            await this.projects.completeTask(task.id);
+            const updatedTask = await this.projects.completeTask(task.id);
             Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
             
             if (!stepResult.needsUserInput) {

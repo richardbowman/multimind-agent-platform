@@ -54,7 +54,7 @@ export class RouterAgent extends Agent {
         // Get channel data including any project goals
         const channelData = await this.chatClient.getChannelData(userPost.channel_id);
         const project = channelData?.projectId
-            ? this.projects.getProject(channelData.projectId)
+            ? await this.projects.getProject(channelData.projectId)
             : null;
 
         // Get agent descriptions from settings for channel members
@@ -209,7 +209,7 @@ export class RouterAgent extends Agent {
         await this.handleRoutingResponse(userPost, response, threadPosts, context);
     }
 
-    protected projectCompleted(project: Project): void {
+    protected async projectCompleted(project: Project): Promise<void> {
         // Router agent doesn't handle projects
     }
 }

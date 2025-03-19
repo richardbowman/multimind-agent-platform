@@ -107,7 +107,7 @@ export abstract class Agent {
     protected isWorking: boolean = false;
     protected isMemoryEnabled: boolean = false;
 
-    protected abstract projectCompleted(project: Project): void;
+    protected abstract projectCompleted(project: Project): Promise<void>;
     protected abstract processTask(task: Task): Promise<void>;
     protected abstract handlerThread(params: HandlerParams): Promise<void>;
     protected abstract handleChannel(params: HandlerParams): Promise<void>;
@@ -136,12 +136,12 @@ export abstract class Agent {
         this.artifactManager = params.artifactManager;
 
         if (this.projects) {
-            this.projects.on("taskAssigned", async (task: Task) => {
+            this.projects.on("taskAssigned", async ({ task } : { task: Task }) => {
                 if (task.assignee === this.userId || task.creator === this.userId) {
                     await this.taskNotification(task, TaskEventType.Assigned);
                 }
             });
-            this.projects.on("taskCompleted", async (task: Task) => {
+            this.projects.on("taskCompleted", async ({ task } : { task: Task }) => {
                 if (task.assignee === this.userId || task.creator === this.userId) {
                     await this.taskNotification(task, TaskEventType.Completed);
                 }
@@ -159,7 +159,7 @@ export abstract class Agent {
                 }
             });
 
-            this.projects.on("taskCancelled", async (task: Task) => {
+            this.projects.on("taskCancelled", async ({ task } : { task: Task }) => {
                 if (task.assignee === this.userId || task.creator === this.userId) {
                     await this.taskNotification(task, TaskEventType.Cancelled);
                 }
@@ -339,7 +339,7 @@ export abstract class Agent {
                         const projectIds = [...new Set(posts.map(p => p.props["project-ids"] || []).flat().filter(id => id !== undefined))];
                         const projects: Project[] = [];
                         for (const projectId of projectIds) {
-                            const project = this.projects.getProject(projectId);
+                            const project = await this.projects.getProject(projectId);
                             if (project) projects.push(project);
                         }
 
@@ -393,7 +393,7 @@ export abstract class Agent {
     private async generateWelcomeMessage(agentOptions: Agent[], allAgents: Agent[], channelId: UUID): Promise<string> {
         const channel = await this.chatClient.getChannelData(channelId);
         const channelProject = channel?.projectId
-            ? this.projects.getProject(channel.projectId)
+            ? await this.projects.getProject(channel.projectId)
             : null;
         const channelGoals = [
             ...Object.values(channelProject?.tasks || {})

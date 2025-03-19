@@ -6619,21 +6619,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^20.9.0":
+  version: 20.17.24
+  resolution: "@types/node@npm:20.17.24"
+  dependencies:
+    undici-types: "npm:~6.19.2"
+  checksum: 10c0/2a39ce4c4cd4588a05b2a485cc0a1407cbea608dd1ab03e36add59d61712718d95c84b492ca5190753f0be2bce748aeeb0f2a1412e712775462befe3820b3ff9
+  languageName: node
+  linkType: hard
+
 "@types/node@npm:^22.10.10":
   version: 22.10.10
   resolution: "@types/node@npm:22.10.10"
   dependencies:
     undici-types: "npm:~6.20.0"
   checksum: 10c0/3425772d4513cd5dbdd87c00acda088113c03a97445f84f6a89744c60a66990b56c9d3a7213d09d57b6b944ae8ff45f985565e0c1846726112588e33a22dd12b
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.7.7":
-  version: 22.13.10
-  resolution: "@types/node@npm:22.13.10"
-  dependencies:
-    undici-types: "npm:~6.20.0"
-  checksum: 10c0/a3865f9503d6f718002374f7b87efaadfae62faa499c1a33b12c527cfb9fd86f733e1a1b026b80c5a0e4a965701174bc3305595a7d36078aa1abcf09daa5dee9
   languageName: node
   linkType: hard
 
@@ -10458,16 +10458,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^35.0.2":
-  version: 35.0.2
-  resolution: "electron@npm:35.0.2"
+"electron@npm:^34.0.0":
+  version: 34.3.3
+  resolution: "electron@npm:34.3.3"
   dependencies:
     "@electron/get": "npm:^2.0.0"
-    "@types/node": "npm:^22.7.7"
+    "@types/node": "npm:^20.9.0"
     extract-zip: "npm:^2.0.1"
   bin:
     electron: cli.js
-  checksum: 10c0/c49175411dd642214ef953cf257cf6b3f3a59d2211f5669c4fdb8f85cf27d8781c978beac7a8af301db4c42ffbf0441c662f0d7c97c845ab13ae5b6c8a070179
+  checksum: 10c0/c18f8f584be89c99b2af7ffbf5f0f2c4dc0b1278f8f685ea6798d6ca238fe1890710fa7a45c114e78aea605425d5f0056f3c520d8348e1d827d9abe76e0aec8f
   languageName: node
   linkType: hard
 
@@ -15603,7 +15603,7 @@ __metadata:
     csv-stringify: "npm:^6.5.2"
     dompurify: "npm:^3.2.3"
     dotenv: "npm:^16.4.7"
-    electron: "npm:^35.0.2"
+    electron: "npm:^34.0.0"
     electron-builder: "npm:^25.1.8"
     electron-builder-squirrel-windows: "npm:^25.1.8"
     electron-is-dev: "npm:^3.0.1"
@@ -20324,6 +20324,13 @@ __metadata:
   version: 5.26.5
   resolution: "undici-types@npm:5.26.5"
   checksum: 10c0/bb673d7876c2d411b6eb6c560e0c571eef4a01c1c19925175d16e3a30c4c428181fb8d7ae802a261f283e4166a0ac435e2f505743aa9e45d893f9a3df017b501
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.19.2":
+  version: 6.19.8
+  resolution: "undici-types@npm:6.19.8"
+  checksum: 10c0/078afa5990fba110f6824823ace86073b4638f1d5112ee26e790155f481f2a868cc3e0615505b6f4282bdf74a3d8caad715fd809e870c2bb0704e3ea6082f344
   languageName: node
   linkType: hard
 

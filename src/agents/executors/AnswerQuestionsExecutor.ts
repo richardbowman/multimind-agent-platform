@@ -49,7 +49,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
-        const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
+        const project = await this.taskManager.getProject(params.projectId) as OnboardingProject;
 
         // Get both direct questions and template-based questions
         const pastQA = Object.values(project.tasks).filter(t =>

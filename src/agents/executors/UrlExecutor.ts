@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { LinkRef } from '../../helpers/scrapeHelper';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -37,9 +37,10 @@ export class UrlExecutor implements StepExecutor {
             
             if (allUrls.length === 0) {
                 return {
-                    type: 'invalid_url',
                     finished: true,
+                    replan: ReplanType.Allow,
                     response: {
+                        type: StepResponseType.Error,
                         message: `No valid URLs found in step: ${step}`
                     }
                 };
@@ -61,10 +62,10 @@ export class UrlExecutor implements StepExecutor {
         } catch (error) {
             Logger.error(`Error looking for links`, error);
             return {
-                type: 'webpage_error',
                 finished: true,
                 replan: ReplanType.Allow,
                 response: {
+                    type: StepResponseType.Error,
                     message: `Error looking for links: ${error}`
                 }
             };

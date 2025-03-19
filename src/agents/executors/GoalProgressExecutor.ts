@@ -82,7 +82,7 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
                     if (task && task.status !== TaskStatus.InProgress) {
                         await this.taskManager.markTaskInProgress(goalId);
                         // Update project status if needed
-                        const project = this.taskManager.getProject(task.projectId);
+                        const project = await this.taskManager.getProject(task.projectId);
                         if (project && project.metadata.status !== 'active') {
                             await this.taskManager.updateProject(task.projectId, {
                                 metadata: { ...project.metadata, status: 'active' }
@@ -102,7 +102,7 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
                     if (task && task.status !== TaskStatus.Completed) {
                         await this.taskManager.completeTask(goalId);
                         // Check if all tasks in project are complete
-                        const project = this.taskManager.getProject(task.projectId);
+                        const project = await this.taskManager.getProject(task.projectId);
                         if (project) {
                             const allTasksComplete = Object.values(project.tasks)
                                 .every(t => t.status === TaskStatus.Completed);

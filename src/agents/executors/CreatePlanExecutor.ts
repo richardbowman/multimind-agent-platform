@@ -47,7 +47,7 @@ export class CreatePlanExecutor implements StepExecutor<StepResponse> {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
+        const project = await this.taskManager.getProject(params.projectId) as OnboardingProject;
         
         // Check for template ID in prior step responses and priorResults
         const templateResult = params.previousResponses?.find(r => 

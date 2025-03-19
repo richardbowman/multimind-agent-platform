@@ -48,7 +48,7 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly description: string;
     readonly type: TaskType;
     readonly category: string;
-    readonly creator: UUID;
+    readonly creator: UUID|'system';
     readonly assignee?: UUID;
     readonly status: TaskStatus;
     /** @deprecated Use status field instead */
@@ -102,15 +102,15 @@ export interface TaskManager extends EventEmitter {
     addProject(project: Partial<Project>): Promise<Project>;
     createProject(params: CreateProjectParams): Promise<Project>;
     addTask(project: Project, params: AddTaskParams): Promise<Task>;
-    getProject(projectId: UUID): Project;
+    getProject(projectId: UUID): Promise<Project>;
     newProjectId(): UUID;
     save(): Promise<void>;
     load(): Promise<void>;
-    assignTaskToAgent(taskId: UUID, agentId: string): Promise<void>;
+    assignTaskToAgent(taskId: UUID, agentId: string): Promise<Task>;
     getNextTaskForUser(userId: string): Promise<Task | null>;
-    getProjects(): Project[];
-    getNextTask(projectId: UUID, type?: TaskType): Task | null;
-    getProjectTasks(projectId: string): Task[];
+    getProjects(): Promise<Project[]>;
+    getNextTask(projectId: UUID, type?: TaskType): Promise<Task | null>;
+    getProjectTasks(projectId: string): Promise<Task[]>;
     markTaskInProgress(task: Task | string): Promise<Task>;
     getTaskById(taskId: UUID): Promise<Readonly<Task> | null>;
     updateTask(taskId: UUID, updates: Partial<Task>): Promise<Task>;

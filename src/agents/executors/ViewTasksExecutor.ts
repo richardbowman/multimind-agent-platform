@@ -48,7 +48,7 @@ export class ViewTasksExecutor implements StepExecutor<StepResponse> {
         }
 
         // Find all projects with tasks assigned to this user
-        const allProjects = this.taskManager.getProjects();
+        const allProjects = await this.taskManager.getProjects();
         const userTasks = allProjects
             .flatMap(project => 
                 Object.values(project.tasks)

@@ -98,9 +98,7 @@ export class ComplexProjectExecutor implements StepExecutor {
             });
 
             // Create research task
-            const researchTaskId = createUUID();
-            await this.taskManager.addTask(project, {
-                id: researchTaskId,
+            const { id: researchTaskId } = await this.taskManager.addTask(project, {
                 description: researchTask,
                 creator: params.agentId,
                 type: TaskType.Standard,
@@ -110,9 +108,7 @@ export class ComplexProjectExecutor implements StepExecutor {
             });
 
             // Create content task with dependency
-            const contentTaskId = createUUID();
-            await this.taskManager.addTask(project, {
-                id: contentTaskId,
+            const { id: contentTaskId } = await this.taskManager.addTask(project, {
                 description: contentTask,
                 creator: params.agentId,
                 type: TaskType.Standard,

@@ -180,9 +180,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
             // Create tasks and assign to agents
             const taskDetails : string[] = [];
             for (const task of tasks) {
-                const taskId = createUUID();
-                await this.taskManager.addTask(project, {
-                    id: taskId,
+                const { id: taskId} = await this.taskManager.addTask(project, {
                     description: task.description,
                     creator: params.agentId,
                     type: TaskType.Standard,

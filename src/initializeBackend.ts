@@ -84,7 +84,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         const dataDir = getDataPath();
 
-        const tasks = new SimpleTaskManager(path.join(dataDir, "tasks.json"));
+        const tasks = new SimpleTaskManager();
+        await tasks.initialize();
 
         // Load previously saved tasks
         Logger.progress("Loading tasks", 0.6, "loading");
@@ -154,11 +155,11 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             agents: agents
         });
 
-        const agentObjects = [...jsonAgentObjects, ...markdownAgentObjects];
+        const agentObjects = [...jsonAgentObjects.entries(), ...markdownAgentObjects.entries()];
 
         // Initialize all agents
         let i = 1, total = Object.keys(agentObjects).length;
-        for (const [name, agent] of agentObjects.entries()) {
+        for (const [name, agent] of agentObjects) {
             Logger.progress(`Initializing ${name} agent...`, (i / total));
             if (agent.initialize) {
                 await agent.initialize();

@@ -53,7 +53,7 @@ export class ReplyExecutor implements StepExecutor {
         promptBuilder.addInstruction("- If asking follow-up questions, make them specific and actionable");
 
         // Add project context
-        const project = this.taskManager.getProject(params.projectId);
+        const project = await this.taskManager.getProject(params.projectId);
         if (project) {
             promptBuilder.addContext({contentType: ContentType.TASKS, tasks: Object.values(project.tasks)});
         }

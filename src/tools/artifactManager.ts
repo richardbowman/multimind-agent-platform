@@ -417,9 +417,7 @@ export class ArtifactManager {
 
     // Execute all read operations in parallel
     const results = await Promise.all(readOperations);
-    return results
-        .filter(artifact => artifact !== null)
-        .map(artifact => TaskModel.mapToTask(artifact!));
+    return results.defined();
   }
 
   async listArtifacts(): Promise<ArtifactItem[]> {

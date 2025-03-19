@@ -2,7 +2,7 @@
     "id": "#product",
     "name": "Software Development Project",
     "description": "Template for managing a software development project",
-    "supportingAgents": ["@product", "@coder"],
+    "supportingAgents": ["@product", "@coding-assistant"],
     "defaultResponder": "@product",
     "initialTasks": [
         {

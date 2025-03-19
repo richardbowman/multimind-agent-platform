@@ -21,7 +21,7 @@ interface TaskAttributes {
 
 interface TaskCreationAttributes extends Optional<TaskAttributes, 'id'> {}
 
-export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> implements Task {
+export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> {
     public id!: UUID;
     public description!: string;
     public category!: string;
@@ -36,10 +36,12 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
     public recurrencePattern?: RecurrencePattern;
     public lastRunDate?: Date;
 
+    public readonly ProjectModel?: ProjectModel;
+
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
-    public static mapToTask(taskModel: TaskModel | null | undefined): Task|null|undefined {
+    public static mapToTask(taskModel: TaskModel): Task {
         if (!taskModel) return taskModel;
 
         try {
@@ -142,10 +144,7 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
             foreignKey: {
                 name: 'projectId',
                 allowNull: false
-            },
-            as: 'project',
-            onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            }
         });
     }
 }
@@ -158,20 +157,20 @@ interface ProjectAttributes {
 
 interface ProjectCreationAttributes extends Optional<ProjectAttributes, 'id'> {}
 
-export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttributes> implements Project {
+export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttributes> {
     public id!: UUID;
     public name!: string;
     public metadata!: ProjectMetadata;
-    public tasks!: TaskModel[]; // Add tasks property
+    public TaskModels?: TaskModel[];
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
-    public static mapToProject(projectModel: ProjectModel|null|undefined): Project|null|undefined {
+    public static mapToProject(projectModel: ProjectModel): Project {
         if (!projectModel) return projectModel;
 
         // Convert TaskModel instances to Task objects
-        const tasks = projectModel.tasks?.reduce((acc, task) => {
+        const tasks = projectModel.TaskModels?.reduce((acc, task) => {
             acc[task.id] = TaskModel.mapToTask(task);
             return acc;
         }, {} as Record<string, Task>) || {};
@@ -221,10 +220,7 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
 
     public static setupAssociations(): void {
         ProjectModel.hasMany(TaskModel, {
-            foreignKey: 'projectId',
-            as: 'tasks',
-            onDelete: 'CASCADE',
-            onUpdate: 'CASCADE'
+            foreignKey: 'projectId'
         });
     }
 }

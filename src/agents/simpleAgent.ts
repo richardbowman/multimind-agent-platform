@@ -9,7 +9,7 @@ import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { LLMContext } from 'src/llm/ILLMService';
 
 export class SimpleAgent extends Agent {
-    protected projectCompleted(project: Project): void {
+    protected async projectCompleted(project: Project): Promise<void> {
         throw new Error('Method not implemented.');
     }
     protected processTask(task: Task): Promise<void> {
@@ -27,7 +27,7 @@ export class SimpleAgent extends Agent {
 
             // Get channel data including any project goals
             const channel = await this.chatClient.getChannelData(params.userPost.channel_id);
-            const channelProject = channel?.projectId && this.projects.getProject(channel.projectId);
+            const channelProject = channel?.projectId && await this.projects.getProject(channel.projectId);
 
             instructions.addContext({contentType: ContentType.PURPOSE});
             channel && instructions.addContext({contentType: ContentType.CHANNEL_DETAILS, channel, tasks: Object.values(channelProject?.tasks||{})});

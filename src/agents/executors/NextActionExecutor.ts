@@ -65,7 +65,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 .filter(metadata => metadata.planner); // Only include executors marked for planner
 
             const schema = await getGeneratedSchema(SchemaType.NextActionResponse);
-            const project = this.projects.getProject(params.projectId);
+            const project = await this.projects.getProject(params.projectId);
             const prompt = this.startModel(params);
 
             prompt.addContext(ContentType.PURPOSE);

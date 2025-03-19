@@ -10,6 +10,8 @@ import { SettingsManager } from '../tools/settingsManager';
 import path from "path";
 import { UUID } from 'src/types/uuid';
 import { parseAsync } from '@babel/core';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { MarkdownConfigurableAgent } from 'src/agents/markdownConfigurableAgent';
 
 
 export interface AgentLoaderParams {
@@ -34,7 +36,7 @@ export class AgentLoader {
         
         try {
             // Find all artifacts with AgentConfig subtype
-            const artifacts = await params.artifactManager.searchArtifacts({
+            const artifacts = await params.artifactManager.searchArtifacts("", {
                 type: ArtifactType.Document,
                 subtype: DocumentSubtype.AgentConfig
             });

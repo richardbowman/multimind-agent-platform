@@ -259,7 +259,7 @@ a separate combining step is required.`);
         
         // Cancel all child tasks if we get a cancellation
         if (eventType === TaskEventType.Cancelled && task.props?.childProjectId) {
-            const project = this.taskManager.getProject(task.props?.childProjectId);
+            const project = await this.taskManager.getProject(task.props?.childProjectId);
             if (project) {
                 const taskList = Object.keys(project.tasks);
                 for (const taskId of taskList) {
@@ -273,7 +273,7 @@ a separate combining step is required.`);
 
         // Update progress when tasks complete
         if (statusPost && task.props?.childProjectId) {
-            const project = this.taskManager.getProject(task.props?.childProjectId);
+            const project = await this.taskManager.getProject(task.props?.childProjectId);
             if (project) {
                 const completedCount = Object.values(project.tasks).filter(t => t.status === TaskStatus.Completed).length;
                 const totalCount = Object.keys(project.tasks).length;

@@ -28,7 +28,7 @@ export class ReviewProgressExecutor implements StepExecutor {
 
     async executeOld(goal: string, step: string, projectId: string): Promise<StepResult<StepResponse>> {
         const project = await this.getProjectWithPlan(projectId);
-        const tasks = this.taskManager.getProjectTasks(projectId);
+        const tasks = await this.taskManager.getProjectTasks(projectId);
 
         const schema = await getGeneratedSchema(SchemaType.ReviewProgressResponse);
 
@@ -79,7 +79,7 @@ export class ReviewProgressExecutor implements StepExecutor {
     }
 
     private async getProjectWithPlan(projectId: string): Promise<OnboardingProject> {
-        const project = this.taskManager.getProject(projectId) as OnboardingProject;
+        const project = await this.taskManager.getProject(projectId) as OnboardingProject;
         if (!project) {
             throw new Error(`Project ${projectId} not found`);
         }

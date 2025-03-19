@@ -6,7 +6,7 @@
         "@assistant",
         "@writer",
         "@research-assistant",
-        "@coder"
+        "@coding-assistant"
     ],
     "defaultResponder": "@assistant",
     "initialTasks": [

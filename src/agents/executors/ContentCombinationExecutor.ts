@@ -24,7 +24,7 @@ export class ContentCombinationExecutor extends BaseStepExecutor<StepResponse> {
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { projectId } = params;
-        const project = this.taskManager.getProject(projectId);
+        const project = await this.taskManager.getProject(projectId);
         
         if (!project) {
             throw new Error('Project is required for content combination');

@@ -31,7 +31,12 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async markTaskComplete(taskId: string, complete: boolean): Promise<Task> {
-        const task = await this.services.taskManager.completeTask(taskId);
+        let task;
+        if (!complete) {
+            task = await this.services.taskManager.cancelTask(taskId);
+        } else {
+            task = await this.services.taskManager.completeTask(taskId);
+        }
         return {
             id: task.id,
             projectId: task.projectId,
@@ -67,7 +72,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async getProject(projectId: string): Promise<ClientProject> {
-        const project = this.services.taskManager.getProject(projectId);
+        const project = await this.services.taskManager.getProject(projectId);
         if (!project) {
             throw new Error(`Project ${projectId} not found`);
         }
@@ -156,7 +161,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
         // Set up task update notifications
         const taskHandler = (event : TaskEventType) => {
-            return ({task}) => {
+            return ({ task }) => {
                 rpc.onTaskUpdate({
                     id: task.id,
                     projectId: task.projectId,
@@ -176,6 +181,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         };
         this.services.taskManager.on('taskAdded', taskHandler(TaskEventType.Created));
         this.services.taskManager.on('taskUpdated', taskHandler(TaskEventType.Updated));
+        this.services.taskManager.on('taskCompleted', taskHandler(TaskEventType.Completed));
+        this.services.taskManager.on('taskAssigned', taskHandler(TaskEventType.Assigned));
+        this.services.taskManager.on('taskCancelled', taskHandler(TaskEventType.Cancelled));
 
         // Set up message receiving for the user client
         // Set up channel creation notifications
@@ -379,16 +387,16 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             ].filter(id => id != undefined);
             
             // Get tasks from storage that match these project IDs and convert to ClientTask format
-            const tasks = projectIds.flatMap(projectId => {
-                const project = this.services.taskManager.getProject(projectId);
+            const tasks = await Promise.all(projectIds.map(async projectId => {
+                const project = await this.services.taskManager.getProject(projectId);
                 if (!project) return [];
                 
                 return Object.values<Task>(project.tasks);
-            });
+            }));
 
-            return tasks;
+            return tasks.flat();
         } else {
-            return this.services.taskManager.getProjects().flatMap(p => 
+            return (await this.services.taskManager.getProjects()).flatMap(p => 
                 Object.values(p.tasks).sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity)));
         }
     }

@@ -357,6 +357,9 @@
             },
             {
               "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "UnderstandGoalsExecutor"
             }
           ]
         }

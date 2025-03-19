@@ -55,7 +55,7 @@ export class MultiStepPlanner implements Planner {
             throw new Error(`Project not found`);
         }
 
-        const tasks = this.projects.getProjectTasks(project.id);
+        const tasks = await this.projects.getProjectTasks(project.id);
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {
