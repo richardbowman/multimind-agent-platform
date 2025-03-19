@@ -38,6 +38,25 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
+    public static mapToTask(taskModel: TaskModel): Task {
+        return {
+            id: taskModel.id,
+            description: taskModel.description,
+            category: taskModel.category,
+            status: taskModel.status,
+            type: taskModel.type,
+            projectId: taskModel.projectId,
+            creator: taskModel.creator,
+            assignee: taskModel.assignee,
+            order: taskModel.order,
+            dependsOn: taskModel.dependsOn,
+            props: taskModel.props,
+            // Maintain backwards compatibility
+            complete: taskModel.status === TaskStatus.Completed,
+            inProgress: taskModel.status === TaskStatus.InProgress
+        };
+    }
+
     public static initialize(sequelize: Sequelize): void {
         TaskModel.init({
             id: {

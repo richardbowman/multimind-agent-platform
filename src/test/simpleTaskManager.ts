@@ -84,7 +84,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             // Emit taskAdded event
             await this.asyncEmit('taskAdded', { task, project });
 
-            return task;
+            return TaskModel.mapToTask(task);
         });
     }
 
@@ -228,11 +228,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
             if (existingTask.status === TaskStatus.InProgress) {
                 Logger.warn(`Task ${taskId} already marked in-progress but markTaskInProgress was called again`, new Error());
-                return existingTask;
+                return TaskModel.mapToTask(existingTask);
             }
             if (existingTask.status === TaskStatus.Cancelled) {
                 Logger.warn(`Trying to start task ${taskId} which is cancelled`, new Error());
-                return existingTask;
+                return TaskModel.mapToTask(existingTask);
             }
 
             await existingTask.update({ 
@@ -241,7 +241,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 complete: false // Maintain backwards compatibility
             });
 
-            return existingTask;
+            return TaskModel.mapToTask(existingTask);
         });
     }
 
@@ -309,7 +309,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 });
             }
 
-            return existingTask;
+            return TaskModel.mapToTask(existingTask);
         });
     }
 
@@ -383,7 +383,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             limit: 1
         });
 
-        return tasks[0] || null;
+        return tasks[0] ? TaskModel.mapToTask(tasks[0]) : null;
     }
 
     async getProjectTasks(projectId: string, type?: TaskType): Promise<Task[]> {
@@ -404,7 +404,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             return null;
         }
         // Return a deep frozen copy to prevent direct modification
-        return Object.freeze(JSON.parse(JSON.stringify(task)));
+        return Object.freeze(TaskModel.mapToTask(task));
     }
 
     async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
@@ -472,7 +472,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 }
             }
             
-            return task;
+            return TaskModel.mapToTask(task);
         });
     }
 
