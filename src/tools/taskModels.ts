@@ -124,7 +124,7 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
         // Associations will be set up after both models are initialized
     }
 
-    public static setupAssociations(ProjectModel: typeof ProjectModel): void {
+    public static setupAssociations(): void {
         TaskModel.belongsTo(ProjectModel, {
             foreignKey: 'projectId',
             as: 'project'
@@ -195,7 +195,7 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
         // Associations will be set up after both models are initialized
     }
 
-    public static setupAssociations(TaskModel: typeof TaskModel): void {
+    public static setupAssociations(): void {
         ProjectModel.hasMany(TaskModel, {
             foreignKey: 'projectId',
             as: 'tasks'

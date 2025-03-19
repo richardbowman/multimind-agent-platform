@@ -73,9 +73,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {
         return this.saveQueue.enqueue(async () => {
             // Get max order for new task
-            const maxOrder = await TaskModel.max('order', {
+            const maxOrder : number = (await TaskModel.max('order', {
                 where: { projectId: project.id }
-            }) || 0;
+            })) || 0;
 
             const task = await TaskModel.create({
                 id: createUUID(),
@@ -261,9 +261,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             }
 
             await existingTask.update({
-                status: TaskStatus.InProgress,
-                inProgress: true, // Maintain backwards compatibility
-                complete: false // Maintain backwards compatibility
+                status: TaskStatus.InProgress
             });
 
             return TaskModel.mapToTask(existingTask);
@@ -300,9 +298,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             }
 
             await existingTask.update({
-                status: TaskStatus.Completed,
-                complete: true, // Maintain backwards compatibility
-                inProgress: false // Maintain backwards compatibility
+                status: TaskStatus.Completed
             });
 
             await this.asyncEmit("taskCompleted", existingTask);
@@ -311,7 +307,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             const dependentTasks = await TaskModel.findAll({
                 where: {
                     dependsOn: existingTask.id,
-                    status: { [Sequelize.Op.ne]: TaskStatus.Completed }
+                    status: { [Op.ne]: TaskStatus.Completed }
                 }
             });
 
@@ -342,14 +338,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         const incompleteTasks = await TaskModel.count({
             where: {
                 projectId,
-                [Op.or]: [
-                    { status: { [Op.ne]: TaskStatus.Completed } },
-                    { complete: false }
-                ]
+                status: { [Op.ne]: TaskStatus.Completed }
             }
         });
 
-        return incompleteTasks[0].count === 0;
+        return incompleteTasks === 0;
     }
 
     async getProjectByTaskId(taskId: string): Promise<Project> {
@@ -364,7 +357,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             throw new Error(`No project found with task ID ${taskId}`);
         }
 
-        return task.project;
+        return ProjectModel.mapToProject(task.project);
     }
 
     async replaceProject(project: Project): Promise<void> {
@@ -403,12 +396,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         const tasks = await TaskModel.findAll({
             where: {
                 projectId,
-                [Sequelize.Op.or]: [
+                [Op.or]: [
                     { status: TaskStatus.Pending },
-                    { status: TaskStatus.InProgress },
-                    { complete: false }
+                    { status: TaskStatus.InProgress }
                 ],
-                status: { [Sequelize.Op.ne]: TaskStatus.Cancelled }
+                status: { [Op.ne]: TaskStatus.Cancelled }
             },
             order: [['order', 'ASC']],
             limit: 1
@@ -475,9 +467,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             }
 
             await task.update({
-                status: TaskStatus.Cancelled,
-                complete: false, // Maintain backwards compatibility
-                inProgress: false // Maintain backwards compatibility
+                status: TaskStatus.Cancelled
             });
 
             // Emit the 'taskCancelled' event with the task
@@ -492,7 +482,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                         const childTasks = await TaskModel.findAll({
                             where: {
                                 projectId: childProjectId,
-                                status: { [Sequelize.Op.ne]: TaskStatus.Cancelled }
+                                status: { [Op.ne]: TaskStatus.Cancelled }
                             }
                         });
 
