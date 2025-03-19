@@ -34,7 +34,18 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
 }> = ({ content, onSave, onAddToolbarActions }) => {
     const rowsRef = useRef<any[]>([]);
     const [rows, setRows] = useState<any[]>([]);
+    const isInitialRender = useRef(true);
     const throttledSetRows = debounce(setRows, 750);
+
+    const updateRows = (newRows: any[]) => {
+        rowsRef.current = newRows;
+        if (isInitialRender.current) {
+            setRows(newRows);
+            isInitialRender.current = false;
+        } else {
+            throttledSetRows(newRows);
+        }
+    };
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [isDirty, setIsDirty] = useState(false);
     const [state, setState] = useState<CSVRendererState>({
@@ -123,8 +134,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                     }));
 
                 setColumns(columnDefs);
-                rowsRef.current = parsedRows;
-                throttledSetRows(parsedRows);
+                updateRows(parsedRows);
             }
         } catch (error) {
             console.error('Error parsing CSV:', error);
@@ -158,8 +168,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
 
     const handleProcessRowUpdate = (newRow: GridRowModel) => {
         const updatedRows = rowsRef.current.map(row => row.id === newRow.id ? newRow : row);
-        rowsRef.current = updatedRows;
-        throttledSetRows(updatedRows);
+        updateRows(updatedRows);
         setIsDirty(true);
         return newRow;
     };
