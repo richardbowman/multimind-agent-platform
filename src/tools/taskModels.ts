@@ -126,8 +126,13 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
 
     public static setupAssociations(): void {
         TaskModel.belongsTo(ProjectModel, {
-            foreignKey: 'projectId',
-            as: 'project'
+            foreignKey: {
+                name: 'projectId',
+                allowNull: false
+            },
+            as: 'project',
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
         });
     }
 }
@@ -198,7 +203,9 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
     public static setupAssociations(): void {
         ProjectModel.hasMany(TaskModel, {
             foreignKey: 'projectId',
-            as: 'tasks'
+            as: 'tasks',
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
         });
     }
 }

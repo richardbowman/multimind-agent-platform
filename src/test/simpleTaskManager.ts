@@ -41,12 +41,13 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         this.migrator = new DatabaseMigrator(this.sequelize, migrationsDir);
 
         // Initialize models first
+        // Initialize models in correct order
         ProjectModel.initialize(this.sequelize);
         TaskModel.initialize(this.sequelize);
         
-        // Then set up associations
-        ProjectModel.setupAssociations(TaskModel);
-        TaskModel.setupAssociations(ProjectModel);
+        // Set up associations after both models are initialized
+        ProjectModel.setupAssociations();
+        TaskModel.setupAssociations();
     }
 
     async initialize(): Promise<void> {
@@ -60,7 +61,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             await this.migrator.migrate();
 
             // Sync models with database
-            await this.sequelize.sync({ alter: true });
+            await this.sequelize.sync({ 
+                alter: true,
+                force: false // Don't drop tables on sync
+            });
 
             this.initialized = true;
             Logger.info('Task manager initialized successfully');
