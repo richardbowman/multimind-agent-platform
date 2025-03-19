@@ -137,6 +137,15 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
+    public static mapToProject(projectModel: ProjectModel): Project {
+        return {
+            id: projectModel.id,
+            name: projectModel.name,
+            metadata: projectModel.metadata,
+            tasks: {} // Will be populated when including TaskModel
+        };
+    }
+
     public static initialize(sequelize: Sequelize): void {
         ProjectModel.init({
             id: {

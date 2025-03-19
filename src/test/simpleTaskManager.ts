@@ -107,7 +107,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 }
             });
 
-            return newProject;
+            return ProjectModel.mapToProject(newProject);
         });
     }
 
@@ -135,7 +135,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 }
             }
 
-            return project;
+            return ProjectModel.mapToProject(project);
         });
     }
 
@@ -148,7 +148,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             throw new Error(`Project ${projectId} not found`);
         }
 
-        return project;
+        return ProjectModel.mapToProject(project);
     }
 
     async save(): Promise<void> {
@@ -432,7 +432,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             // Emit projectUpdated event
             await this.asyncEmit('projectUpdated', { project });
 
-            return project;
+            return ProjectModel.mapToProject(project);
         });
     }
 
