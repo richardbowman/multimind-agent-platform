@@ -119,6 +119,12 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
             tableName: 'tasks',
             timestamps: true
         });
+
+        // Set up associations
+        TaskModel.belongsTo(ProjectModel, {
+            foreignKey: 'projectId',
+            as: 'project'
+        });
     }
 }
 
@@ -172,6 +178,12 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
             sequelize,
             tableName: 'projects',
             timestamps: true
+        });
+
+        // Set up associations
+        ProjectModel.hasMany(TaskModel, {
+            foreignKey: 'projectId',
+            as: 'tasks'
         });
     }
 }
