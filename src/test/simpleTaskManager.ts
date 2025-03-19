@@ -152,7 +152,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async getProject(projectId: string): Promise<Project> {
         const project = await ProjectModel.findByPk(projectId, {
-            include: [TaskModel]
+            include: [{
+                model: TaskModel,
+                as: 'tasks'
+            }]
         });
 
         if (!project) {
@@ -192,7 +195,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     assignee: userId,
                     status: TaskStatus.Pending
                 },
-                include: [ProjectModel]
+                include: [{
+                    model: ProjectModel,
+                    as: 'project'
+                }]
             });
 
             // First filter tasks with future due dates
@@ -348,7 +354,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async getProjectByTaskId(taskId: string): Promise<Project> {
         const task = await TaskModel.findByPk(taskId, {
-            include: [ProjectModel]
+            include: [{
+                model: ProjectModel,
+                as: 'project'
+            }]
         });
 
         if (!task || !task.project) {
@@ -383,7 +392,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async getProjects(): Promise<Project[]> {
         return (await ProjectModel.findAll({
-            include: [TaskModel]
+            include: [{
+                model: TaskModel,
+                as: 'tasks'
+            }]
         })).map(ProjectModel.mapToProject);
     }
 
