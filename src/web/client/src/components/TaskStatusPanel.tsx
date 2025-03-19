@@ -19,6 +19,28 @@ import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
 import { useIPCService } from '../contexts/IPCContext';
 
+const flyRight = keyframes`
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+`;
+
+const flyLeft = keyframes`
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+`;
+
 const fadeIn = keyframes`
   0% {
     opacity: 0;
@@ -40,15 +62,40 @@ interface TaskStatusPanelProps {
 export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => {
     const { tasks } = useTasks();
     const ipcService = useIPCService();
-    const [prevTaskIds, setPrevTaskIds] = useState<Set<string>>(new Set());
+    const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
     
-    // Track new tasks for animation
+    // Track task positions for animation
     useEffect(() => {
-        const currentIds = new Set(tasks.map(t => t.id));
-        setPrevTaskIds(currentIds);
+        const currentPositions = tasks.reduce((acc, task) => {
+            acc[task.id] = task.status;
+            return acc;
+        }, {} as Record<string, TaskStatus>);
+        
+        setPrevTaskPositions(currentPositions);
     }, [tasks]);
 
-    const isNewTask = (taskId: string) => !prevTaskIds.has(taskId);
+    const getTaskAnimation = (taskId: string, currentStatus: TaskStatus) => {
+        const prevStatus = prevTaskPositions[taskId];
+        
+        if (!prevStatus) return '';
+        if (prevStatus === currentStatus) return '';
+        
+        // Determine animation direction based on status change
+        if (prevStatus === TaskStatus.Pending && currentStatus === TaskStatus.InProgress) {
+            return `${flyRight} 0.3s ease-in-out`;
+        }
+        if (prevStatus === TaskStatus.InProgress && currentStatus === TaskStatus.Completed) {
+            return `${flyRight} 0.3s ease-in-out`;
+        }
+        if (prevStatus === TaskStatus.Pending && currentStatus === TaskStatus.Completed) {
+            return `${flyRight} 0.5s ease-in-out`;
+        }
+        if (prevStatus === TaskStatus.InProgress && currentStatus === TaskStatus.Cancelled) {
+            return `${flyLeft} 0.3s ease-in-out`;
+        }
+        
+        return '';
+    };
 
     // Group tasks by status with most recent first
     const groupedTasks = useMemo(() => {
@@ -184,9 +231,8 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
                                     key={task.id} 
                                     sx={{ 
                                         p: 0,
-                                        animation: isNewTask(task.id) ? 
-                                            `${fadeIn} 1s ease-in-out` : 
-                                            'none'
+                                        animation: getTaskAnimation(task.id, task.status),
+                                        willChange: 'transform, opacity'
                                     }}
                                 >
                                     <TaskCard 
