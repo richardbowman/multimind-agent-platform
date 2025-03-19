@@ -5,11 +5,12 @@ import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from 'src/helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { createUUID, UUID } from 'src/types/uuid';
-import { Sequelize } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 import { TaskModel, ProjectModel } from '../tools/taskModels';
 import { DatabaseMigrator } from 'src/database/migrator';
 import { getDataPath } from 'src/helpers/paths';
 import fs from 'node:fs';
+import path from 'node:path';
 
 export enum TaskManagerEvents {
 
@@ -49,7 +50,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         // Ensure the .output directory exists and run migrations
         await this.saveQueue.enqueue(async () => {
-            await fs.mkdir(getDataPath(), { recursive: true });
+            fs.mkdir(getDataPath(), { recursive: true });
             await this.migrator.migrate();
         }).catch(err => Logger.error('Error initializing database:', err));
 
@@ -126,7 +127,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
             if (params.tasks) {
                 for (const task of params.tasks) {
-                    await this.addTask(project, {
+                    await this.addTask(ProjectModel.mapToProject(project), {
                         id: createUUID(),
                         description: task.description,
                         type: task.type,
@@ -174,7 +175,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     async getNextTaskForUser(userId: UUID): Promise<Task | null> {
         return this.saveQueue.enqueue(async () => {
             const now = Date.now();
-            
+
             // Find all tasks assigned to user that are pending
             const tasks = await TaskModel.findAll({
                 where: {
@@ -185,7 +186,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             });
 
             // First filter tasks with future due dates
-            const tasksWithoutFutureDueDates = tasks.filter(task => 
+            const tasksWithoutFutureDueDates = tasks.filter(task =>
                 !(task.props?.dueDate && new Date(task.props.dueDate).getTime() > now)
             );
 
@@ -193,14 +194,14 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             const dependencyIds = tasksWithoutFutureDueDates
                 .map(t => t.dependsOn)
                 .filter(Boolean) as UUID[];
-                
+
             const dependencyStatuses = await TaskModel.findAll({
                 where: {
                     id: dependencyIds
                 },
                 attributes: ['id', 'status']
             });
-            
+
             const dependencyMap = new Map(dependencyStatuses.map(d => [d.id, d.status]));
 
             // Filter tasks based on dependencies
@@ -210,19 +211,18 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     return depStatus === TaskStatus.Completed;
                 }
                 return true;
+            }).sort((a, b) => {
+                // Sort by due date first
+                const aDue = a.props?.dueDate ? new Date(a.props.dueDate).getTime() : Infinity;
+                const bDue = b.props?.dueDate ? new Date(b.props.dueDate).getTime() : Infinity;
+                if (aDue !== bDue) {
+                    return aDue - bDue;
+                }
+                // Then by order
+                return (a.order ?? Infinity) - (b.order ?? Infinity);
             });
-                .sort((a, b) => {
-                    // Sort by due date first
-                    const aDue = a.props?.dueDate ? new Date(a.props.dueDate).getTime() : Infinity;
-                    const bDue = b.props?.dueDate ? new Date(b.props.dueDate).getTime() : Infinity;
-                    if (aDue !== bDue) {
-                        return aDue - bDue;
-                    }
-                    // Then by order
-                    return (a.order ?? Infinity) - (b.order ?? Infinity);
-                });
 
-            return eligibleTasks[0] || null;
+            return TaskModel.mapToTask(eligibleTasks[0]) || null;
         });
     }
 
@@ -244,7 +244,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 return TaskModel.mapToTask(existingTask);
             }
 
-            await existingTask.update({ 
+            await existingTask.update({
                 status: TaskStatus.InProgress,
                 inProgress: true, // Maintain backwards compatibility
                 complete: false // Maintain backwards compatibility
@@ -258,7 +258,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         // Emit the 'taskCompleted' event with the task
         const listeners = this.listeners(eventName);
         Logger.verbose(`Calling event listener ${eventName}`);
-        for(const listener of listeners) {
+        for (const listener of listeners) {
             try {
                 await listener.apply(this, eventArgs);
             } catch (e) {
@@ -268,7 +268,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async completeTask(id: string): Promise<Task> {
-        return this.saveQueue.enqueue(async () => {
+        return TaskModel.mapToTask(await this.saveQueue.enqueue(async () => {
             const existingTask = await TaskModel.findByPk(id);
             if (!existingTask) {
                 throw new Error(`Task ${id} not found`);
@@ -283,12 +283,12 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 return existingTask;
             }
 
-            await existingTask.update({ 
+            await existingTask.update({
                 status: TaskStatus.Completed,
                 complete: true, // Maintain backwards compatibility
                 inProgress: false // Maintain backwards compatibility
             });
-            
+
             await this.asyncEmit("taskCompleted", existingTask);
 
             // Find any tasks that were dependent on this one
@@ -300,7 +300,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             });
 
             // Emit 'ready' event for each dependent task
-            for(const dependentTask of dependentTasks) {
+            for (const dependentTask of dependentTasks) {
                 await this.asyncEmit('taskReady', {
                     task: dependentTask,
                     project: await ProjectModel.findByPk(dependentTask.projectId),
@@ -310,7 +310,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
             // Check if all tasks in the project are completed
             if (await this.areAllTasksCompleted(existingTask.projectId)) {
-                await this.asyncEmit('projectCompleted', { 
+                await this.asyncEmit('projectCompleted', {
                     project: await ProjectModel.findByPk(existingTask.projectId),
                     task: existingTask,
                     creator: existingTask.creator,
@@ -318,33 +318,33 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 });
             }
 
-            return TaskModel.mapToTask(existingTask);
-        });
+            return existingTask;
+        }));
     }
 
     private async areAllTasksCompleted(projectId: string): Promise<boolean> {
         const incompleteTasks = await TaskModel.count({
             where: {
                 projectId,
-                [Sequelize.Op.or]: [
-                    { status: { [Sequelize.Op.ne]: TaskStatus.Completed } },
+                [Op.or]: [
+                    { status: { [Op.ne]: TaskStatus.Completed } },
                     { complete: false }
                 ]
             }
         });
 
-        return incompleteTasks === 0;
+        return incompleteTasks[0].count === 0;
     }
 
     async getProjectByTaskId(taskId: string): Promise<Project> {
         const task = await TaskModel.findByPk(taskId, {
             include: [ProjectModel]
         });
-        
+
         if (!task || !task.project) {
             throw new Error(`No project found with task ID ${taskId}`);
         }
-        
+
         return task.project;
     }
 
@@ -372,9 +372,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async getProjects(): Promise<Project[]> {
-        return ProjectModel.findAll({
+        return (await ProjectModel.findAll({
             include: [TaskModel]
-        });
+        })).map(ProjectModel.mapToProject);
     }
 
     async getNextTask(projectId: string): Promise<Task | null> {
@@ -401,10 +401,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             where.type = type;
         }
 
-        return TaskModel.findAll({
+        return (await TaskModel.findAll({
             where,
             order: [['order', 'ASC']]
-        });
+        })).map(TaskModel.mapToTask);
     }
 
     async getTaskById(taskId: string): Promise<Readonly<Task> | null> {
@@ -452,12 +452,12 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 throw new Error(`Task ${taskId} not found`);
             }
 
-            await task.update({ 
+            await task.update({
                 status: TaskStatus.Cancelled,
                 complete: false, // Maintain backwards compatibility
                 inProgress: false // Maintain backwards compatibility
             });
-            
+
             // Emit the 'taskCancelled' event with the task
             await this.asyncEmit('taskCancelled', task);
 
@@ -473,14 +473,14 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                                 status: { [Sequelize.Op.ne]: TaskStatus.Cancelled }
                             }
                         });
-                        
+
                         for (const childTask of childTasks) {
                             await this.cancelTask(childTask.id);
                         }
                     }
                 }
             }
-            
+
             return TaskModel.mapToTask(task);
         });
     }
@@ -511,12 +511,12 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             });
 
             // Emit taskUpdated event
-            await this.asyncEmit('taskUpdated', { 
-                task, 
-                project: await ProjectModel.findByPk(task.projectId) 
+            await this.asyncEmit('taskUpdated', {
+                task,
+                project: await ProjectModel.findByPk(task.projectId)
             });
 
-            return task;
+            return TaskModel.mapToTask(task);
         });
     }
 
@@ -578,16 +578,16 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             // Check for missed due dates on non-recurring tasks
             if (task.type !== TaskType.Recurring && task.props?.dueDate) {
                 const dueDate = new Date(task.props.dueDate).getTime();
-                if (dueDate <= now && 
-                    task.status !== TaskStatus.Completed && 
+                if (dueDate <= now &&
+                    task.status !== TaskStatus.Completed &&
                     task.status !== TaskStatus.Cancelled) {
                     Logger.info(`Task ${task.id} has missed its due date of ${new Date(dueDate).toISOString()}`);
-                    
+
                     // Emit event for missed due date
-                    await this.asyncEmit('taskMissedDueDate', { 
-                        task, 
+                    await this.asyncEmit('taskMissedDueDate', {
+                        task,
                         project: task.project,
-                        dueDate: new Date(dueDate) 
+                        dueDate: new Date(dueDate)
                     });
                 }
             }
