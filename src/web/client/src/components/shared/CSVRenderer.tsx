@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { unstable_useThrottle as useThrottle } from '@mui/utils';
+import { unstable_debounce as debounce } from '@mui/utils';
 import { ArtifactDrawer } from '../ArtifactDrawer';
 import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';
@@ -34,7 +34,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
 }> = ({ content, onSave, onAddToolbarActions }) => {
     const rowsRef = useRef<any[]>([]);
     const [rows, setRows] = useState<any[]>([]);
-    const throttledSetRows = useThrottle(setRows, 300);
+    const throttledSetRows = debounce(setRows, 750);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [isDirty, setIsDirty] = useState(false);
     const [state, setState] = useState<CSVRendererState>({
