@@ -39,23 +39,31 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
-    public static mapToTask(taskModel: TaskModel): Task {
-        return {
-            id: taskModel.id,
-            description: taskModel.description,
-            category: taskModel.category,
-            status: taskModel.status,
-            type: taskModel.type,
-            projectId: taskModel.projectId,
-            creator: taskModel.creator,
-            assignee: taskModel.assignee,
-            order: taskModel.order,
-            dependsOn: taskModel.dependsOn,
-            props: taskModel.props,
-            // Maintain backwards compatibility
-            complete: taskModel.status === TaskStatus.Completed,
-            inProgress: taskModel.status === TaskStatus.InProgress
-        };
+    public static mapToTask(taskModel: TaskModel | null | undefined): Task {
+        if (!taskModel) {
+            throw new Error('Cannot map null or undefined task model');
+        }
+
+        try {
+            return {
+                id: taskModel.id,
+                description: taskModel.description,
+                category: taskModel.category,
+                status: taskModel.status,
+                type: taskModel.type,
+                projectId: taskModel.projectId,
+                creator: taskModel.creator,
+                assignee: taskModel.assignee,
+                order: taskModel.order,
+                dependsOn: taskModel.dependsOn,
+                props: taskModel.props,
+                // Maintain backwards compatibility
+                complete: taskModel.status === TaskStatus.Completed,
+                inProgress: taskModel.status === TaskStatus.InProgress
+            };
+        } catch (error) {
+            throw new Error(`Error mapping task model: ${error instanceof Error ? error.message : String(error)}`);
+        }
     }
 
     public static initialize(sequelize: Sequelize): void {
