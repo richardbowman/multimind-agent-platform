@@ -88,6 +88,29 @@ export const PDFRenderer: React.FC<PDFRendererProps> = ({ content, mimeType }) =
         updateActionState('pdf-renderer-next', { disabled: pageNumber.current === numPages.current });
     }, [updateActionState]);
 
+    const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Convert base64 to Blob and create URL
+        const binary = atob(content);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            array[i] = binary.charCodeAt(i);
+        }
+        const blob = new Blob([array], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        setPdfUrl(url);
+
+        // Cleanup on unmount
+        return () => {
+            URL.revokeObjectURL(url);
+        };
+    }, [content, mimeType]);
+
+    if (!pdfUrl) {
+        return <Box>Loading PDF...</Box>;
+    }
+
     return (
         <Box sx={{
             display: 'flex',
@@ -97,7 +120,7 @@ export const PDFRenderer: React.FC<PDFRendererProps> = ({ content, mimeType }) =
         }}>
             <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', overflow: 'auto' }}>
                 <Document
-                    file={`data:${mimeType};base64,${content}`}
+                    file={pdfUrl}
                     onLoadSuccess={handleLoadSuccess}
                 >
                     <Page
