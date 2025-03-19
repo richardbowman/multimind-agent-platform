@@ -4,7 +4,6 @@ import * as Events from 'events';
 import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskType } from '../tools/taskManager';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from 'src/helpers/logger';
-import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { createUUID, UUID } from 'src/types/uuid';
 
@@ -27,7 +26,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {
-        const task = {
+        let task = {
             id: createUUID(),
             category: "",
             status: TaskStatus.Pending,
@@ -39,13 +38,16 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
-        }
+        } as Task;
 
         // Set order to be after existing tasks if not specified
         if (task.order === undefined) {
             const existingTasks = Object.values(this.projects[project.id].tasks || {});
             const maxOrder = Math.max(...existingTasks.map(t => t.order ?? 0), 0);
-            task.order = maxOrder + 1;
+            task = {
+                ...task,
+                order: maxOrder + 1
+            };
         }
 
         // Emit taskAdded event before saving
@@ -59,7 +61,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 .sort((a, b) => (b.order ?? 0) - (a.order ?? 0))[0];
 
             if (previousTask) {
-                task.dependsOn = previousTask.id;
+                task = {
+                    ...task,
+                    dependsOn: previousTask.id
+                };
             }
         }
 
@@ -152,7 +157,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
     }
 
-    async assignTaskToAgent(taskId: string, assignee: string): Promise<void> {
+    async assignTaskToAgent(taskId: UUID, assignee: UUID): Promise<void> {
         let taskFound = false;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
@@ -172,7 +177,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
     }
 
-    async getNextTaskForUser(userId: string): Promise<Task | null> {
+    async getNextTaskForUser(userId: UUID): Promise<Task | null> {
         const now = Date.now();
         
         for (const projectId in this.projects) {
@@ -322,7 +327,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         throw new Error(`No project found with task ID ${taskId}.`);
     }
 
-    async replaceProject(project: ContentProject): Promise<void> {
+    async replaceProject(project: Project): Promise<void> {
         // Update metadata
         if (project.metadata) {
             project.metadata.updatedAt = new Date();
@@ -371,7 +376,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
     }
 
-    getTaskById(taskId: string): Readonly<Task> | null {
+    async getTaskById(taskId: string): Promise<Readonly<Task> | null> {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(taskId)) {

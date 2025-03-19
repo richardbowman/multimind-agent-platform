@@ -23,8 +23,8 @@ export interface AddTaskParams {
     description: string;
     type?: TaskType;    // will default to Standard
     category?: string;
-    creator: string;
-    assignee?: string;
+    creator: UUID|'system';
+    assignee?: UUID;
     status?: TaskStatus;
     /** @deprecated Use status field instead */
     complete?: boolean;
@@ -111,7 +111,6 @@ export interface TaskManager extends EventEmitter {
     getProjects(): Project[];
     getNextTask(projectId: UUID, type?: TaskType): Task | null;
     getProjectTasks(projectId: string): Task[];
-    getAllTasks(): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;
     getTaskById(taskId: UUID): Promise<Readonly<Task> | null>;
     updateTask(taskId: UUID, updates: Partial<Task>): Promise<Task>;
