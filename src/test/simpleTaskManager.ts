@@ -8,6 +8,8 @@ import { createUUID, UUID } from 'src/types/uuid';
 import { Sequelize } from 'sequelize';
 import { TaskModel, ProjectModel } from '../tools/taskModels';
 import { DatabaseMigrator } from 'src/database/migrator';
+import { getDataPath } from 'src/helpers/paths';
+import fs from 'node:fs';
 
 export enum TaskManagerEvents {
 
