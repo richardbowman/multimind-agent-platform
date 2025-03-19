@@ -52,16 +52,22 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     async initialize(): Promise<void> {
         if (this.initialized) return;
 
-        // Ensure the .output directory exists and run migrations
-        await this.saveQueue.enqueue(async () => {
-            fs.mkdir(getDataPath(), { recursive: true });
+        try {
+            // Ensure the data directory exists
+            await fs.promises.mkdir(getDataPath(), { recursive: true });
+
+            // Run migrations
             await this.migrator.migrate();
-        }).catch(err => Logger.error('Error initializing database:', err));
 
-        // Wait for initial migration to complete
-        await this.sequelize.sync();
+            // Sync models with database
+            await this.sequelize.sync({ alter: true });
 
-        this.initialized = true;
+            this.initialized = true;
+            Logger.info('Task manager initialized successfully');
+        } catch (err) {
+            Logger.error('Error initializing task manager:', err);
+            throw err;
+        }
     }
 
     async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {

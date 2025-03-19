@@ -117,7 +117,8 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
         }, {
             sequelize,
             tableName: 'tasks',
-            timestamps: true
+            timestamps: true,
+            paranoid: true // Enable soft deletion
         });
 
         // Associations will be set up after both models are initialized
@@ -187,7 +188,8 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
         }, {
             sequelize,
             tableName: 'projects',
-            timestamps: true
+            timestamps: true,
+            paranoid: true // Enable soft deletion
         });
 
         // Associations will be set up after both models are initialized
