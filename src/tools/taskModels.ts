@@ -58,7 +58,7 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
         };
     }
 
-    public static initialize(sequelize: Sequelize): void {
+    public static initialize(sequelize: Sequelize, ProjectModel: typeof ProjectModel): void {
         TaskModel.init({
             id: {
                 type: DataTypes.UUID,
@@ -121,10 +121,12 @@ export class TaskModel extends Model<TaskAttributes, TaskCreationAttributes> imp
         });
 
         // Set up associations
-        TaskModel.belongsTo(ProjectModel, {
-            foreignKey: 'projectId',
-            as: 'project'
-        });
+        if (ProjectModel) {
+            TaskModel.belongsTo(ProjectModel, {
+                foreignKey: 'projectId',
+                as: 'project'
+            });
+        }
     }
 }
 
@@ -160,7 +162,7 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
         };
     }
 
-    public static initialize(sequelize: Sequelize): void {
+    public static initialize(sequelize: Sequelize, TaskModel: typeof TaskModel): void {
         ProjectModel.init({
             id: {
                 type: DataTypes.UUID,
@@ -188,9 +190,11 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
         });
 
         // Set up associations
-        ProjectModel.hasMany(TaskModel, {
-            foreignKey: 'projectId',
-            as: 'tasks'
-        });
+        if (TaskModel) {
+            ProjectModel.hasMany(TaskModel, {
+                foreignKey: 'projectId',
+                as: 'tasks'
+            });
+        }
     }
 }
