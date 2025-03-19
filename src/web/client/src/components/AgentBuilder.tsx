@@ -20,8 +20,10 @@ import {
     Collapse,
     Tabs,
     Tab,
-    Autocomplete
+    Autocomplete,
+    Stack
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridActionsCellItem, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -141,14 +143,48 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom sx={{
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{
                 mb: 2,
                 pb: 1,
                 borderBottom: '1px solid',
                 borderColor: 'divider'
             }}>
-                Agent Builder
-            </Typography>
+                <Typography variant="h6" gutterBottom>
+                    Agent Builder
+                </Typography>
+                <IconButton
+                    color="primary"
+                    onClick={() => {
+                        const newAgentId = `agent-${Date.now()}`;
+                        onSettingsChange({
+                            ...settings,
+                            agentBuilder: {
+                                ...settings.agentBuilder,
+                                [newAgentId]: {
+                                    name: '',
+                                    description: '',
+                                    purpose: '',
+                                    finalInstructions: '',
+                                    plannerType: 'nextStep',
+                                    autoRespondChannelIds: '',
+                                    enabled: true,
+                                    supportsDelegation: false,
+                                    executors: []
+                                }
+                            }
+                        });
+                    }}
+                    sx={{
+                        backgroundColor: 'primary.main',
+                        color: 'primary.contrastText',
+                        '&:hover': {
+                            backgroundColor: 'primary.dark'
+                        }
+                    }}
+                >
+                    <AddIcon />
+                </IconButton>
+            </Stack>
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
@@ -590,31 +626,6 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                     </DialogActions>
                 </Dialog>
 
-                <Button
-                    variant="contained"
-                    onClick={() => {
-                        const newAgentId = `agent-${Date.now()}`;
-                        onSettingsChange({
-                            ...settings,
-                            agentBuilder: {
-                                ...settings.agentBuilder,
-                                [newAgentId]: {
-                                    name: '',
-                                    description: '',
-                                    purpose: '',
-                                    finalInstructions: '',
-                                    plannerType: 'nextStep',
-                                    autoRespondChannelIds: '',
-                                    enabled: true,
-                                    supportsDelegation: false,
-                                    executors: []
-                                }
-                            }
-                        });
-                    }}
-                >
-                    Add New Agent
-                </Button>
             </Box>
         </Box>
     );
