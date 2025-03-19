@@ -47,7 +47,7 @@ export namespace StringUtils {
      * @param value The value to check
      * @returns true if the value is not a string or is a string with length 0 (after trimming), false otherwise
      */
-    export function isEmptyString(value: any): boolean {
+    export function isEmptyString(value: any): value is undefined | null | '' {
         return !isString(value) || value.trim().length === 0;
     }
 
