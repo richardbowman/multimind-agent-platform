@@ -1,14 +1,9 @@
-import { Project } from "src/tools/taskManager";
-import { Task } from "src/tools/taskManager";
 import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { Planner } from "./planners/planner";
 import { MultiStepPlanner } from "./planners/multiStepPlanner";
 import { ModelType } from "src/llm/LLMServiceFactory";
-import { parseAndMergeNestedHeaders } from "@mattermost/client/lib/client4";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
-import { StepSequence } from "src/llm/modelHelpers";
-import { ExecutorType } from "./interfaces/ExecutorType";
 import { ExecutorConstructorParams } from "./interfaces/ExecutorConstructorParams";
 
 export class ConfigurableAgent extends StepBasedAgent {

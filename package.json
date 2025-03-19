@@ -76,7 +76,7 @@
     "csv-stringify": "^6.5.2",
     "dompurify": "^3.2.3",
     "electron-is-dev": "^3.0.1",
-    "electron-updater": "^6.3.9",
+    "electron-updater": "^6.6.2",
     "express": "^4.21.2",
     "ical": "^0.8.0",
     "ical-generator": "^8.1.1",
@@ -140,6 +140,7 @@
     "@mui/system": "^6.4.2",
     "@mui/x-data-grid": "^7.24.1",
     "@mui/x-tree-view": "^7.26.0",
+    "@napi-rs/canvas": "^0.1.68",
     "@react-pdf/renderer": "^4.1.6",
     "@types/babel__preset-env": "^7",
     "@types/babel__standalone": "^7",
@@ -175,7 +176,7 @@
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^7.1.2",
     "dotenv": "^16.4.7",
-    "electron": "^34.0.0",
+    "electron": "^35.0.2",
     "electron-builder": "^25.1.8",
     "electron-builder-squirrel-windows": "^25.1.8",
     "electron-rebuild": "^3.2.9",
@@ -215,7 +216,7 @@
   },
   "packageManager": "yarn@4.6.0",
   "volta": {
-    "node": "20.18.3",
+    "node": "22.14.0",
     "yarn": "4.7.0"
   }
 }
