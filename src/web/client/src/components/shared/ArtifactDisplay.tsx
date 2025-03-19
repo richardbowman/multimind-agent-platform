@@ -41,31 +41,27 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         let mimeType = 'text/plain';
 
         // Handle different content types
-        if (artifact.metadata?.mimeType?.startsWith('image/')) {
+        if (artifact.metadata?.mimeType?.startsWith('image/') || 
+            artifact.metadata?.mimeType === 'application/pdf') {
             let binaryData;
             if (typeof artifact.content === 'string') {
                 if (artifact.content.startsWith('data:')) {
                     // Extract base64 data from data URL
-                    binaryData = atob(artifact.content.split(',')[1]);
+                    const base64Data = artifact.content.split(',')[1];
+                    binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
                 } else {
                     // Assume it's already base64
-                    binaryData = atob(artifact.content);
+                    binaryData = Uint8Array.from(atob(artifact.content), c => c.charCodeAt(0));
                 }
             } else if (artifact.content instanceof ArrayBuffer) {
-                binaryData = String.fromCharCode(...new Uint8Array(artifact.content));
+                binaryData = new Uint8Array(artifact.content);
             } else if (artifact.content instanceof Uint8Array) {
-                binaryData = String.fromCharCode(...artifact.content);
+                binaryData = artifact.content;
             } else {
-                throw new Error('Unsupported image content type');
+                throw new Error('Unsupported binary content type');
             }
             
-            // Convert binary string to Uint8Array
-            const bytes = new Uint8Array(binaryData.length);
-            for (let i = 0; i < binaryData.length; i++) {
-                bytes[i] = binaryData.charCodeAt(i);
-            }
-            
-            fileContent = bytes;
+            fileContent = binaryData;
             mimeType = artifact.metadata.mimeType;
             fileName = `${fileName}.${mimeType.split('/')[1]}`;
         } else if (artifact.type === 'csv' || artifact.metadata?.mimeType === 'text/csv') {
