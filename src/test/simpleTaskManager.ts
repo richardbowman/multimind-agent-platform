@@ -184,24 +184,33 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 include: [ProjectModel]
             });
 
-            // Filter and sort tasks
-            const eligibleTasks = tasks
-                .filter(task => {
-                    // Skip if due date is in future
-                    if (task.props?.dueDate && new Date(task.props.dueDate).getTime() > now) {
-                        return false;
-                    }
+            // First filter tasks with future due dates
+            const tasksWithoutFutureDueDates = tasks.filter(task => 
+                !(task.props?.dueDate && new Date(task.props.dueDate).getTime() > now)
+            );
 
-                    // Check dependencies if they exist
-                    if (task.dependsOn) {
-                        const dependentTask = await TaskModel.findByPk(task.dependsOn);
-                        if (!dependentTask || dependentTask.status !== TaskStatus.Completed) {
-                            return false;
-                        }
-                    }
+            // Get all dependency statuses in one query
+            const dependencyIds = tasksWithoutFutureDueDates
+                .map(t => t.dependsOn)
+                .filter(Boolean) as UUID[];
+                
+            const dependencyStatuses = await TaskModel.findAll({
+                where: {
+                    id: dependencyIds
+                },
+                attributes: ['id', 'status']
+            });
+            
+            const dependencyMap = new Map(dependencyStatuses.map(d => [d.id, d.status]));
 
-                    return true;
-                })
+            // Filter tasks based on dependencies
+            const eligibleTasks = tasksWithoutFutureDueDates.filter(task => {
+                if (task.dependsOn) {
+                    const depStatus = dependencyMap.get(task.dependsOn);
+                    return depStatus === TaskStatus.Completed;
+                }
+                return true;
+            });
                 .sort((a, b) => {
                     // Sort by due date first
                     const aDue = a.props?.dueDate ? new Date(a.props.dueDate).getTime() : Infinity;
