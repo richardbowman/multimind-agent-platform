@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { throttle } from 'lodash';
 import { ArtifactDrawer } from '../ArtifactDrawer';
 import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';
@@ -31,7 +32,9 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
         disabled?: boolean;
     }>) => void
 }> = ({ content, onSave, onAddToolbarActions }) => {
+    const rowsRef = useRef<any[]>([]);
     const [rows, setRows] = useState<any[]>([]);
+    const throttledSetRows = useMemo(() => throttle(setRows, 300), []);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [isDirty, setIsDirty] = useState(false);
     const [state, setState] = useState<CSVRendererState>({
@@ -120,7 +123,8 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                     }));
 
                 setColumns(columnDefs);
-                setRows(parsedRows);
+                rowsRef.current = parsedRows;
+                throttledSetRows(parsedRows);
             }
         } catch (error) {
             console.error('Error parsing CSV:', error);
@@ -153,13 +157,15 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
     };
 
     const handleProcessRowUpdate = (newRow: GridRowModel) => {
-        setRows(rows.map(row => row.id === newRow.id ? newRow : row));
+        const updatedRows = rowsRef.current.map(row => row.id === newRow.id ? newRow : row);
+        rowsRef.current = updatedRows;
+        throttledSetRows(updatedRows);
         setIsDirty(true);
         return newRow;
     };
 
     useEffect(() => {
-        if (onAddToolbarActions && rows.length > 0) {
+        if (onAddToolbarActions && rowsRef.current.length > 0) {
             onAddToolbarActions([
                 {
                     id: 'csv-renderer-save',
