@@ -329,7 +329,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                     data: response.resultColumns.reduce((acc, insight) => {
                         acc[insight.name] = insight.value;
                         return acc;
-                    }),
+                    }, {} as Record<string, any>), // Initialize accumulator as empty object
                     artifacts: responseData.artifactIds,
                     traceId
                 };
