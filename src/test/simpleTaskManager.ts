@@ -158,51 +158,42 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async assignTaskToAgent(taskId: UUID, assignee: UUID): Promise<void> {
-        let taskFound = false;
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(taskId)) {
-                const task = project.tasks[taskId];
-                taskFound = true;
-                const updatedTask = await this.updateTask(task.id, {
-                    assignee
-                })
-                // Emit the 'taskAssigned' event with the task and agent ID
-                this.asyncEmit('taskAssigned', updatedTask);
-                break;
+        return this.saveQueue.enqueue(async () => {
+            const task = await TaskModel.findByPk(taskId);
+            if (!task) {
+                throw new Error(`Task with ID ${taskId} not found`);
             }
-        }
-        if (!taskFound) {
-            throw new Error(`Task with ID ${taskId} not found.`);
-        }
+
+            await task.update({ assignee });
+            await this.asyncEmit('taskAssigned', task);
+        });
     }
 
     async getNextTaskForUser(userId: UUID): Promise<Task | null> {
-        const now = Date.now();
-        
-        for (const projectId in this.projects) {
-            const project : Project = this.projects[projectId];
-            const userTasks = Object.values<Task>(project.tasks || [])
-                .filter(t => {
-                    // Skip cancelled tasks
-                    if (t.status === TaskStatus.Cancelled) {
-                        return false;
-                    }
-                    
-                    // Task must be assigned to user and pending
-                    if (t.assignee !== userId || t.status !== TaskStatus.Pending) {
+        return this.saveQueue.enqueue(async () => {
+            const now = Date.now();
+            
+            // Find all tasks assigned to user that are pending
+            const tasks = await TaskModel.findAll({
+                where: {
+                    assignee: userId,
+                    status: TaskStatus.Pending
+                },
+                include: [ProjectModel]
+            });
+
+            // Filter and sort tasks
+            const eligibleTasks = tasks
+                .filter(task => {
+                    // Skip if due date is in future
+                    if (task.props?.dueDate && new Date(task.props.dueDate).getTime() > now) {
                         return false;
                     }
 
-                    // If task has a due date, check if it's in the future
-                    if (t.props?.dueDate && new Date(t.props?.dueDate).getTime() > now) {
-                        return false;
-                    }
-
-                    // If task depends on another task, check if dependency is completed
-                    if (t.dependsOn) {
-                        const dependentTask = project.tasks[t.dependsOn];
-                        if (dependentTask?.status !== TaskStatus.Completed) {
+                    // Check dependencies if they exist
+                    if (task.dependsOn) {
+                        const dependentTask = await TaskModel.findByPk(task.dependsOn);
+                        if (!dependentTask || dependentTask.status !== TaskStatus.Completed) {
                             return false;
                         }
                     }
@@ -210,9 +201,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     return true;
                 })
                 .sort((a, b) => {
-                    // Sort by due date first (earlier dates first)
-                    const aDue = a.props?.dueDate ? new Date(a.props?.dueDate).getTime() : Infinity;
-                    const bDue = b.props?.dueDate ? new Date(b.props?.dueDate).getTime() : Infinity;
+                    // Sort by due date first
+                    const aDue = a.props?.dueDate ? new Date(a.props.dueDate).getTime() : Infinity;
+                    const bDue = b.props?.dueDate ? new Date(b.props.dueDate).getTime() : Infinity;
                     if (aDue !== bDue) {
                         return aDue - bDue;
                     }
@@ -220,30 +211,35 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     return (a.order ?? Infinity) - (b.order ?? Infinity);
                 });
 
-            if (userTasks.length > 0) {
-                return userTasks[0];
-            }
-        }
-        return null;
+            return eligibleTasks[0] || null;
+        });
     }
 
     async markTaskInProgress(task: Task | string): Promise<Task> {
-        const taskId = typeof (task) === 'string' ? task : task.id;
+        return this.saveQueue.enqueue(async () => {
+            const taskId = typeof (task) === 'string' ? task : task.id;
 
-        const existingTask = await this.getTaskById(taskId);
-        if (existingTask?.status === TaskStatus.InProgress) {
-            Logger.warn(`Task ${taskId} already marked in-progress but markTaskInProgress was called again`, new Error());
-            return existingTask;
-        }
-        if (existingTask?.status === TaskStatus.Cancelled) {
-            Logger.warn(`Trying to start task ${taskId} which is cancelled`, new Error());
-            return existingTask;
-        }
+            const existingTask = await TaskModel.findByPk(taskId);
+            if (!existingTask) {
+                throw new Error(`Task ${taskId} not found`);
+            }
 
-        return this.updateTask(taskId, { 
-            status: TaskStatus.InProgress,
-            inProgress: true, // Maintain backwards compatibility
-            complete: false // Maintain backwards compatibility
+            if (existingTask.status === TaskStatus.InProgress) {
+                Logger.warn(`Task ${taskId} already marked in-progress but markTaskInProgress was called again`, new Error());
+                return existingTask;
+            }
+            if (existingTask.status === TaskStatus.Cancelled) {
+                Logger.warn(`Trying to start task ${taskId} which is cancelled`, new Error());
+                return existingTask;
+            }
+
+            await existingTask.update({ 
+                status: TaskStatus.InProgress,
+                inProgress: true, // Maintain backwards compatibility
+                complete: false // Maintain backwards compatibility
+            });
+
+            return existingTask;
         });
     }
 
@@ -261,60 +257,72 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async completeTask(id: string): Promise<Task> {
-        const existingTask = await this.getTaskById(id);
-        if (existingTask?.status === TaskStatus.Completed) {
-            Logger.warn(`Task ${id} already marked complete but complete was called again`, new Error());
-            return existingTask;
-        }
-        if (existingTask?.status === TaskStatus.Cancelled) {
-            Logger.warn(`Trying to complete task ${id} which is cancelled`, new Error());
-            return existingTask;
-        }
+        return this.saveQueue.enqueue(async () => {
+            const existingTask = await TaskModel.findByPk(id);
+            if (!existingTask) {
+                throw new Error(`Task ${id} not found`);
+            }
 
-        const task = await this.updateTask(id, { 
-            status: TaskStatus.Completed,
-            complete: true, // Maintain backwards compatibility
-            inProgress: false // Maintain backwards compatibility
+            if (existingTask.status === TaskStatus.Completed) {
+                Logger.warn(`Task ${id} already marked complete but complete was called again`, new Error());
+                return existingTask;
+            }
+            if (existingTask.status === TaskStatus.Cancelled) {
+                Logger.warn(`Trying to complete task ${id} which is cancelled`, new Error());
+                return existingTask;
+            }
+
+            await existingTask.update({ 
+                status: TaskStatus.Completed,
+                complete: true, // Maintain backwards compatibility
+                inProgress: false // Maintain backwards compatibility
+            });
+            
+            await this.asyncEmit("taskCompleted", existingTask);
+
+            // Find any tasks that were dependent on this one
+            const dependentTasks = await TaskModel.findAll({
+                where: {
+                    dependsOn: existingTask.id,
+                    status: { [Sequelize.Op.ne]: TaskStatus.Completed }
+                }
+            });
+
+            // Emit 'ready' event for each dependent task
+            for(const dependentTask of dependentTasks) {
+                await this.asyncEmit('taskReady', {
+                    task: dependentTask,
+                    project: await ProjectModel.findByPk(dependentTask.projectId),
+                    dependency: existingTask
+                });
+            };
+
+            // Check if all tasks in the project are completed
+            if (await this.areAllTasksCompleted(existingTask.projectId)) {
+                await this.asyncEmit('projectCompleted', { 
+                    project: await ProjectModel.findByPk(existingTask.projectId),
+                    task: existingTask,
+                    creator: existingTask.creator,
+                    assignee: existingTask.assignee
+                });
+            }
+
+            return existingTask;
         });
-        
-        await this.asyncEmit("taskCompleted", task);
-
-        // Find any tasks that were dependent on this one
-        const project = this.getProject(task.projectId);
-        const dependentTasks = Object.values(project.tasks || {})
-            .filter(t => t.dependsOn === task.id && !t.complete);
-
-        // Emit 'ready' event for each dependent task
-        for(const dependentTask of dependentTasks) {
-            await this.asyncEmit('taskReady', {
-                task: dependentTask,
-                project,
-                dependency: task
-            });
-        };
-
-        // Check if all tasks in the project are completed
-        if (this.areAllTasksCompleted(task.projectId)) {
-            await this.asyncEmit('projectCompleted', { 
-                project, 
-                task, 
-                creator: task.creator, 
-                assignee: task.assignee 
-            });
-        }
-
-        return task;
     }
 
-    private areAllTasksCompleted(projectId: string): boolean {
-        const project = this.projects[projectId];
-        for (const taskId in project.tasks) {
-            const task = project.tasks[taskId];
-            if (task.status !== TaskStatus.Completed && !task.complete) {
-                return false;
+    private async areAllTasksCompleted(projectId: string): Promise<boolean> {
+        const incompleteTasks = await TaskModel.count({
+            where: {
+                projectId,
+                [Sequelize.Op.or]: [
+                    { status: { [Sequelize.Op.ne]: TaskStatus.Completed } },
+                    { complete: false }
+                ]
             }
-        }
-        return true;
+        });
+
+        return incompleteTasks === 0;
     }
 
     getProjectByTaskId(taskId: string): Project {
