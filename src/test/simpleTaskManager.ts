@@ -548,7 +548,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         // Find all tasks that need to be checked
         const tasks = await TaskModel.findAll({
-            include: [ProjectModel]
+            include: [{
+                model: ProjectModel,
+                as: 'project'
+            }]
         });
 
         for (const task of tasks) {
