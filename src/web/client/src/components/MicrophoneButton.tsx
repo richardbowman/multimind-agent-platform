@@ -67,11 +67,13 @@ export const MicrophoneButton: React.FC = () => {
         };
     }, [isRecording]);
     
+    const snackbar = useSnackbar();
+
     const handleRecording = async () => {
         // If already recording, stop and clean up
         if (isRecordingRef.current && mediaRecorderRef.current) {
             try {
-                useSnackbar().showSnackbar({
+                snackbar.showSnackbar({
                     message: "Processing speech..."
                 });
                 setIsRecording(false);
@@ -92,7 +94,7 @@ export const MicrophoneButton: React.FC = () => {
                     throw new Error('audio/webm format not supported');
                 }
 
-                useSnackbar().showSnackbar({
+                snackbar.showSnackbar({
                     message: "Listening..."
                 });
 
