@@ -136,10 +136,6 @@ jobs:
           
       - name: Build All App Components
         run: yarn build:app
-        
-      - name: Ensure compiled components target Electron Node version
-        run: |
-          yarn electron-rebuild
 
       - name: Build and Publish Electron App
         run: |

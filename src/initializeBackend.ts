@@ -133,7 +133,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         const agents: Agents = { agents: {} };
 
         // Load all agents dynamically
-        const agentObjects = await AgentLoader.loadAgents({
+        const jsonAgentObjects = await AgentLoader.loadAgents({
             llmService: chatService,
             vectorDBService: vectorDB,
             taskManager: tasks,
@@ -142,6 +142,19 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             settingsManager: settingsManager,
             agents: agents
         });
+
+        // Load all agents dynamically
+        const markdownAgentObjects = await AgentLoader.loadMarkdownConfigurableAgents({
+            llmService: chatService,
+            vectorDBService: vectorDB,
+            taskManager: tasks,
+            artifactManager,
+            chatStorage,
+            settingsManager: settingsManager,
+            agents: agents
+        });
+
+        const agentObjects = [...jsonAgentObjects, ...markdownAgentObjects];
 
         // Initialize all agents
         let i = 1, total = Object.keys(agentObjects).length;

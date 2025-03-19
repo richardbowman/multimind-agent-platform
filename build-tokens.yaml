@@ -1,0 +1,44 @@
+      - name: Ensure compiled components target Electron Node version
+        run: |
+          yarn electron-rebuild
+
+
+      # - name: Import Apple Certificates
+      #   if: matrix.os == 'macos-latest'
+      #   run: |
+      #     # Decode and combine certificate components
+      #     echo "${{ secrets.MAC_PRIVATE_KEY }}" | base64 --decode > private.key
+      #     echo "${{ secrets.MAC_CERTIFICATE }}" | base64 --decode > ceyarnrtificate.cer
+          
+      #     # Convert certificate to PEM format
+      #     openssl x509 -in certificate.cer -inform DER -out certificate.pem -outform PEM
+          
+      #     # Create PKCS#12 file
+      #     openssl pkcs12 -export -legacy -inkey private.key -in certificate.pem -out certificate.p12 -password pass:"${{ secrets.CERTIFICATE_PASSWORD }}" -name "Mac Developer"
+          
+      #     # Set up keychain
+      #     security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+      #     security default-keychain -s build.keychain
+      #     security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          
+      #     # Import certificate
+      #     security import certificate.p12 -k build.keychain -P "${{ secrets.CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
+      #     security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+      #     rm certificate.p12
+
+
+      - name: Build and Publish Electron App
+        env:
+          # GH_TOKEN: ${{ secrets.GH_PAT }}
+          # CSC_LINK: ${{ secrets.MAC_CERTIFICATE }}
+          # CSC_KEY_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          # APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            yarn electron:package --mac --publish always
+          elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+            yarn electron:package --win --publish always
+          fi
+        shell: bash

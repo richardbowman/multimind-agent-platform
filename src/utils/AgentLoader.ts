@@ -31,7 +31,6 @@ type AgentType<T extends Agent> = new (...args: any[]) => T;
 export class AgentLoader {
     static async loadMarkdownConfigurableAgents(params: AgentLoaderParams): Promise<Map<string, Agent>> {
         const agentsMap = new Map<string, Agent>();
-        const logger = Logger.getInstance();
         
         try {
             // Find all artifacts with AgentConfig subtype
@@ -55,13 +54,13 @@ export class AgentLoader {
                     await agent.initialize();
                     
                     agentsMap.set(artifact.metadata?.agentName || `agent-${artifact.id}`, agent);
-                    logger.info(`Loaded markdown configurable agent from artifact ${artifact.id}`);
+                    Logger.info(`Loaded markdown configurable agent from artifact ${artifact.id}`);
                 } catch (error) {
-                    logger.error(`Failed to load agent from artifact ${artifact.id}:`, error);
+                    Logger.error(`Failed to load agent from artifact ${artifact.id}:`, error);
                 }
             }
         } catch (error) {
-            logger.error('Failed to load markdown configurable agents:', error);
+            Logger.error('Failed to load markdown configurable agents:', error);
         }
 
         return agentsMap;

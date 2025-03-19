@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import Database from 'better-sqlite3';
+import { Database } from 'sqlite3';
 import * as crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
@@ -15,7 +15,7 @@ import { createUUID, UUID } from "src/types/uuid";
 const syncQueue = new AsyncQueue();
 
 class SQLiteVecService extends EventEmitter implements IVectorDatabase {
-    private db: Database.Database | null = null;
+    private db: Database | null = null;
     private collectionName: string = '';
     private dimensions: number = 768; // Default embedding dimensions
 
