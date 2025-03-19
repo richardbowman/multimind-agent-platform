@@ -54,7 +54,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
         }
     });
 
-    const [executorOptions, setExecutorOptions] = useState<{value: string, label: string}[]>([]);
+    const [executorOptions, setExecutorOptions] = useState<{ value: string, label: string }[]>([]);
     const [currentTab, setCurrentTab] = useState(0);
 
     useEffect(() => {
@@ -69,7 +69,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 console.error('Failed to fetch executor types:', error);
             }
         };
-        
+
         fetchExecutorTypes();
     }, []);
 
@@ -77,7 +77,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
         setEditingAgentId(agentId);
         // Get the agent config from either agentBuilder or agents
         const agentConfig = settings.agentBuilder?.[agentId] || settings.agents?.[agentId];
-        
+
         if (!agentConfig) {
             console.error(`Agent config not found for ID: ${agentId}`);
             return;
@@ -88,7 +88,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             className: executor.className || '',
             config: executor.config || {}
         })) || [];
-        
+
         setAgentForm({
             name: agentConfig.name || '',
             description: agentConfig.description || 'A helpful general purpose agent',
@@ -119,7 +119,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                     ...settings.agentBuilder,
                     [editingAgentId]: {
                         ...agentForm,
-                        // Preserve any existing fields not in the form
+                        // Preserve any Provided fields not in the form
                         ...(settings.agentBuilder?.[editingAgentId] || {})
                     }
                 }
@@ -149,23 +149,23 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             }}>
                 Agent Builder
             </Typography>
-            
+
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={Object.entries(allAgents).map(([id, config]) => ({
                         id,
-                        name: config.name || `Agent ${id}`,
+                        name: config.name || id,
                         description: config.description || '',
                         className: config.className || '',
-                        type: settings.agents?.[id] ? 'Existing' : 'Custom'
+                        type: settings.agents?.[id] ? 'Provided' : 'Custom'
                     }))}
                     columns={[
-                        { 
-                            field: 'name', 
-                            headerName: 'Name', 
+                        {
+                            field: 'name',
+                            headerName: 'Name',
                             flex: 1,
                             renderCell: (params) => (
-                                <Typography variant="body1">{params.value}</Typography>
+                                <Typography variant="body2">{params.value}</Typography>
                             )
                         },
                         {
@@ -178,9 +178,9 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 </Typography>
                             )
                         },
-                        { 
-                            field: 'description', 
-                            headerName: 'Description', 
+                        {
+                            field: 'description',
+                            headerName: 'Description',
                             flex: 2,
                             renderCell: (params) => (
                                 <Typography variant="body2" color="text.secondary">
@@ -188,18 +188,22 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 </Typography>
                             )
                         },
-                        { 
-                            field: 'type', 
-                            headerName: 'Type', 
+                        {
+                            field: 'type',
+                            headerName: 'Type',
                             width: 120,
                             renderCell: (params) => (
-                                params.value === 'Existing' ? (
-                                    <Chip 
-                                        label="Existing Agent" 
-                                        color="primary" 
+                                params.value === 'Provided' ? (
+                                    <Chip
+                                        label="Provided"
+                                        color="primary"
                                         size="small"
                                     />
-                                ) : null
+                                ) : <Chip
+                                    label="Custom"
+                                    color="secondary"
+                                    size="small"
+                                />
                             )
                         },
                         {
@@ -247,189 +251,189 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                         </Box>
 
                         {currentTab === 0 && (
-                        <Box sx={{ 
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr',
-                            gap: 3,
-                            pt: 2
-                        }}>
-                            {/* Left Column */}
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <TextField
-                                label="Agent Name"
-                                value={agentForm.name || ''}
-                                onChange={(e) => handleFormChange('name', e.target.value)}
-                                fullWidth
-                                margin="normal"
-                            />
-
-                            <TextField
-                                label="Description"
-                                value={agentForm.description || ''}
-                                onChange={(e) => handleFormChange('description', e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                multiline
-                                rows={2}
-                            />
-
-                            <TextField
-                                label="Purpose"
-                                value={agentForm.purpose || ''}
-                                onChange={(e) => handleFormChange('purpose', e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                multiline
-                                rows={3}
-                                required
-                            />
-
-                            <TextField
-                                label="Final Instructions"
-                                value={agentForm.finalInstructions || ''}
-                                onChange={(e) => handleFormChange('finalInstructions', e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                multiline
-                                rows={4}
-                                required
-                            />
-
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Planner Type</InputLabel>
-                                <Select
-                                    value={agentForm.plannerType || 'nextStep'}
-                                    label="Planner Type"
-                                    onChange={(e) => handleFormChange('plannerType', e.target.value)}
-                                >
-                                    <MenuItem value="nextStep">Next Step</MenuItem>
-                                </Select>
-                            </FormControl>
-
-                            <TextField
-                                label="Auto Respond Channels"
-                                value={agentForm.autoRespondChannelIds || ''}
-                                onChange={(e) => handleFormChange('autoRespondChannelIds', e.target.value)}
-                                fullWidth
-                                margin="normal"
-                                helperText="Comma separated list of channel IDs"
-                            />
-
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={agentForm.enabled ?? true}
-                                        onChange={(e) => handleFormChange('enabled', e.target.checked)}
+                            <Box sx={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: 3,
+                                pt: 2
+                            }}>
+                                {/* Left Column */}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <TextField
+                                        label="Agent Name"
+                                        value={agentForm.name || ''}
+                                        onChange={(e) => handleFormChange('name', e.target.value)}
+                                        fullWidth
+                                        margin="normal"
                                     />
-                                }
-                                label="Enabled"
-                            />
 
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={agentForm.supportsDelegation || false}
-                                        onChange={(e) => handleFormChange('supportsDelegation', e.target.checked)}
+                                    <TextField
+                                        label="Description"
+                                        value={agentForm.description || ''}
+                                        onChange={(e) => handleFormChange('description', e.target.value)}
+                                        fullWidth
+                                        margin="normal"
+                                        multiline
+                                        rows={2}
                                     />
-                                }
-                                label="Supports Delegation"
-                                sx={{ mt: 1 }}
-                            />
-                            </Box>
 
-                            {/* Right Column - Executors */}
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    Executors
-                                </Typography>
-                                
-                                {agentForm.executors?.map((executor: any, index: number) => (
-                                    <Paper key={index} sx={{ p: 2, mb: 1 }}>
-                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                                            <FormControl fullWidth size="small">
-                                                <InputLabel>Executor Type</InputLabel>
-                                                <Select
-                                                    value={executor.className || ''}
-                                                    label="Executor Type"
-                                                    onChange={(e) => {
+                                    <TextField
+                                        label="Purpose"
+                                        value={agentForm.purpose || ''}
+                                        onChange={(e) => handleFormChange('purpose', e.target.value)}
+                                        fullWidth
+                                        margin="normal"
+                                        multiline
+                                        rows={3}
+                                        required
+                                    />
+
+                                    <TextField
+                                        label="Final Instructions"
+                                        value={agentForm.finalInstructions || ''}
+                                        onChange={(e) => handleFormChange('finalInstructions', e.target.value)}
+                                        fullWidth
+                                        margin="normal"
+                                        multiline
+                                        rows={4}
+                                        required
+                                    />
+
+                                    <FormControl fullWidth margin="normal">
+                                        <InputLabel>Planner Type</InputLabel>
+                                        <Select
+                                            value={agentForm.plannerType || 'nextStep'}
+                                            label="Planner Type"
+                                            onChange={(e) => handleFormChange('plannerType', e.target.value)}
+                                        >
+                                            <MenuItem value="nextStep">Next Step</MenuItem>
+                                        </Select>
+                                    </FormControl>
+
+                                    <TextField
+                                        label="Auto Respond Channels"
+                                        value={agentForm.autoRespondChannelIds || ''}
+                                        onChange={(e) => handleFormChange('autoRespondChannelIds', e.target.value)}
+                                        fullWidth
+                                        margin="normal"
+                                        helperText="Comma separated list of channel IDs"
+                                    />
+
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={agentForm.enabled ?? true}
+                                                onChange={(e) => handleFormChange('enabled', e.target.checked)}
+                                            />
+                                        }
+                                        label="Enabled"
+                                    />
+
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={agentForm.supportsDelegation || false}
+                                                onChange={(e) => handleFormChange('supportsDelegation', e.target.checked)}
+                                            />
+                                        }
+                                        label="Supports Delegation"
+                                        sx={{ mt: 1 }}
+                                    />
+                                </Box>
+
+                                {/* Right Column - Executors */}
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Executors
+                                    </Typography>
+
+                                    {agentForm.executors?.map((executor: any, index: number) => (
+                                        <Paper key={index} sx={{ p: 2, mb: 1 }}>
+                                            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                                <FormControl fullWidth size="small">
+                                                    <InputLabel>Executor Type</InputLabel>
+                                                    <Select
+                                                        value={executor.className || ''}
+                                                        label="Executor Type"
+                                                        onChange={(e) => {
+                                                            const newExecutors = [...agentForm.executors];
+                                                            newExecutors[index].className = e.target.value;
+                                                            handleFormChange('executors', newExecutors);
+                                                        }}
+                                                    >
+                                                        {executorOptions.map(option => (
+                                                            <MenuItem key={option.value} value={option.value}>
+                                                                {option.label}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+
+                                                <IconButton
+                                                    onClick={() => {
                                                         const newExecutors = [...agentForm.executors];
-                                                        newExecutors[index].className = e.target.value;
+                                                        newExecutors.splice(index, 1);
+                                                        handleFormChange('executors', newExecutors);
+                                                    }}
+                                                    size="small"
+                                                    color="error"
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+
+                                            <Box sx={{ mt: 1 }}>
+                                                <Button
+                                                    size="small"
+                                                    startIcon={executor.showConfig ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                                    onClick={() => {
+                                                        const newExecutors = [...agentForm.executors];
+                                                        newExecutors[index].showConfig = !executor.showConfig;
                                                         handleFormChange('executors', newExecutors);
                                                     }}
                                                 >
-                                                    {executorOptions.map(option => (
-                                                        <MenuItem key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </MenuItem>
-                                                    ))}
-                                                </Select>
-                                            </FormControl>
+                                                    {executor.showConfig ? 'Hide' : 'Show'} Configuration
+                                                </Button>
 
-                                            <IconButton
-                                                onClick={() => {
-                                                    const newExecutors = [...agentForm.executors];
-                                                    newExecutors.splice(index, 1);
-                                                    handleFormChange('executors', newExecutors);
-                                                }}
-                                                size="small"
-                                                color="error"
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        </Box>
+                                                <Collapse in={executor.showConfig}>
+                                                    <TextField
+                                                        label="Configuration (JSON)"
+                                                        value={JSON.stringify(executor.config || {}, null, 2)}
+                                                        onChange={(e) => {
+                                                            try {
+                                                                const newExecutors = [...agentForm.executors];
+                                                                newExecutors[index].config = JSON.parse(e.target.value);
+                                                                handleFormChange('executors', newExecutors);
+                                                            } catch (error) {
+                                                                // Invalid JSON - ignore
+                                                            }
+                                                        }}
+                                                        fullWidth
+                                                        margin="normal"
+                                                        multiline
+                                                        rows={3}
+                                                    />
+                                                </Collapse>
+                                            </Box>
+                                        </Paper>
+                                    ))}
 
-                                        <Box sx={{ mt: 1 }}>
-                                            <Button
-                                                size="small"
-                                                startIcon={executor.showConfig ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                                                onClick={() => {
-                                                    const newExecutors = [...agentForm.executors];
-                                                    newExecutors[index].showConfig = !executor.showConfig;
-                                                    handleFormChange('executors', newExecutors);
-                                                }}
-                                            >
-                                                {executor.showConfig ? 'Hide' : 'Show'} Configuration
-                                            </Button>
-                                            
-                                            <Collapse in={executor.showConfig}>
-                                                <TextField
-                                                    label="Configuration (JSON)"
-                                                    value={JSON.stringify(executor.config || {}, null, 2)}
-                                                    onChange={(e) => {
-                                                        try {
-                                                            const newExecutors = [...agentForm.executors];
-                                                            newExecutors[index].config = JSON.parse(e.target.value);
-                                                            handleFormChange('executors', newExecutors);
-                                                        } catch (error) {
-                                                            // Invalid JSON - ignore
-                                                        }
-                                                    }}
-                                                    fullWidth
-                                                    margin="normal"
-                                                    multiline
-                                                    rows={3}
-                                                />
-                                            </Collapse>
-                                        </Box>
-                                    </Paper>
-                                ))}
-
-                                <Button 
-                                    variant="outlined" 
-                                    size="small"
-                                    onClick={() => {
-                                        const newExecutors = [...(agentForm.executors || [])];
-                                        newExecutors.push({
-                                            className: '',
-                                            config: {}
-                                        });
-                                        handleFormChange('executors', newExecutors);
-                                    }}
-                                >
-                                    Add Executor
-                                </Button>
-                            </Box>
-                        </Box>)}
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        onClick={() => {
+                                            const newExecutors = [...(agentForm.executors || [])];
+                                            newExecutors.push({
+                                                className: '',
+                                                config: {}
+                                            });
+                                            handleFormChange('executors', newExecutors);
+                                        }}
+                                    >
+                                        Add Executor
+                                    </Button>
+                                </Box>
+                            </Box>)}
                         {currentTab === 1 && (
                             <Box sx={{ pt: 2 }}>
                                 <Typography variant="h6" gutterBottom>
@@ -462,7 +466,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                                 <DeleteIcon />
                                             </IconButton>
                                         </Box>
-                                        
+
                                         <Box sx={{ mt: 2 }}>
                                             {sequence.steps.map((step: any, stepIndex: number) => (
                                                 <Box key={stepIndex} sx={{ display: 'flex', gap: 2, mb: 1 }}>
@@ -571,9 +575,9 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                         </Button>
                     </DialogActions>
                 </Dialog>
-                
-                <Button 
-                    variant="contained" 
+
+                <Button
+                    variant="contained"
                     onClick={() => {
                         const newAgentId = `agent-${Date.now()}`;
                         onSettingsChange({
