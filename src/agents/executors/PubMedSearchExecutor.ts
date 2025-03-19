@@ -175,7 +175,7 @@ interface PubMedSearchResult {
                 type: ArtifactType.Document,
                 content: result.fullText!,
                 metadata: {
-                    subtype: DocumentSubtype.PubMedFullArticle,
+                    subtype: DocumentSubtype.ScientificPaper,
                     title: result.title,
                     authors: result.authors.join(', '),
                     journal: result.journal,

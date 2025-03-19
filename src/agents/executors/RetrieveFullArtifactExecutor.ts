@@ -12,7 +12,7 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
-import { UUID } from "src/types/uuid";
+import { isUUID, UUID } from "src/types/uuid";
 import { Artifact } from "src/tools/artifact";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 

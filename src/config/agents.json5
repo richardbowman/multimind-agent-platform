@@ -395,10 +395,10 @@
               "className": "RetrieveFullArtifactExecutor"
             },
             {
-              "className": "ContentCombinationExecutor"
+              "className": "CSVMergeExecutor"
             },
             {
-              "className": "CSVMergeExecutor"
+              "className": "CombineArtifactsExecutor"
             }
           ]
         }

@@ -37,9 +37,10 @@ export enum ArtifactType {
 export enum DocumentSubtype {
   ResearchReport = "Research Report",
   WebpageSummary = "Webpage Summary",
-  PubMedFullArticle = "PubMed Full Article",
+  ScientificPaper = "Scientific Paper",
   Procedure = "Procedure",
-  Template = "Template"
+  Template = "Template",
+  General = "General"
 }
 
 export enum SpreadsheetSubType {
@@ -47,7 +48,7 @@ export enum SpreadsheetSubType {
   SearchResults = "Search Results",
   EvaluationCriteria = "Evaluation Criteria",
   Template = "Template",
-  Other = "Other",
+  General = "General",
   Procedure = "Procedure"
 }
 

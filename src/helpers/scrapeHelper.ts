@@ -320,6 +320,7 @@ class ScrapeHelper {
                 metadata: {
                     url,
                     title,
+                    mimeType: "text/markdown",
                     scrapedAt: new Date().toISOString(),
                     ...metadata
                 }

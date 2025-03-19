@@ -16,7 +16,7 @@ import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { withRetry } from 'src/helpers/retry';
 
-@StepExecutorDecorator(ExecutorType.DELEGATION, 'Create projects with tasks delegated to agents in the channel')
+@StepExecutorDecorator(ExecutorType.DELEGATION, 'Delegate task(s) to agent(s) in the channel')
 export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
@@ -120,6 +120,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         );
 
         const prompt = this.startModel(params);
+        prompt.addContext({contentType: ContentType.GOALS_FULL, params});
         const schema = await DelegationSchema;
         
         // Add delegation guides context if found

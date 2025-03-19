@@ -146,6 +146,8 @@ export namespace StringUtils {
     }
 
     export function extractAndParseJsonBlock<T extends Object>(text: string|ModelMessageResponse, schema?: JSONSchema): T {
+        if (!text) throw new Error("No message provided");
+        
         if (isObject(text) && text.message) {
             text = text.message;
         } else {

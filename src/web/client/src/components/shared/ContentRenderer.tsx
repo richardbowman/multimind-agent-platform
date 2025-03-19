@@ -120,7 +120,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     // Handle webpage content
-    if (type === ArtifactType.Webpage || metadata?.mimeType === 'text/html') {
+    if ((type === ArtifactType.Webpage || metadata?.mimeType === 'text/html') && metadata?.mimeType !== 'text/markdown') {
         return <WebpageRenderer content={content} metadata={metadata} />;
     }
 

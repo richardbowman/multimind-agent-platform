@@ -479,21 +479,24 @@ export class ArtifactManager {
 
     try {
       const content = artifact.content.toString();
-      const prompt = `Please generate a concise 2-3 sentence summary of the following content. Focus on the key points and main ideas:\n\n${content.substring(0, 8000)}`; // Limit to first 8000 chars
+      const prompt = `Please generate a concise 2-3 sentence summary of the following content. Focus on the key points and main ideas.`;
 
-      const response = await this.llmService.sendLLMRequest<ModelMessageResponse>({
-        messages: [{ role: 'user', content: prompt }],
+      const response = await this.llmService.generate(
+        prompt,
+        { message: `${content.substring(0, 20000)}` },
+        [],
+        {
         opts: {
           temperature: 0.2,
-          maxPredictedTokens: 200
-        },
-        context: {
-          agentName: "ArtifactManager",
-          stepType: "generateSummary"
+          maxPredictedTokens: 200,
+          context: {
+            agentName: "ArtifactManager",
+            stepType: "generateSummary"
+          }
         }
       });
 
-      return response.response.message;
+      return response.message;
     } catch (error) {
       Logger.error('Error generating summary:', error);
       return null;

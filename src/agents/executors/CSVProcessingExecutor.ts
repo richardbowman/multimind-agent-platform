@@ -31,7 +31,7 @@ interface CSVProcessingStepResponse extends StepResponse {
     }
 }
 
-@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
+@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Start task for each row in CSV spreadsheet and add new result columns')
 export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;

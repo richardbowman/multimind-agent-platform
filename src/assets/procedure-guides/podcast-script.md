@@ -35,7 +35,7 @@ Create engaging podcast scripts using a structured approach. Develop episode out
    d. Format for readability  
 
 4. **Final Production**  
-   Action Type: content-combination  
+   Action Type: combine-documents  
    Combine all script segments into a final markdown document with:  
    - Proper formatting and timing markers  
    - Consistent style throughout  

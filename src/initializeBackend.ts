@@ -138,12 +138,15 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         });
 
         // Initialize all agents
+        let i = 1, total = Object.keys(agentObjects).length;
         for (const [name, agent] of agentObjects.entries()) {
+            Logger.progress(`Initializing ${name} agent...`, (i / total));
             if (agent.initialize) {
                 await agent.initialize();
                 Logger.info(`Initialized agent: ${name}`);
             }
             agents.agents[agent.userId] = agent;
+            i++;
         }
 
         chatStorage.announceChannels();

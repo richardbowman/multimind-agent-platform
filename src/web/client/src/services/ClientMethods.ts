@@ -229,7 +229,7 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     onTaskUpdate(task: Task, type: TaskEventType) {
-        console.log(`Task ${type} event occured`, task);
+        // console.log(`Task ${type} event occured`, task);
         this.tasksContext.replaceTask(task);
     }
 

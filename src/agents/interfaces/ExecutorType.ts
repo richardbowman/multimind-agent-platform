@@ -49,5 +49,6 @@ export enum ExecutorType {
     CSV_MERGE = "csv-merge",
     SEARCH_ARTIFACT = "artifact-excerpts",
     SUGGESTED_RESPONSES = "suggested-responses",
-    LIST_AGENT_CAPABILITIES = "list-agents"
+    LIST_AGENT_CAPABILITIES = "list-agents",
+    COMBINE_DOCUMENTS = "combine-documents"
 }

@@ -253,10 +253,10 @@ stepResult.response.status && `<toolResult>${stepResult.response.status}</toolRe
             posts.forEach((post, index) => {
                 const postSteps = postMap.get(post.id);
                 if (postSteps && postSteps.length > 0) {
-                    output += `## POST ${index + 1}:\n`;
-                    output += `- User: ${handles?.[post.user_id] ?? "(unknown)"}\n`;
+                    output += `## POST ${index + 1} OF ${posts.length}${index === posts.length-1?" [THIS POST]":"[PREVIOUS POST]"}:\n`;
+                    if (handles) output += `- User: ${handles?.[post.user_id] ?? "(unknown)"}\n`;
                     output += `- Message: ${post.message}\n`;
-                    output += `### STEPS YOU'VE ALREADY PERFORMED FOR THIS POST:\n`;
+                    output += `### COMPLETED STEPS:\n`;
                     output += postSteps.join('\n') + '\n\n';
                 }
             });

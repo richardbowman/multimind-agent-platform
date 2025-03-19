@@ -11,10 +11,10 @@ export class LLMCallLogger extends EventEmitter {
     private sequelize: Sequelize;
     private serviceName: string;
 
-    constructor(serviceName: string, storageDir: string) {
+    constructor(serviceName: string, storageDir: string = 'llm') {
         super();
         this.serviceName = serviceName;
-        const logDir = path.join(getDataPath(), 'llm');
+        const logDir = path.join(getDataPath(), storageDir);
         // Initialize SQLite database
         const dbPath = path.join(logDir, 'logs.db');
         this.sequelize = new Sequelize({

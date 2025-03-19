@@ -69,12 +69,17 @@ export class CSVUtils {
         return csv;
     }
 
-    static async toCSV(csv: CSVContents) : Promise<string> {
+    static getColumnHeadersFromData(csv: CSVContents) : string[] {
         // Collect all unique column names from all rows
         const allColumns = new Set<string>();
         for (const row of csv.rows) {
             Object.keys(row).forEach(col => allColumns.add(col));
         }
+        return [...allColumns];        
+    }
+
+    static async toCSV(csv: CSVContents, headers?: string[]) : Promise<string> {
+        const allColumns = headers || this.getColumnHeadersFromData(csv);
 
         // Update the processed artifact with all columns
         const stringifier = stringify(csv.rows, { 

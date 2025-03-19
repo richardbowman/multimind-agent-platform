@@ -130,7 +130,7 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
         }
         
         // Default to Other if no common subtype
-        return SpreadsheetSubType.Other;
+        return SpreadsheetSubType.General;
     }
 
     private async generateMergePlan(goal: string, task: string, artifacts: Artifact[]): Promise<MergePlanResponse|undefined> {

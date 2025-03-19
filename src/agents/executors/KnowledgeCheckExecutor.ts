@@ -29,7 +29,7 @@ import { asError } from 'src/types/types';
  * - Identifies information gaps for further research
  * - Provides structured research reports with sources and relevance scores
  */
-@StepExecutorDecorator(ExecutorType.CHECK_KNOWLEDGE, 'Check my existing knowledgebase (useful to do upfront)')
+@StepExecutorDecorator(ExecutorType.CHECK_KNOWLEDGE, 'Check internal knowledge base for existing artifacts.')
 export class KnowledgeCheckExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private vectorDB: IVectorDatabase;
