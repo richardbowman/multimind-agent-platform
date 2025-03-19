@@ -42,6 +42,15 @@ export namespace StringUtils {
         return isString(value) && value.trim().length > 0;
     }
 
+    /**
+     * Checks if a value is an empty string
+     * @param value The value to check
+     * @returns true if the value is a string with length 0 (after trimming), false otherwise
+     */
+    export function isEmptyString(value: any): value is string {
+        return isString(value) && value.trim().length === 0;
+    }
+
     export function truncate(string: string, maxLength: number, truncationMsg = (maxLength: number, originalLength: number) => `[Truncated to ${maxLength}. Original length: ${originalLength}`) {
         if (typeof string === "string") {
             const originalLength = string.length;
