@@ -325,108 +325,113 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return incompleteTasks === 0;
     }
 
-    getProjectByTaskId(taskId: string): Project {
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(taskId)) {
-                return project;
-            }
+    async getProjectByTaskId(taskId: string): Promise<Project> {
+        const task = await TaskModel.findByPk(taskId, {
+            include: [ProjectModel]
+        });
+        
+        if (!task || !task.project) {
+            throw new Error(`No project found with task ID ${taskId}`);
         }
-        throw new Error(`No project found with task ID ${taskId}.`);
+        
+        return task.project;
     }
 
     async replaceProject(project: Project): Promise<void> {
-        // Update metadata
-        if (project.metadata) {
-            project.metadata.updatedAt = new Date();
-        }
-        this.projects[project.id] = project;
-        // Emit taskUpdated for each task in the project
-        const tasks = Object.values(project.tasks || {});
-        for (const task of tasks) {
-            await this.asyncEmit('taskUpdated', { task, project });
-        };
-        await this.save();
+        return this.saveQueue.enqueue(async () => {
+            // Update project metadata
+            await ProjectModel.update({
+                metadata: {
+                    ...project.metadata,
+                    updatedAt: new Date()
+                }
+            }, {
+                where: { id: project.id }
+            });
+
+            // Update all tasks in the project
+            const tasks = await TaskModel.findAll({
+                where: { projectId: project.id }
+            });
+
+            for (const task of tasks) {
+                await this.asyncEmit('taskUpdated', { task, project });
+            }
+        });
     }
 
-    getProjects(): Project[] {
-        return Object.values(this.projects);
+    async getProjects(): Promise<Project[]> {
+        return ProjectModel.findAll({
+            include: [TaskModel]
+        });
     }
 
-    getNextTask(projectId: string): Task | null {
-        const project = this.projects[projectId];
-        if (!project) {
-            return null;
-        }
+    async getNextTask(projectId: string): Promise<Task | null> {
+        const tasks = await TaskModel.findAll({
+            where: {
+                projectId,
+                [Sequelize.Op.or]: [
+                    { status: TaskStatus.Pending },
+                    { status: TaskStatus.InProgress },
+                    { complete: false }
+                ],
+                status: { [Sequelize.Op.ne]: TaskStatus.Cancelled }
+            },
+            order: [['order', 'ASC']],
+            limit: 1
+        });
 
-        // Get all tasks for the project
-        const tasks : Task[] = Object.values(project.tasks || {});
-
-        // Filter for not started tasks and sort by order
-        const availableTasks = tasks
-            .filter(t => (t.status === TaskStatus.Pending || t.status === TaskStatus.InProgress || !t.complete) && 
-                        t.status !== TaskStatus.Cancelled)
-            .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
-
-        // Return the first task or null if none found
-        return availableTasks[0] || null;
+        return tasks[0] || null;
     }
 
-    getProjectTasks(projectId: string, type?: TaskType): Task[] {
-        const project = this.projects[projectId];
-        if (!project) {
-            return [];
+    async getProjectTasks(projectId: string, type?: TaskType): Promise<Task[]> {
+        const where: any = { projectId };
+        if (type) {
+            where.type = type;
         }
 
-        // Get all tasks and sort by order
-        return Object.values<Task>(project.tasks || {})
-            .filter(t => type ? t.type === type : true)
-            .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+        return TaskModel.findAll({
+            where,
+            order: [['order', 'ASC']]
+        });
     }
 
     async getTaskById(taskId: string): Promise<Readonly<Task> | null> {
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(taskId)) {
-                // Return a deep frozen copy to prevent direct modification
-                return Object.freeze(JSON.parse(JSON.stringify(project.tasks[taskId])));
-            }
+        const task = await TaskModel.findByPk(taskId);
+        if (!task) {
+            return null;
         }
-        return null;
+        // Return a deep frozen copy to prevent direct modification
+        return Object.freeze(JSON.parse(JSON.stringify(task)));
     }
 
     async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
-        if (!this.projects[projectId]) {
-            throw new Error(`Project with ID ${projectId} not found`);
-        }
-
-        // Create updated project object
-        const updatedProject = {
-            ...this.projects[projectId],
-            ...updates,
-            // Ensure these properties can't be changed
-            id: this.projects[projectId].id,
-            // Update metadata timestamp
-            metadata: {
-                ...this.projects[projectId].metadata,
-                ...updates.metadata,
-                updatedAt: new Date()
+        return this.saveQueue.enqueue(async () => {
+            const project = await ProjectModel.findByPk(projectId);
+            if (!project) {
+                throw new Error(`Project with ID ${projectId} not found`);
             }
-        };
 
-        // Validate project properties
-        if (updatedProject.name && typeof updatedProject.name !== 'string') {
-            throw new Error('Project name must be a string');
-        }
+            // Validate project properties
+            if (updates.name && typeof updates.name !== 'string') {
+                throw new Error('Project name must be a string');
+            }
 
-        // Update the project
-        this.projects[projectId] = updatedProject;
+            // Update project
+            await project.update({
+                ...updates,
+                metadata: {
+                    ...project.metadata,
+                    ...updates.metadata,
+                    updatedAt: new Date()
+                }
+            });
 
-        // Emit projectUpdated event
-        await this.asyncEmit('projectUpdated', { project: updatedProject });
+            // Emit projectUpdated event
+            await this.asyncEmit('projectUpdated', { project });
 
-        await this.save();
-        return updatedProject;
+            return project;
+        });
     }
 
     async cancelTask(taskId: string): Promise<Task> {
