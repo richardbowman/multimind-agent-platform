@@ -1,6 +1,7 @@
 import { Sequelize, Model, DataTypes, Optional } from 'sequelize';
-import { Task, Project, TaskStatus, TaskType, ProjectMetadata, RecurringTask, RecurrencePattern } from './taskManager';
+import { Task, Project, TaskType, ProjectMetadata, RecurringTask, RecurrencePattern } from './taskManager';
 import { UUID } from 'src/types/uuid';
+import { TaskStatus } from 'src/schemas/TaskStatus';
 
 interface TaskAttributes {
     id: UUID;
