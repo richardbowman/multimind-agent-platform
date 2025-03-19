@@ -20,11 +20,9 @@ import {
     Collapse,
     Tabs,
     Tab,
-    Autocomplete,
-    DataGrid,
-    GridColDef,
-    GridActionsCellItem
+    Autocomplete
 } from '@mui/material';
+import { DataGrid, GridColDef, GridActionsCellItem, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -570,9 +568,6 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                         </Button>
                     </DialogActions>
                 </Dialog>
-                    </Paper>
-                ))}
-
                 
                 <Button 
                     variant="contained" 
