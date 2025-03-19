@@ -4,9 +4,13 @@ import Stop from '@mui/icons-material/Stop';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
+import { useChannels } from '../contexts/ChannelContext';
+import { useMessages } from '../contexts/MessageContext';
 
 export const MicrophoneButton: React.FC = () => {
-    const { currentChannelId, currentThreadId } = useDataContext();
+    const { currentChannelId } = useChannels();
+    const { currentThreadId } = useMessages();
+    
     const [isRecording, setIsRecording] = useState(false);
     const isRecordingRef = useRef(false); // Ref for immediate access
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
