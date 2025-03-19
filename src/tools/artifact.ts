@@ -40,7 +40,8 @@ export enum DocumentSubtype {
   ScientificPaper = "Scientific Paper",
   Procedure = "Procedure",
   Template = "Template",
-  General = "General"
+  General = "General",
+  AgentConfig = "Agent Config"
 }
 
 export enum SpreadsheetSubType {
