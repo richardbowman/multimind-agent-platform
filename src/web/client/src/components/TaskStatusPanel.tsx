@@ -106,14 +106,16 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
             [TaskStatus.Cancelled]: []
         };
 
-        // Sort by creation date (newest first)
-        const sortedTasks = [...tasks].sort((a, b) => 
-            new Date(b.create_at).getTime() - new Date(a.create_at).getTime()
-        );
-
-        // Group by status
-        sortedTasks.forEach(task => {
+        // Group by status first
+        tasks.forEach(task => {
             groups[task.status].push(task);
+        });
+
+        // Then sort each group by update_at (most recently updated first)
+        Object.values(groups).forEach(group => {
+            group.sort((a, b) => 
+                (b.update_at || b.create_at) - (a.update_at || a.create_at)
+            );
         });
 
         return groups;
