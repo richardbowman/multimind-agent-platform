@@ -24,6 +24,24 @@ export interface Link {
 }
 
 export namespace StringUtils {
+    /**
+     * Checks if a value is a string
+     * @param value The value to check
+     * @returns true if the value is a string, false otherwise
+     */
+    export function isString(value: any): value is string {
+        return typeof value === 'string';
+    }
+
+    /**
+     * Checks if a value is a non-empty string
+     * @param value The value to check
+     * @returns true if the value is a string with length > 0, false otherwise
+     */
+    export function isNonEmptyString(value: any): value is string {
+        return isString(value) && value.trim().length > 0;
+    }
+
     export function truncate(string: string, maxLength: number, truncationMsg = (maxLength: number, originalLength: number) => `[Truncated to ${maxLength}. Original length: ${originalLength}`) {
         if (typeof string === "string") {
             const originalLength = string.length;
