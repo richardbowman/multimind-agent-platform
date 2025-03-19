@@ -114,7 +114,7 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
         // Then sort each group by update_at (most recently updated first)
         Object.values(groups).forEach(group => {
             group.sort((a, b) => 
-                (b.update_at || b.create_at) - (a.update_at || a.create_at)
+                new Date(b.props?.updatedAt || b.props?.createdAt).getDate() - new Date(a.props?.updatedAt || a.props?.createdAt).getDate()
             );
         });
 
