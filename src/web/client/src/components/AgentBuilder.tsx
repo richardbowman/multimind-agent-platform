@@ -157,9 +157,23 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                         name: config.name || id,
                         description: config.description || '',
                         className: config.className || '',
-                        type: settings.agents?.[id] ? 'Provided' : 'Custom'
+                        type: settings.agents?.[id] ? 'Provided' : 'Custom',
+                        enabled: config.enabled ?? true
                     }))}
                     columns={[
+                        {
+                            field: 'enabled',
+                            headerName: 'Enabled',
+                            width: 100,
+                            type: 'boolean',
+                            renderCell: (params) => (
+                                <Checkbox
+                                    checked={params.value}
+                                    disabled
+                                    color="primary"
+                                />
+                            )
+                        },
                         {
                             field: 'name',
                             headerName: 'Name',
