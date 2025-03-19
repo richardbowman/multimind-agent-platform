@@ -1,4 +1,4 @@
-const { createCanvas, loadImage } = require('canvas');
+const { createCanvas, loadImage } = require('@napi-rs/canvas')
 const fs = require('fs');
 const path = require('path');
 
@@ -36,7 +36,8 @@ async function generateIcon() {
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
 
     // Save the icon
-    fs.mkdirSync(path.join(__dirname, '../dist'));
+    const distFolder = path.join(__dirname, '../dist');
+    if (!fs.existsSync(distFolder)) fs.mkdirSync(distFolder);
     const outPath = path.join(__dirname, '../dist/icon.png');
     fs.writeFileSync(outPath, canvas.toBuffer('image/png'));
     console.log(`Icon generated at ${outPath}`);
