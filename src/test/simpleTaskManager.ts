@@ -1,76 +1,89 @@
 import cron from 'node-cron';
-import fs from 'fs/promises';
 import * as Events from 'events';
 import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskType } from '../tools/taskManager';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from 'src/helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { createUUID, UUID } from 'src/types/uuid';
+import { Sequelize } from 'sequelize';
+import { TaskModel, ProjectModel } from '../tools/taskModels';
+import { DatabaseMigrator } from 'src/database/migrator';
 
 export enum TaskManagerEvents {
 
 }
 
 class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
-    private projects: Record<UUID, Project> = {};
-    private filePath: string;
-    private savePending: boolean = false;
-    private fileQueue: AsyncQueue = new AsyncQueue();
+    private sequelize: Sequelize;
+    private migrator: DatabaseMigrator;
+    private saveQueue: AsyncQueue = new AsyncQueue();
     private lastCheckTime: number = Date.now();
+    private initialized: boolean = false;
 
-    constructor(filePath: string) {
+    constructor() {
         super();
-        this.filePath = filePath;
         Logger.info("Starting task manager (should not happen more than once)");
         this.setMaxListeners(100);
+
+        // Initialize SQLite database
+        const dbPath = path.join(getDataPath(), 'tasks.db');
+        this.sequelize = new Sequelize({
+            dialect: 'sqlite',
+            storage: dbPath,
+            logging: msg => Logger.verbose(msg)
+        });
+
+        // Initialize migrator
+        const migrationsDir = path.join(getDataPath(), 'migrations');
+        this.migrator = new DatabaseMigrator(this.sequelize, migrationsDir);
+
+        // Initialize models
+        TaskModel.initialize(this.sequelize);
+        ProjectModel.initialize(this.sequelize);
+    }
+
+    async initialize(): Promise<void> {
+        if (this.initialized) return;
+
+        // Ensure the .output directory exists and run migrations
+        await this.saveQueue.enqueue(async () => {
+            await fs.mkdir(getDataPath(), { recursive: true });
+            await this.migrator.migrate();
+        }).catch(err => Logger.error('Error initializing database:', err));
+
+        // Wait for initial migration to complete
+        await this.sequelize.sync();
+
+        this.initialized = true;
     }
 
     async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {
-        let task = {
-            id: createUUID(),
-            category: "",
-            status: TaskStatus.Pending,
-            type: TaskType.Standard,
-            ...addTask,
-            projectId: project.id,
-            props: {
-                ...addTask.props,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            }
-        } as Task;
+        return this.saveQueue.enqueue(async () => {
+            // Get max order for new task
+            const maxOrder = await TaskModel.max('order', {
+                where: { projectId: project.id }
+            }) || 0;
 
-        // Set order to be after existing tasks if not specified
-        if (task.order === undefined) {
-            const existingTasks = Object.values(this.projects[project.id].tasks || {});
-            const maxOrder = Math.max(...existingTasks.map(t => t.order ?? 0), 0);
-            task = {
-                ...task,
-                order: maxOrder + 1
-            };
-        }
+            const task = await TaskModel.create({
+                id: createUUID(),
+                category: "",
+                status: TaskStatus.Pending,
+                type: TaskType.Standard,
+                ...addTask,
+                projectId: project.id,
+                order: maxOrder + 1,
+                props: {
+                    ...addTask.props,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                }
+            });
 
-        // Emit taskAdded event before saving
-        await this.asyncEmit('taskAdded', { task, project });
+            // Emit taskAdded event
+            await this.asyncEmit('taskAdded', { task, project });
 
-        // If not explicitly set, make this task depend on the task with the next lowest order
-        if (task.dependsOn === undefined) {
-            const existingTasks = Object.values(this.projects[project.id].tasks || {});
-            const previousTask = existingTasks
-                .filter(t => (t.order ?? Infinity) < (task.order ?? Infinity))
-                .sort((a, b) => (b.order ?? 0) - (a.order ?? 0))[0];
-
-            if (previousTask) {
-                task = {
-                    ...task,
-                    dependsOn: previousTask.id
-                };
-            }
-        }
-
-        this.projects[project.id].tasks[task.id] = task;
-        await this.save();
-        return task;
+            return task;
+        });
     }
 
     newProjectId(): UUID {
@@ -78,83 +91,70 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async addProject(project: Partial<Project>): Promise<Project> {
-        // Merge provided metadata with defaults
-        const addProject: Project = {
-            id: createUUID(),
-            name: `Project created ${new Date()}`,
-            tasks: {},
-            ...project,
-            metadata: {
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: 'active',
-                priority: 'medium',
-                ...project.metadata // Spread existing metadata to override defaults
-            }
-        };
+        return this.saveQueue.enqueue(async () => {
+            const newProject = await ProjectModel.create({
+                id: createUUID(),
+                name: `Project created ${new Date()}`,
+                ...project,
+                metadata: {
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    status: 'active',
+                    priority: 'medium',
+                    ...project.metadata
+                }
+            });
 
-        this.projects[addProject.id] = addProject;
-        await this.save();
-        return addProject;
+            return newProject;
+        });
     }
 
     async createProject(params: CreateProjectParams): Promise<Project> {
-        const project = {
-            name: params.name,
-            tasks: {},
-            metadata: {
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: "active",
-                priority: "medium",
-                ...params.metadata
-            } as ProjectMetadata
-        };
+        return this.saveQueue.enqueue(async () => {
+            const project = await ProjectModel.create({
+                name: params.name,
+                metadata: {
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    status: "active",
+                    priority: "medium",
+                    ...params.metadata
+                }
+            });
 
-        const newProject = await this.addProject(project);
-
-        if (params.tasks) {
-            for (const task of params.tasks) {
-                await this.addTask(newProject, {
-                    id: createUUID(),
-                    description: task.description,
-                    type: task.type,
-                    creator: 'system'
-                });
+            if (params.tasks) {
+                for (const task of params.tasks) {
+                    await this.addTask(project, {
+                        id: createUUID(),
+                        description: task.description,
+                        type: task.type,
+                        creator: 'system'
+                    });
+                }
             }
-        }
 
-        return newProject;
+            return project;
+        });
     }
 
-    getProject(projectId: string): Project {
-        return this.projects[projectId];
+    async getProject(projectId: string): Promise<Project> {
+        const project = await ProjectModel.findByPk(projectId, {
+            include: [TaskModel]
+        });
+
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
+
+        return project;
     }
 
     async save(): Promise<void> {
-        try {
-            if (this.savePending) return;
-            this.savePending = true;
-            await this.fileQueue.enqueue(async () => {
-                await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
-                this.savePending = false;
-            });
-        } catch (error) {
-            Logger.error('Failed to save tasks:', error);
-            this.savePending = false;
-        }
+        // No-op since we're using Sequelize
     }
 
     async load(): Promise<void> {
-        try {
-            await this.fileQueue.enqueue(async () => {
-                const data = await fs.readFile(this.filePath, 'utf-8');
-                this.projects = JSON.parse(data);
-                Logger.info(`Loaded ${Object.keys(this.projects).length} projects from disk`);
-            });
-        } catch (error) {
-            Logger.error('Failed to load tasks:', error);
-        }
+        // No-op since we're using Sequelize
     }
 
     async assignTaskToAgent(taskId: UUID, assignee: UUID): Promise<void> {
