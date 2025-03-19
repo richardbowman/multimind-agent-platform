@@ -20,7 +20,10 @@ import {
     Collapse,
     Tabs,
     Tab,
-    Autocomplete
+    Autocomplete,
+    DataGrid,
+    GridColDef,
+    GridActionsCellItem
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -149,50 +152,83 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 Agent Builder
             </Typography>
             
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {Object.entries(allAgents).map(([agentId, agentConfig]) => (
-                    <Paper key={agentId} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                                <Typography variant="subtitle1" gutterBottom>
-                                    {agentConfig.name || `Agent ${agentId}`}
+            <Box sx={{ height: 400, width: '100%' }}>
+                <DataGrid
+                    rows={Object.entries(allAgents).map(([id, config]) => ({
+                        id,
+                        name: config.name || `Agent ${id}`,
+                        description: config.description || '',
+                        className: config.className || '',
+                        type: settings.agents?.[id] ? 'Existing' : 'Custom'
+                    }))}
+                    columns={[
+                        { 
+                            field: 'name', 
+                            headerName: 'Name', 
+                            flex: 1,
+                            renderCell: (params) => (
+                                <Box>
+                                    <Typography variant="body1">{params.value}</Typography>
+                                    {params.row.className && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            Class: {params.row.className}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            )
+                        },
+                        { 
+                            field: 'description', 
+                            headerName: 'Description', 
+                            flex: 2,
+                            renderCell: (params) => (
+                                <Typography variant="body2" color="text.secondary">
+                                    {params.value}
                                 </Typography>
-                                {agentConfig.className && (
-                                    <Typography variant="caption" color="text.secondary">
-                                        Class: {agentConfig.className}
-                                    </Typography>
-                                )}
-                            </Box>
-                            <Box>
-                                {settings.agents?.[agentId] && (
+                            )
+                        },
+                        { 
+                            field: 'type', 
+                            headerName: 'Type', 
+                            width: 120,
+                            renderCell: (params) => (
+                                params.value === 'Existing' ? (
                                     <Chip 
                                         label="Existing Agent" 
                                         color="primary" 
                                         size="small"
-                                        sx={{ ml: 1 }}
                                     />
-                                )}
-                                <Tooltip title="Edit Agent">
-                                    <IconButton
-                                        onClick={() => handleEditClick(agentId)}
-                                        size="small"
-                                    >
-                                        <EditIcon fontSize="small" />
-                                    </IconButton>
-                                </Tooltip>
-                                {!settings.agents?.[agentId] && (
-                                    <Tooltip title="Delete Agent">
-                                        <IconButton
-                                            onClick={() => handleDeleteAgent(agentId)}
-                                            color="error"
-                                            size="small"
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
-                            </Box>
-                        </Box>
+                                ) : null
+                            )
+                        },
+                        {
+                            field: 'actions',
+                            type: 'actions',
+                            width: 100,
+                            getActions: (params) => [
+                                <GridActionsCellItem
+                                    icon={<EditIcon />}
+                                    label="Edit"
+                                    onClick={() => handleEditClick(params.id as string)}
+                                />,
+                                params.row.type === 'Custom' && (
+                                    <GridActionsCellItem
+                                        icon={<DeleteIcon />}
+                                        label="Delete"
+                                        onClick={() => handleDeleteAgent(params.id as string)}
+                                        color="error"
+                                    />
+                                )
+                            ].filter(Boolean)
+                        }
+                    ]}
+                    pageSizeOptions={[5, 10, 25]}
+                    initialState={{
+                        pagination: {
+                            paginationModel: { page: 0, pageSize: 10 },
+                        },
+                    }}
+                />
                 {/* Edit Agent Dialog */}
                 <Dialog
                     open={editingAgentId === agentId}
