@@ -165,14 +165,17 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                             headerName: 'Name', 
                             flex: 1,
                             renderCell: (params) => (
-                                <Box>
-                                    <Typography variant="body1">{params.value}</Typography>
-                                    {params.row.className && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            Class: {params.row.className}
-                                        </Typography>
-                                    )}
-                                </Box>
+                                <Typography variant="body1">{params.value}</Typography>
+                            )
+                        },
+                        {
+                            field: 'className',
+                            headerName: 'Class',
+                            flex: 1,
+                            renderCell: (params) => (
+                                <Typography variant="body2" color="text.secondary">
+                                    {params.value}
+                                </Typography>
                             )
                         },
                         { 
