@@ -140,16 +140,23 @@ export class ProjectModel extends Model<ProjectAttributes, ProjectCreationAttrib
     public id!: UUID;
     public name!: string;
     public metadata!: ProjectMetadata;
+    public tasks!: TaskModel[]; // Add tasks property
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 
     public static mapToProject(projectModel: ProjectModel): Project {
+        // Convert TaskModel instances to Task objects
+        const tasks = projectModel.tasks?.reduce((acc, task) => {
+            acc[task.id] = TaskModel.mapToTask(task);
+            return acc;
+        }, {} as Record<string, Task>) || {};
+
         return {
             id: projectModel.id,
             name: projectModel.name,
             metadata: projectModel.metadata,
-            tasks: {} // Will be populated when including TaskModel
+            tasks // Include the mapped tasks
         };
     }
 
