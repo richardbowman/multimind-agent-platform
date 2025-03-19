@@ -435,108 +435,95 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async cancelTask(taskId: string): Promise<Task> {
-        const task = await this._updateTask(taskId, { 
-            status: TaskStatus.Cancelled,
-            complete: false, // Maintain backwards compatibility
-            inProgress: false // Maintain backwards compatibility
-        }, false);
-        
-        // Emit the 'taskCancelled' event with the task
-        await this.asyncEmit('taskCancelled', task);
+        return this.saveQueue.enqueue(async () => {
+            const task = await TaskModel.findByPk(taskId);
+            if (!task) {
+                throw new Error(`Task ${taskId} not found`);
+            }
 
-        // Check if this task has child projects and cancel their tasks
-        if (task.props?.childProjectIds) {
-            for (const childProjectId of task.props.childProjectIds) {
-                const childProject = this.getProject(childProjectId);
-                if (childProject) {
-                    // Cancel all tasks in the child project
-                    for (const childTask of Object.values(childProject.tasks)) {
-                        if (childTask.status !== TaskStatus.Cancelled) {
+            await task.update({ 
+                status: TaskStatus.Cancelled,
+                complete: false, // Maintain backwards compatibility
+                inProgress: false // Maintain backwards compatibility
+            });
+            
+            // Emit the 'taskCancelled' event with the task
+            await this.asyncEmit('taskCancelled', task);
+
+            // Check if this task has child projects and cancel their tasks
+            if (task.props?.childProjectIds) {
+                for (const childProjectId of task.props.childProjectIds) {
+                    const childProject = await this.getProject(childProjectId);
+                    if (childProject) {
+                        // Cancel all tasks in the child project
+                        const childTasks = await TaskModel.findAll({
+                            where: {
+                                projectId: childProjectId,
+                                status: { [Sequelize.Op.ne]: TaskStatus.Cancelled }
+                            }
+                        });
+                        
+                        for (const childTask of childTasks) {
                             await this.cancelTask(childTask.id);
                         }
                     }
                 }
             }
-        }
-        
-        return task;
+            
+            return task;
+        });
     }
 
     async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
-        return this._updateTask(taskId, updates);
-    }
-
-    protected async _updateTask(taskId: string, updates: Partial<Task>, fireEvent: boolean = true): Promise<Task> {
-        let taskFound = false;
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(taskId)) {
-                const existingTask = project.tasks[taskId];
-                
-                // Create updated task object
-                const updatedTask = {
-                    ...existingTask,
-                    ...updates,
-                    // Ensure these properties can't be changed
-                    id: existingTask.id,
-                    projectId: existingTask.projectId,
-                    type: existingTask.type,
-                    props: {
-                        ...existingTask.props,
-                        ...updates.props,
-                        updatedAt: new Date()
-                    }
-                };
-
-                // Validate task properties
-                if (updatedTask.order !== undefined && typeof updatedTask.order !== 'number') {
-                    throw new Error('Task order must be a number');
-                }
-                if (updatedTask.complete !== undefined && typeof updatedTask.complete !== 'boolean') {
-                    throw new Error('Task complete status must be a boolean');
-                }
-
-                // Update the task
-                project.tasks[taskId] = updatedTask;
-                taskFound = true;
-
-                // Emit taskUpdated event
-                await this.asyncEmit('taskUpdated', { task: updatedTask, project });
-
-                await this.save();
-                return updatedTask;
+        return this.saveQueue.enqueue(async () => {
+            const task = await TaskModel.findByPk(taskId);
+            if (!task) {
+                throw new Error(`Task ${taskId} not found`);
             }
-        }
 
-        throw new Error(`Task with ID ${taskId} not found`);
+            // Validate task properties
+            if (updates.order !== undefined && typeof updates.order !== 'number') {
+                throw new Error('Task order must be a number');
+            }
+            if (updates.complete !== undefined && typeof updates.complete !== 'boolean') {
+                throw new Error('Task complete status must be a boolean');
+            }
+
+            // Update the task
+            await task.update({
+                ...updates,
+                props: {
+                    ...task.props,
+                    ...updates.props,
+                    updatedAt: new Date()
+                }
+            });
+
+            // Emit taskUpdated event
+            await this.asyncEmit('taskUpdated', { 
+                task, 
+                project: await ProjectModel.findByPk(task.projectId) 
+            });
+
+            return task;
+        });
     }
 
-    // Method to handle recurring tasks
     async scheduleRecurringTask(taskId: string, nextRunDate?: Date): Promise<void> {
-        let taskFound = false;
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(taskId)) {
-                if (project.tasks[taskId].type === "recurring") {
-                    const task = project.tasks[taskId] as RecurringTask;
-                    // Optionally update the next run date
-                    if (nextRunDate) {
-                        task.lastRunDate = nextRunDate;
-                    } else {
-                        task.lastRunDate = new Date();
-                    }
-                    taskFound = true;
-                    await this.save();
-                    break;
-                } else {
-                    throw new Error('Task is not marked as recurring.');
-                }
+        return this.saveQueue.enqueue(async () => {
+            const task = await TaskModel.findByPk(taskId);
+            if (!task) {
+                throw new Error(`Task ${taskId} not found`);
             }
 
-            if (!taskFound) {
-                throw new Error(`Task with ID ${taskId} not found.`);
+            if (task.type !== TaskType.Recurring) {
+                throw new Error('Task is not marked as recurring');
             }
-        }
+
+            await task.update({
+                lastRunDate: nextRunDate || new Date()
+            });
+        });
     }
 
     private async checkMissedTasks() {
@@ -544,53 +531,53 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         const lastCheck = this.lastCheckTime;
         this.lastCheckTime = now;
 
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            for (const taskId in project.tasks) {
-                const task = project.tasks[taskId];
-                
-                // Check for missed recurring tasks
-                if (task.isRecurring && task.lastRunDate) {
-                    const lastRun = new Date(task.lastRunDate).getTime();
-                    let nextRun = lastRun;
+        // Find all tasks that need to be checked
+        const tasks = await TaskModel.findAll({
+            include: [ProjectModel]
+        });
 
-                    // Calculate when the next run should have been
-                    switch (task.recurrencePattern) {
-                        case RecurrencePattern.Daily:
-                            nextRun = new Date(task.lastRunDate).setHours(24, 0, 0, 0);
-                            break;
-                        case RecurrencePattern.Weekly:
-                            nextRun = lastRun + (7 * 24 * 60 * 60 * 1000);
-                            break;
-                        case RecurrencePattern.Monthly:
-                            const nextMonth = new Date(lastRun);
-                            nextMonth.setMonth(nextMonth.getMonth() + 1);
-                            nextRun = nextMonth.getTime();
-                            break;
-                    }
+        for (const task of tasks) {
+            // Check for missed recurring tasks
+            if (task.type === TaskType.Recurring && task.lastRunDate) {
+                const lastRun = new Date(task.lastRunDate).getTime();
+                let nextRun = lastRun;
 
-                    // If next run should have happened between last check and now
-                    if (nextRun > lastCheck && nextRun <= now) {
-                        Logger.info(`Executing missed recurring task ${taskId} from ${new Date(nextRun).toISOString()}`);
-                        await this.scheduleRecurringTask(taskId, new Date(nextRun));
-                    }
+                // Calculate when the next run should have been
+                switch (task.recurrencePattern) {
+                    case RecurrencePattern.Daily:
+                        nextRun = new Date(task.lastRunDate).setHours(24, 0, 0, 0);
+                        break;
+                    case RecurrencePattern.Weekly:
+                        nextRun = lastRun + (7 * 24 * 60 * 60 * 1000);
+                        break;
+                    case RecurrencePattern.Monthly:
+                        const nextMonth = new Date(lastRun);
+                        nextMonth.setMonth(nextMonth.getMonth() + 1);
+                        nextRun = nextMonth.getTime();
+                        break;
                 }
 
-                // Check for missed due dates on non-recurring tasks
-                if (!task.isRecurring && task.dueDate) {
-                    const dueDate = new Date(task.dueDate).getTime();
-                    if (dueDate <= now && 
-                        task.status !== TaskStatus.Completed && 
-                        task.status !== TaskStatus.Cancelled) {
-                        Logger.info(`Task ${taskId} has missed its due date of ${new Date(dueDate).toISOString()}`);
-                        
-                        // Emit event for missed due date
-                        await this.asyncEmit('taskMissedDueDate', { 
-                            task, 
-                            project,
-                            dueDate: new Date(dueDate) 
-                        });
-                    }
+                // If next run should have happened between last check and now
+                if (nextRun > lastCheck && nextRun <= now) {
+                    Logger.info(`Executing missed recurring task ${task.id} from ${new Date(nextRun).toISOString()}`);
+                    await this.scheduleRecurringTask(task.id, new Date(nextRun));
+                }
+            }
+
+            // Check for missed due dates on non-recurring tasks
+            if (task.type !== TaskType.Recurring && task.props?.dueDate) {
+                const dueDate = new Date(task.props.dueDate).getTime();
+                if (dueDate <= now && 
+                    task.status !== TaskStatus.Completed && 
+                    task.status !== TaskStatus.Cancelled) {
+                    Logger.info(`Task ${task.id} has missed its due date of ${new Date(dueDate).toISOString()}`);
+                    
+                    // Emit event for missed due date
+                    await this.asyncEmit('taskMissedDueDate', { 
+                        task, 
+                        project: task.project,
+                        dueDate: new Date(dueDate) 
+                    });
                 }
             }
         }
