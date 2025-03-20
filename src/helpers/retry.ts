@@ -13,7 +13,7 @@ export class RetryError extends Error {
 let lastTaskTime = 0;
 
 export async function withRetry<T>(
-    fn: () => Promise<T>|T,
+    fn: (previousError?: Error) => Promise<T>|T,
     validate: (result: T) => Promise<boolean>|boolean,
     options: RetryOptions = {}
 ): Promise<T> {
@@ -43,7 +43,7 @@ export async function withRetry<T>(
             // Execute task and track time
             lastTaskTime = Date.now();
             const result = await Promise.race([
-                fn(),
+                fn(lastError),
                 new Promise<T>((_, reject) => 
                     setTimeout(() => reject(new Error('Timeout')), timeoutMs)
                 )
