@@ -1,7 +1,7 @@
 import Logger from "src/helpers/logger";
 import { ArtifactManager } from "./artifactManager";
 import fs from "node:fs";
-import { ArtifactType, DocumentSubtype, SpreadsheetSubType, Artifact, ArtifactItem } from "./artifact";
+import { ArtifactType, DocumentSubtype, SpreadsheetSubType, Artifact, ArtifactItem, ArtifactMetadata } from "./artifact";
 import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
@@ -79,7 +79,8 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
     return loadedTemplates;
 }
 
-export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<void> {
+export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
+    const loadedArtifacts: Artifact[] = [];
     const guidesDir = path.join(basePath, guidePath);
     if (!fs.existsSync(guidesDir)) {
         Logger.warn(`Procedure guides directory not found at ${guidesDir}`);
@@ -132,6 +133,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
             const existingHash = existingGuide.metadata?.contentHash;
             if (existingHash === contentHash) {
                 Logger.info(`Procedure guide unchanged: ${file}`);
+                loadedArtifacts.push(existingGuide);
                 continue;
             }
             Logger.info(`Updating procedure guide: ${file}`);
@@ -160,16 +162,76 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         }
 
         try {
-            await artifactManager.saveArtifact({
+            const artifact = await artifactManager.saveArtifact({
                 ...existingGuide?.id?{id: existingGuide?.id}:{},
                 type: artifactType,
                 content: content,
                 metadata: metadata
             });
 
+            loadedArtifacts.push(artifact);
             Logger.info(`Loaded procedure guide: ${file}`);
         } catch (e) {
             Logger.error(`Failed to save procedure guide ${file}`, e);
         }
+    }
+
+    // Generate the actions artifact from the loaded guides
+    const actionsGuide = loadedArtifacts.find(a => a.metadata?.source?.endsWith('actions.md'));
+    if (actionsGuide) {
+        await generateActionsArtifact(actionsGuide, artifactManager);
+    }
+
+    return loadedArtifacts;
+}
+
+async function generateActionsArtifact(actionsGuide: Artifact, artifactManager: ArtifactManager): Promise<void> {
+    // Parse the markdown table
+    const content = actionsGuide.content.toString();
+    const tableRegex = /^\|.*\|.*\|.*\|\n\|.*\|.*\|.*\|\n((?:\|.*\|.*\|.*\|\n)*)/m;
+    const match = content.match(tableRegex);
+    
+    if (!match) {
+        Logger.warn('Could not find action table in actions guide');
+        return;
+    }
+
+    const tableRows = match[1].trim().split('\n');
+    const actions = tableRows.map(row => {
+        const cells = row.split('|').map(c => c.trim()).filter(c => c);
+        return {
+            typeKey: cells[0],
+            className: cells[1],
+            description: cells[2]
+        };
+    });
+
+    // Create metadata
+    const metadata: ArtifactMetadata = {
+        title: 'Action Reference',
+        description: 'A comprehensive list of all supported agent actions',
+        source: 'generated://actions-reference',
+        contentHash: require('crypto').createHash('sha256').update(JSON.stringify(actions)).digest('hex'),
+        generatedFrom: actionsGuide.id
+    };
+
+    // Check if we already have this artifact
+    const existingArtifacts = await artifactManager.getArtifacts({ 
+        type: ArtifactType.Document, 
+        subtype: DocumentSubtype.Reference 
+    });
+    const existingArtifact = existingArtifacts.find(a => a.metadata?.source === 'generated://actions-reference');
+
+    try {
+        await artifactManager.saveArtifact({
+            ...existingArtifact?.id ? { id: existingArtifact.id } : {},
+            type: ArtifactType.Document,
+            subtype: DocumentSubtype.Reference,
+            content: JSON.stringify(actions, null, 2),
+            metadata: metadata
+        });
+        Logger.info('Generated actions reference artifact');
+    } catch (e) {
+        Logger.error('Failed to generate actions reference artifact', e);
     }
 }
