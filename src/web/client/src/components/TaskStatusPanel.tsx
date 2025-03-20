@@ -161,7 +161,6 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
                     </Typography>
                     <Tooltip title="Cancel all outstanding tasks">
                         <IconButton
-                            edge="end"
                             color="inherit"
                             aria-label="cancel-all"
                             size="small"
@@ -184,7 +183,6 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
                     </Tooltip>
                     <Tooltip title="Close panel">
                         <IconButton
-                            edge="end"
                             color="inherit"
                             aria-label="close"
                             onClick={onClose}

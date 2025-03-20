@@ -21,12 +21,19 @@ import { asUUID, UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../helpers/logger';
 import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
+import { error } from 'console';
 
 interface ExecutorCapability {
     stepType: string;
     description: string;
     exampleInput?: string;
     exampleOutput?: string;
+}
+
+export class ModelResponseError extends Error {
+    constructor(message: string, public modelResponse: string, options?: ErrorOptions) {
+        super(message, options);
+    }
 }
 
 export abstract class StepBasedAgent extends Agent {
@@ -702,7 +709,7 @@ export abstract class StepBasedAgent extends Agent {
         if (stepResult.finished || this.planner?.alwaysComplete) {
             // If this was the last planned task, add a validation step
             const remainingTasks = (await this.projects.getProjectTasks(projectId)).filter(t => !t.complete && t.type === "step" && t.id !== task.id);
-            const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
+            const stepArtifacts =   await this.mapRequestedArtifacts(artifactList);
 
             if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                 //TODO: hacky, we don't really post this message

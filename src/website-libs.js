@@ -25,10 +25,6 @@ const postMessageWithResponse = (type, data) => {
 
 // Expose artifact methods using postMessage
 window.loadArtifactContent = async (artifactId) => {
-    // Handle both raw UUIDs and "/artifact/UUID" format
-    const actualId = artifactId.startsWith('/artifact/') 
-        ? artifactId.split('/')[2] 
-        : artifactId;
     const response = await postMessageWithResponse('loadArtifactContent', { artifactId: actualId });
     return response.content;
 };

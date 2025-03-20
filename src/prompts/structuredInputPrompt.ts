@@ -6,4 +6,5 @@ export interface InputPrompt {
     addInstruction(instruction?: ContentInput): InputPrompt;
     addContext(context?: ContentInput): InputPrompt;
     addOutputInstructions(params: OutputInstructionsParams): InputPrompt;
+    setLastError(error: string): InputPrompt;
 }

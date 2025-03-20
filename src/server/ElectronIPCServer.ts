@@ -60,7 +60,7 @@ export class ElectronIPCServer {
             this.createWrapper(),
             {
                 ...safeHandlers,
-                post: (data) => this.mainWindow?.webContents.send('birpc', data),
+                post: (data) => this.mainWindow?.webContents?.send('birpc', data),
                 on: (handler) => {
                     ipcMain.on('birpc', (_, data) => handler(data));
                     const cleanup = () => {

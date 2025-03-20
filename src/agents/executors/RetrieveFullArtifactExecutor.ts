@@ -80,6 +80,7 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
         prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: allArtifacts});
 
         const schema = await getGeneratedSchema(SchemaType.ArtifactSelectionResponse);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
         
         try {
             const unstructuredResult = await this.modelHelpers.generate({
@@ -88,7 +89,6 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
                 threadPosts: params.context?.threadPosts,
                 modelType: ModelType.REASONING
             });
-            prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);
             const thinking = StringUtils.extractXmlBlock(unstructuredResult.message, "thinking");

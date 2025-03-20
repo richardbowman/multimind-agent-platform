@@ -10,6 +10,7 @@ import { StringUtils } from "src/utils/StringUtils";
 import { JSONSchema } from "./ILLMService";
 import { ArtifactType } from "src/tools/artifact";
 import { FullArtifactStepResponse } from "src/agents/executors/RetrieveFullArtifactExecutor";
+import { json } from "sequelize";
 
 export interface ContentRenderer<T> {
     (content: T): Promise<string> | string;
@@ -539,6 +540,7 @@ export class PromptBuilder implements InputPrompt {
     private instructions: (Promise<string> | string)[] = [];
     private context: (Promise<string> | string)[] = [];
     private registry: PromptRegistry;
+    lastError: string;
     
     constructor(registry: PromptRegistry) {
         this.registry = registry;
@@ -562,7 +564,29 @@ export class PromptBuilder implements InputPrompt {
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schema) {
             this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with a user-friendly message.
-3. After your message, provide the requested structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
+3. After your message, provide the requested structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}
+
+Example of calling a step:
+<thinking>Based on X, Y and Z...</thinking>
+I'm going to create a spreadsheet to...
+\`\`\`json
+{
+  nextAction: "generate-spreadsheet",
+  ...
+}
+\'\'\'
+
+Example of responding to user:
+<thinking>Based on X, Y and Z...</thinking>
+I've successfully created a spreadsheet to...
+\`\`\`json
+{
+  nextAction: "REPLY",
+  ...
+}
+\'\'\'
+
+`);
         } else if (outputType === OutputType.MULTIPLE_JSON_WITH_MESSAGE && schema) {
             this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and one or more fenced code blocks \`\`\`json each containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
         }
@@ -623,6 +647,11 @@ export class PromptBuilder implements InputPrompt {
         return this;
     }
 
+    setLastError(errorMessage: string) {
+        this.lastError = errorMessage;
+        return this;
+    }
+
     async build(): Promise<string> {
         const sections: string[] = [];
 
@@ -647,6 +676,10 @@ export class PromptBuilder implements InputPrompt {
         // Add instructions last
         if (this.instructions.length > 0) {
             sections.push("## INSTRUCTIONS\n" + (await Promise.all(this.instructions)).join('\n\n'));
+        }
+
+        if (this.lastError) {
+            sections.push(this.lastError);
         }
 
         return sections.join('\n\n');

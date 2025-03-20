@@ -50,7 +50,11 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
             try {
                 switch (event.data.type) {
                     case 'loadArtifactContent':
-                        const artifact = await ipcService.getRPC().getArtifact(event.data.artifactId);
+                        // Handle both raw UUIDs and "/artifact/UUID" format
+                        const artifactId = event.data.artifactId.startsWith('/artifact/') 
+                            ? event.data.artifactId.split('/')[2] 
+                            : event.data.artifactId;
+                        const artifact = await ipcService.getRPC().getArtifact(artifactId);
                         iframeWindow.postMessage({
                             type: 'loadArtifactContentResponse',
                             requestId: event.data.requestId,

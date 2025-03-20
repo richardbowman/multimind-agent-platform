@@ -78,13 +78,13 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 - Include all necessary JavaScript code within the HTML file
 
 You can load additional artifacts using these methods:
-- window.loadArtifact(artifactId): Loads an artifact by ID
-- window.getArtifactMetadata(artifactId): Gets metadata for an artifact
-- window.listAvailableArtifacts(): Lists all artifacts available to this project
+- window.loadArtifactContent(artifactId : string): string: Loads an artifact by ID
+- window.getArtifactMetadata(artifactId : string) : Record<string, any>: Gets metadata for an artifact
+- window.listAvailableArtifacts() : { title: string, id: string, type: string, subtype: string }: Lists all artifacts available to this project
 
 Example usage:
 // Load an artifact
-const artifact = await window.loadArtifact('12345');
+const artifact = await window.loadArtifactContent('12345');
 console.log(artifact.content);
 
 // Get artifact metadata

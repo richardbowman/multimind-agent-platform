@@ -99,7 +99,8 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
 
     private createModelConversation(prompt: any, params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
         return {
-            _prompt: prompt, // Store reference to prompt for cloning
+            _prompt: prompt,
+            setLastError: prompt.setLastError.bind(prompt),            
             addContext: prompt.addContext.bind(prompt),
             addInstruction: prompt.addInstruction.bind(prompt),
             getInstructions: prompt.getInstructions.bind(prompt),

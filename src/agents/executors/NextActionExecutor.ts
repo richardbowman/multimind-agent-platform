@@ -20,6 +20,7 @@ import { ModelResponse } from 'src/schemas/ModelResponse';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { asError } from 'src/types/types';
+import { ModelResponseError } from '../stepBasedAgent';
 
 export type WithReasoning<T extends ModelResponse> = T & {
     reasoning?: string;
@@ -142,7 +143,13 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             ]);
 
             const response: WithReasoning<Partial<NextActionResponse>> = await withRetry(
-                async () => {
+                async ({ previousError, previousResult} ) => {
+                    if (previousError) {
+                        prompt.setLastError(`YOU PROVIDED AN IMPROPER RESPONSE IN YOUR LAST ATTEMPT. MAKE SURE TO FOLLOW OUTPUT INSTRUCTIONS.
+                            Previous Response: ${previousError.modelResponse||JSON.stringify(previousResult)}
+                            Previous Error: ${previousError.message} `);
+                    }
+
                     const result = await prompt.generate({
                         message: params.message || params.stepGoal,
                         instructions: prompt,
@@ -156,15 +163,15 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     };
 
                     // Validate nextAction is one of the available types
-                    if (response.nextAction && !validActions.has(response.nextAction)) {
-                        throw new Error(`Invalid nextAction: ${response.nextAction}. Must be one of: ${Array.from(validActions).join(', ')}`);
+                    if (!response.nextAction || !validActions.has(response.nextAction)) {
+                        throw new ModelResponseError(`Error: Invalid nextAction: ${response.nextAction||"None provided"}. Must be one of: ${Array.from(validActions).join(', ')}`, result);
                     }
 
                     return response;
                 },
                 (result) => {
-                    const hasValidResponse = !!result && (!!result.nextAction || !!result.message);
-                    const hasValidAction = !result.nextAction || validActions.has(result.nextAction);
+                    const hasValidResponse = !!result && !!result.nextAction && !!result.message;
+                    const hasValidAction = result.nextAction && validActions.has(result.nextAction);
                     return hasValidResponse && hasValidAction;
                 },
                 {

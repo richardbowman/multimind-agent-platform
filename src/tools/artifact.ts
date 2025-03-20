@@ -60,6 +60,10 @@ export interface Artifact extends ArtifactItem {
 export interface ArtifactItem {
   id: UUID;
   type: ArtifactType;
-  metadata?: Record<string, any>;
+  metadata?: ArtifactMetadata;
   tokenCount?: number;
+}
+
+export interface ArtifactMetadata extends Record<string, any> {
+
 }

@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponseType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { LinkRef } from '../../helpers/scrapeHelper';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -11,15 +11,18 @@ import Logger from '../../helpers/logger';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { UrlExtractionResponse } from 'src/schemas/UrlExtractionResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { OutputType } from 'src/llm/promptBuilder';
+import { StringUtils } from 'src/utils/StringUtils';
 
 /**
  * Processes user messages to clean up URL refences and extract valid URLs.
  */
 @StepExecutorDecorator(ExecutorType.URL_EXTRACT, 'Process user messages to clean up URL refences and extract valid URLs.')
-export class UrlExecutor implements StepExecutor {
+export class UrlExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers!;
     }
 
@@ -48,9 +51,9 @@ export class UrlExecutor implements StepExecutor {
 
             return {
                 finished: true,
-                type: 'url_extraction',
                 replan: ReplanType.Allow,
                 response: {
+                    type: StepResponseType.URLList,
                     status: allUrls.length > 0 
                         ? "Found links:\n"+allUrls.map(a => " - " + a).join('\n')
                         : "I couldn't find any links.",
@@ -85,9 +88,10 @@ export class UrlExecutor implements StepExecutor {
 
             if (!params.message) return [];
 
+            const instructions = this.startModel(params);
             const schema = await getGeneratedSchema(SchemaType.UrlExtractionResponse);
             
-            const systemPrompt = `You are a URL extraction assistant. Analyze the user's message and extract any URLs or website references that should be visited:
+            instructions.addInstruction(`You are a URL extraction assistant. Analyze the user's message and extract any URLs or website references that should be visited:
             - Include full URLs with https:// prefix
             - Convert domain names (test.com) to full URLs
             - Include any relevant paths
@@ -96,14 +100,17 @@ export class UrlExecutor implements StepExecutor {
 
             Additional context:
             - Step: ${params.step || 'none'}
+            - Step Goal: ${params.stepGoal}
             - Available links from previous results: ${availableLinks.join(', ') || 'none'}
-            - Previous messages: ${previousMessages.join('\n') || 'none'}`;
+            - Previous messages: ${previousMessages.join('\n') || 'none'}`);
 
-            const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-            const response = await this.modelHelpers.generate<UrlExtractionResponse>({
-                message: params.message, // Just use the user's message as input
-                instructions
+            instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+
+
+            const rawResponse = await instructions.generate({
+                message: params.message||params.stepGoal
             });
+            const response = StringUtils.extractAndParseJsonBlock<UrlExtractionResponse>(rawResponse, schema);
 
             // Validate and normalize URLs
             const validUrls = (response.urls || [])
