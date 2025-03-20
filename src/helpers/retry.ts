@@ -13,7 +13,7 @@ export class RetryError extends Error {
 let lastTaskTime = 0;
 
 export async function withRetry<T>(
-    fn: (previousError?: Error) => Promise<T>|T,
+    fn: (previousResult?: T, previousError?: Error) => Promise<T>|T,
     validate: (result: T) => Promise<boolean>|boolean,
     options: RetryOptions = {}
 ): Promise<T> {
@@ -27,6 +27,7 @@ export async function withRetry<T>(
 
     let retryCount = 0;
     let lastError: Error | null = null;
+    let lastResult: T | undefined = undefined;
 
     while (retryCount < maxRetries) {
         try {
@@ -43,7 +44,7 @@ export async function withRetry<T>(
             // Execute task and track time
             lastTaskTime = Date.now();
             const result = await Promise.race([
-                fn(lastError),
+                fn(lastResult, lastError),
                 new Promise<T>((_, reject) => 
                     setTimeout(() => reject(new Error('Timeout')), timeoutMs)
                 )
@@ -52,7 +53,8 @@ export async function withRetry<T>(
             if (await validate(result)) {
                 return result;
             }
-
+            
+            lastResult = result;
             throw new Error('Validation failed');
         } catch (error) {
             lastError = error as Error;
