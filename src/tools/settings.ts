@@ -429,7 +429,28 @@ export class SQLiteVecSettings{
     journalMode: string = 'WAL';
 };
 
+import { ModelProviderConfig } from './modelProviderConfig';
+
 export class Settings {
+    @ClientSettings({
+        label: 'Model Configurations',
+        category: 'LLM Settings',
+        type: 'array',
+        description: 'Configure different model types and their providers',
+        arrayType: 'ModelProviderConfig'
+    })
+    modelConfigs: ModelProviderConfig[] = [
+        {
+            type: 'conversation',
+            provider: 'openrouter',
+            model: '',
+            baseUrl: '',
+            maxTokensPerMinute: 20000,
+            defaultDelayMs: 1000,
+            windowSizeMs: 60000
+        }
+    ];
+
     @ClientSettings({
         label: 'Text-to-Speech',
         category: 'Text-to-Speech',
