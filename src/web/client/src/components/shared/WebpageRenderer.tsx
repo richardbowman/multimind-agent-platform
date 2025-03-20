@@ -4,7 +4,9 @@ import { Box, Paper, Typography, IconButton } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
-import { useIpcService } from '../../hooks/useIpcService';
+import { useIPCService } from '../../contexts/IPCContext';
+import { ArtifactMetadata } from '../../../../../tools/artifact';
+import { subscribe } from 'diagnostics_channel';
 
 interface WebpageRendererProps {
     content: string;
@@ -15,7 +17,7 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [scale, setScale] = useState(1.0);
     const { registerActions, unregisterActions } = useToolbarActions();
-    const ipcService = useIpcService();
+    const ipcService = useIPCService();
 
     const zoomIn = useCallback(() => {
         setScale(prev => Math.min(prev + 0.2, 2.0));
@@ -42,17 +44,23 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
         if (!iframeWindow) return;
 
         // Expose artifact methods using IPC
-        iframeWindow.loadArtifact = async (artifactId: string) => {
-            return ipcService.invoke('getArtifact', { id: artifactId });
+        iframeWindow.loadArtifactContent = async (artifactId: string) : Promise<string> => {
+            const artifact = await ipcService.getRPC().getArtifact(artifactId);
+            return artifact.content;
         };
 
-        iframeWindow.getArtifactMetadata = async (artifactId: string) => {
-            const artifact = await ipcService.invoke('getArtifact', { id: artifactId });
+        iframeWindow.getArtifactMetadata = async (artifactId: string) : Promise<ArtifactMetadata> => {
+            const artifact = await ipcService.getRPC().getArtifact(artifactId);
             return artifact?.metadata;
         };
 
-        iframeWindow.listAvailableArtifacts = async () => {
-            return ipcService.invoke('listArtifacts');
+        iframeWindow.listAvailableArtifacts = async () : Promise<{ title: string, id: string, type: string, subtype: string }[]> => {
+            return (await ipcService.getRPC().listArtifacts()).map(a => ({
+                title: a.metadata?.title||"[Unknown title]",
+                id: a.id,
+                type: a.type,
+                subtype: a.metadata?.subtype
+            }));
         };
 
         // Cleanup
