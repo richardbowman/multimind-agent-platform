@@ -548,6 +548,10 @@ export class PromptBuilder implements InputPrompt {
         return this.build();
     }
 
+    getContext(): Promise<string> {
+        return Promise.all(this.context).then(contexts => contexts.join('\n\n'));
+    }
+
 
     addOutputInstructions({ outputType, schema, specialInstructions, type = 'markdown' }: OutputInstructionsParams) : PromptBuilder {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
