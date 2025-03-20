@@ -1,17 +1,17 @@
 import '@babel/standalone';
 import { createTheme } from '@mui/material/styles';
-import { parse } from 'csv-parse/sync';
-import { stringify } from 'csv-stringify/sync';
+import { parse } from 'csv-parse/browser/esm/sync';
+import { stringify } from 'csv-stringify/browser/esm/sync';
 
 // Message handling utilities
 const postMessageWithResponse = (type, data) => {
     return new Promise((resolve, reject) => {
         const requestId = Math.random().toString(36).substring(2);
-        
+
         const handleMessage = (event) => {
             if (event.data.requestId === requestId) {
                 window.removeEventListener('message', handleMessage);
-                
+
                 if (event.data.type === `${type}Response`) {
                     resolve(event.data);
                 } else if (event.data.type === 'error') {
@@ -19,7 +19,7 @@ const postMessageWithResponse = (type, data) => {
                 }
             }
         };
-        
+
         window.addEventListener('message', handleMessage);
         window.parent.postMessage({ type, requestId, ...data }, '*');
     });
@@ -27,7 +27,7 @@ const postMessageWithResponse = (type, data) => {
 
 // Expose artifact methods using postMessage
 window.loadArtifactContent = async (artifactId) => {
-    const response = await postMessageWithResponse('loadArtifactContent', { artifactId: actualId });
+    const response = await postMessageWithResponse('loadArtifactContent', { artifactId });
     return response.content;
 };
 
@@ -42,21 +42,19 @@ window.listAvailableArtifacts = async () => {
 };
 
 // Expose CSV utilities
-window.CSV = {
-    parse: (csvString, options) => parse(csvString, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true,
-        relax_quotes: true,
-        relax_column_count: true,
-        bom: true,
-        ...options
-    }),
-    stringify: (data, options) => stringify(data, {
-        header: true,
-        ...options
-    })
-};
+export const parseSync = (csvString, options) => parse(csvString, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    relax_quotes: true,
+    relax_column_count: true,
+    bom: true,
+    ...options
+});
+export const stringifySync = (data, options) => stringify(data, {
+    header: true,
+    ...options
+});
 
 export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom';
@@ -69,7 +67,7 @@ export { ThemeProvider, createTheme, alpha } from '@mui/material/styles';
 window.appContainer = {};
 
 export const getTheme = (themeName) => {
-    switch(themeName) {
+    switch (themeName) {
         case 'light':
             return createTheme({
                 palette: {

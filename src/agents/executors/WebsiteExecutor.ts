@@ -25,7 +25,7 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 `You are creating a website. Follow these guidelines:
 - Use modern, responsive design principles
 - You may use React 19 and Material-UI (MUI) components
-- CSV parsing utilities are available through window.CSV.parse() and window.CSV.stringify()
+- CSV parsing utilities are available through WebsiteLibs.parseSync(content) : { data : [] } and WebsiteLibs.stringifySync({ data: [] }) : string
 - Use these exact script references in your HTML:;
 - Your JavaScript must be inside of a 'text/babel' script so the JSX can be processed.
 - To access needed libraries: 

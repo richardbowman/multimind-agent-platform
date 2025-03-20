@@ -435,9 +435,8 @@ export class Settings {
     @ClientSettings({
         label: 'Model Configurations',
         category: 'LLM Settings',
-        type: 'array',
-        description: 'Configure different model types and their providers',
-        arrayType: 'ModelProviderConfig'
+        type: 'Models',
+        description: 'Configure different model types and their providers'
     })
     modelConfigs: ModelProviderConfig[] = [
         {
@@ -719,7 +718,7 @@ export class Settings {
         options: ['vectra', 'chroma', 'sqlite_vec'],
         description: 'Type of vector database to use for storing and querying embeddings'
     })
-    vectorDatabaseType: string = 'sqlite_vec';
+    vectorDatabaseType: string = 'vectra';
 
     @ClientSettings({
         label: 'SQLiteVec Settings',

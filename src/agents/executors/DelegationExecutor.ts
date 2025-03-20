@@ -110,7 +110,7 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
 
         // Search for delegation-specific procedure guides
         const delegationGuides = await this.params.artifactManager.searchArtifacts(
-            params.stepGoal,
+            StringUtils.truncateWithEllipsis(params.stepGoal, 1000),
             {
                 type: ArtifactType.Document,
                 subtype: DocumentSubtype.Procedure,

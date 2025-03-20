@@ -1,6 +1,6 @@
-import React, { useCallback } from 'react';                                                                                                        
+import React, { useCallback, useEffect } from 'react';                                                                                                        
 import { Box, Paper } from '@mui/material';                                                                                                        
-import { BoldItalicUnderlineToggles, headingsPlugin, listsPlugin, markdownShortcutPlugin, MDXEditor, MDXEditorMethods, MDXEditorProps, quotePlugin, thematicBreakPlugin, toolbarPlugin, UndoRedo } from '@mdxeditor/editor';                                                                   
+import { BoldItalicUnderlineToggles, diffSourcePlugin, DiffSourceToggleWrapper, headingsPlugin, listsPlugin, markdownShortcutPlugin, MDXEditor, MDXEditorMethods, MDXEditorProps, quotePlugin, thematicBreakPlugin, toolbarPlugin, UndoRedo } from '@mdxeditor/editor';                                                                   
 import { useIPCService } from '../../contexts/IPCContext';                                                                                         
 import { ArtifactItem } from '../../../../../tools/artifact';                                                                                      
 import '@mdxeditor/editor/style.css';                                                                                                              
@@ -20,7 +20,13 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 }) => {                                                                                                                                            
   const ipcService = useIPCService();                                                                                                              
   const editorRef = React.useRef<MDXEditorMethods>(null);                                                                                          
-                                                                                                                                                   
+      
+  useEffect(() => {                                                                                                                                
+    if (editorRef.current) {                                                                                                                       
+      editorRef.current.setMarkdown(initialContent);                                                                                               
+    }                                                                                                                                              
+  }, [initialContent]); 
+
   const handleSave = useCallback(async () => {                                                                                                     
     if (artifact && ipcService.getRPC()) {                                                                                                         
       const markdown = editorRef.current?.getMarkdown() || '';                                                                                     
@@ -37,21 +43,24 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         <MDXEditor                                                                                                                                 
           ref={editorRef}                                                                                                                          
           markdown={initialContent}                                                                                                                
-          onChange={onChange}                                                                                                                      
           readOnly={readOnly}                                                                                                                      
-          contentEditableClassName="prose"                                                                                                         
+          contentEditableClassName="prose"      
+          onError={({ error, source }) => {
+            console.error(error, source);
+          }}                                                                                                   
           plugins={[                                                                                                                               
             headingsPlugin(),
             listsPlugin(),
             quotePlugin(),
             thematicBreakPlugin(),
             markdownShortcutPlugin(),
+            diffSourcePlugin(),
             toolbarPlugin({
               toolbarContents: () => (
-                <>
+                <DiffSourceToggleWrapper>
                   <UndoRedo />
                   <BoldItalicUnderlineToggles />
-                </>
+                </DiffSourceToggleWrapper>
               )
             })                                                                                              
           ]}                                                                                                                                 

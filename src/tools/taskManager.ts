@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import { ContentProject } from 'src/agents/contentManager';
 
 // Define a RecurrencePattern enum
 export enum RecurrencePattern {

@@ -20,7 +20,6 @@ import { Message } from "./chat/chatClient";
 import _crypto from 'node:crypto';
 import { loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
 import { Sequelize } from "sequelize";
-
 if (!global.crypto) {
     global.crypto = _crypto;
 }
@@ -36,7 +35,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 } = {}): Promise<BackendServices> {
 
     const _s = settingsManager.getSettings();
-
+    
     // Initialize the models
     try {
         if (!_s.providers.embeddings) {
@@ -82,7 +81,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         await vectorDB.initializeCollection(_s.chromaCollection);
 
-        const dataDir = getDataPath();
 
         const tasks = new SimpleTaskManager();
         await tasks.initialize();

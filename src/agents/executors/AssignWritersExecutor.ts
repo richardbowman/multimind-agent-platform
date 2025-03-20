@@ -82,7 +82,7 @@ For each section, provide a clear title, description, key points to cover, and r
         
         // Get procedure guides from search, excluding any already in use
         const searchedGuides = (await this.params.artifactManager.searchArtifacts(
-            params.stepGoal, 
+            StringUtils.truncateWithEllipsis(params.stepGoal, 1000), 
             { 
                 type: ArtifactType.Document, 
                 subtype: DocumentSubtype.Procedure 

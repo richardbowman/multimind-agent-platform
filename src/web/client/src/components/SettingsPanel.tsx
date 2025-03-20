@@ -27,6 +27,7 @@ import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
 import ModelSelector from './ModelSelector';
+import { ModelConfigBuilder } from './ModelConfigBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
@@ -415,6 +416,15 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             if (category === 'Agents') {
                                 return (
                                     <AgentBuilder
+                                        key={category}
+                                        id={category}
+                                        settings={settings}
+                                        onSettingsChange={setSettings}
+                                    />
+                                );
+                            } else if (category === 'Models') {
+                                return (
+                                    <ModelConfigBuilder
                                         key={category}
                                         id={category}
                                         settings={settings}

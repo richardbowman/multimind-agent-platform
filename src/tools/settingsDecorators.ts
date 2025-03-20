@@ -5,7 +5,7 @@ export function ClientSettings(metadata: {
     label: string;
     category: string;
     description?: string;
-    type?: 'string' | 'number' | 'boolean' | 'select' | 'section' | 'slider';
+    type?: 'string' | 'number' | 'boolean' | 'select' | 'section' | 'slider' | 'Agents' | 'Models';
     options?: string[];
     min?: number;
     max?: number;

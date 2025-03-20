@@ -62,10 +62,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             // Sync models with database in correct order
             try {
                 Logger.verbose('Syncing ProjectModel...');
-                // await ProjectModel.sync({ alter: true });
+                await ProjectModel.sync();
                 
                 Logger.verbose('Syncing TaskModel...');
-                // await TaskModel.sync({ alter: true });
+                await TaskModel.sync();
                 
                 Logger.verbose('Database models synchronized successfully');
             } catch (error) {

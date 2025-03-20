@@ -86,7 +86,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
             // Get procedure guides from search, excluding any already in use
             const searchedGuides = (await this.artifactManager.searchArtifacts(
-                `Procedure guides to achieve ${params.stepGoal}`,
+                `Procedure guides to achieve ${StringUtils.truncateWithEllipsis(params.stepGoal, 1000)}`,
                 {
                     type: ArtifactType.Document,
                     subtype: DocumentSubtype.Procedure

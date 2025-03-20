@@ -1,10 +1,19 @@
 import './register-paths';
 
-//import 'reflect-metadata';
+import 'reflect-metadata';
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import fs from 'node:fs';
+import { getDataPath } from './helpers/paths';
+
+// Set app name based on environment
+const isDev = !app.isPackaged;
+const appName = isDev ? 'MultiMindDev' : 'MultiMind';
+app.setName(appName);
+const dataDir = getDataPath();
+fs.mkdirSync(dataDir, { recursive: true });
 
 import { initializeConfig } from './helpers/config';
-import { app, BrowserWindow, ipcMain } from 'electron';
-const isDev = (await import('electron-is-dev')).default;
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
@@ -17,9 +26,6 @@ import { SettingsManager } from './tools/settingsManager';
 import { LogReader } from './server/LogReader';
 import { AppUpdater, autoUpdater } from 'electron-updater';
 import { AsyncQueue } from './helpers/asyncQueue';
-import { electron } from 'process';
-import { getDataPath } from './helpers/paths';
-import path from 'path';
 
 let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
@@ -54,10 +60,7 @@ ipcMain.handle('check-for-updates', checkForUpdates);
 // Set up global error handling
 setupUnhandledRejectionHandler();
 
-// Set app name based on environment
-const isDev = (await import('electron-is-dev')).default;
-const appName = isDev ? 'MultiMindDev' : 'MultiMind';
-app.setName(appName);
+
 
 app.whenReady().then(async () => {
     try {

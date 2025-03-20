@@ -135,6 +135,7 @@
     "@lexical/markdown": "^0.27.2",
     "@lexical/react": "^0.27.2",
     "@lexical/rich-text": "^0.27.2",
+    "@mdxeditor/editor": "^3.29.0",
     "@mui/icons-material": "^6.4.2",
     "@mui/lab": "6.0.0-beta.30",
     "@mui/material": "^6.4.2",

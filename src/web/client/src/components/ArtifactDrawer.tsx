@@ -43,15 +43,24 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
             onClose={onClose}
             PaperProps={{
                 sx: {
-                    width: '80%'
+                    width: '80%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden' 
                 }
             }}
+            sx={{
+                display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden'
+            }}
+            
         >
             <DrawerHeader onClick={onClose}/>
             {currentArtifact && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <ActionToolbar actions={actions}/>
-                    <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+                    <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', p: 2 }}>
                         <ArtifactDisplay
                             artifact={currentArtifact}
                             onDelete={onClose}
