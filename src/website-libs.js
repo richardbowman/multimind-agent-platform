@@ -1,6 +1,44 @@
 import '@babel/standalone';
 import { createTheme } from '@mui/material/styles';
 
+// Message handling utilities
+const postMessageWithResponse = (type, data) => {
+    return new Promise((resolve, reject) => {
+        const requestId = Math.random().toString(36).substring(2);
+        
+        const handleMessage = (event) => {
+            if (event.data.requestId === requestId) {
+                window.removeEventListener('message', handleMessage);
+                
+                if (event.data.type === `${type}Response`) {
+                    resolve(event.data);
+                } else if (event.data.type === 'error') {
+                    reject(new Error(event.data.message));
+                }
+            }
+        };
+        
+        window.addEventListener('message', handleMessage);
+        window.parent.postMessage({ type, requestId, ...data }, '*');
+    });
+};
+
+// Expose artifact methods using postMessage
+window.loadArtifactContent = async (artifactId) => {
+    const response = await postMessageWithResponse('loadArtifactContent', { artifactId });
+    return response.content;
+};
+
+window.getArtifactMetadata = async (artifactId) => {
+    const response = await postMessageWithResponse('getArtifactMetadata', { artifactId });
+    return response.metadata;
+};
+
+window.listAvailableArtifacts = async () => {
+    const response = await postMessageWithResponse('listAvailableArtifacts', {});
+    return response.artifacts;
+};
+
 export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom';
 export * as ReactDOMClient from 'react-dom/client';

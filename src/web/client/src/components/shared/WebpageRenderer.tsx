@@ -43,32 +43,55 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
         const iframeWindow = iframeRef.current.contentWindow;
         if (!iframeWindow) return;
 
-        // Expose artifact methods using IPC
-        iframeWindow.loadArtifactContent = async (artifactId: string) : Promise<string> => {
-            const artifact = await ipcService.getRPC().getArtifact(artifactId);
-            return artifact.content;
+        // Handle messages from the iframe
+        const handleMessage = async (event: MessageEvent) => {
+            if (event.source !== iframeWindow) return;
+
+            try {
+                switch (event.data.type) {
+                    case 'loadArtifactContent':
+                        const artifact = await ipcService.getRPC().getArtifact(event.data.artifactId);
+                        iframeWindow.postMessage({
+                            type: 'loadArtifactContentResponse',
+                            requestId: event.data.requestId,
+                            content: artifact?.content
+                        }, '*');
+                        break;
+                        
+                    case 'getArtifactMetadata':
+                        const artifactMeta = await ipcService.getRPC().getArtifact(event.data.artifactId);
+                        iframeWindow.postMessage({
+                            type: 'getArtifactMetadataResponse',
+                            requestId: event.data.requestId,
+                            metadata: artifactMeta?.metadata
+                        }, '*');
+                        break;
+                        
+                    case 'listAvailableArtifacts':
+                        const artifacts = await ipcService.getRPC().listArtifacts();
+                        iframeWindow.postMessage({
+                            type: 'listAvailableArtifactsResponse',
+                            requestId: event.data.requestId,
+                            artifacts: artifacts.map(a => ({
+                                title: a.metadata?.title || "[Unknown title]",
+                                id: a.id,
+                                type: a.type,
+                                subtype: a.metadata?.subtype
+                            }))
+                        }, '*');
+                        break;
+                }
+            } catch (error) {
+                iframeWindow.postMessage({
+                    type: 'error',
+                    requestId: event.data.requestId,
+                    message: error instanceof Error ? error.message : 'Unknown error'
+                }, '*');
+            }
         };
 
-        iframeWindow.getArtifactMetadata = async (artifactId: string) : Promise<ArtifactMetadata> => {
-            const artifact = await ipcService.getRPC().getArtifact(artifactId);
-            return artifact?.metadata;
-        };
-
-        iframeWindow.listAvailableArtifacts = async () : Promise<{ title: string, id: string, type: string, subtype: string }[]> => {
-            return (await ipcService.getRPC().listArtifacts()).map(a => ({
-                title: a.metadata?.title||"[Unknown title]",
-                id: a.id,
-                type: a.type,
-                subtype: a.metadata?.subtype
-            }));
-        };
-
-        // Cleanup
-        return () => {
-            delete iframeWindow.loadArtifact;
-            delete iframeWindow.getArtifactMetadata;
-            delete iframeWindow.listAvailableArtifacts;
-        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
     }, [ipcService]);
 
     useEffect(() => {
