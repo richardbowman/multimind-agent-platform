@@ -81,7 +81,8 @@ module.exports = {
       /^@agents\//,
       /^@executors\//,
       /^@tools\//,
-      /^src\//
+      /^src\//,
+      /^node-llama-cpp$/
     ]
   })],
   externalsPresets: {
