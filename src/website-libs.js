@@ -1,5 +1,7 @@
 import '@babel/standalone';
 import { createTheme } from '@mui/material/styles';
+import { parse } from 'csv-parse/sync';
+import { stringify } from 'csv-stringify/sync';
 
 // Message handling utilities
 const postMessageWithResponse = (type, data) => {
@@ -37,6 +39,23 @@ window.getArtifactMetadata = async (artifactId) => {
 window.listAvailableArtifacts = async () => {
     const response = await postMessageWithResponse('listAvailableArtifacts', {});
     return response.artifacts;
+};
+
+// Expose CSV utilities
+window.CSV = {
+    parse: (csvString, options) => parse(csvString, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        relax_quotes: true,
+        relax_column_count: true,
+        bom: true,
+        ...options
+    }),
+    stringify: (data, options) => stringify(data, {
+        header: true,
+        ...options
+    })
 };
 
 export { default as React } from 'react';
