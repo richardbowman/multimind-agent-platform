@@ -4,6 +4,7 @@ import { Box, Paper, Typography, IconButton } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
+import { useIpcService } from '../../hooks/useIpcService';
 
 interface WebpageRendererProps {
     content: string;
@@ -14,6 +15,7 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [scale, setScale] = useState(1.0);
     const { registerActions, unregisterActions } = useToolbarActions();
+    const ipcService = useIpcService();
 
     const zoomIn = useCallback(() => {
         setScale(prev => Math.min(prev + 0.2, 2.0));
@@ -32,6 +34,34 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
             }
         }
     }, []);
+
+    useEffect(() => {
+        if (!iframeRef.current) return;
+
+        const iframeWindow = iframeRef.current.contentWindow;
+        if (!iframeWindow) return;
+
+        // Expose artifact methods using IPC
+        iframeWindow.loadArtifact = async (artifactId: string) => {
+            return ipcService.invoke('getArtifact', { id: artifactId });
+        };
+
+        iframeWindow.getArtifactMetadata = async (artifactId: string) => {
+            const artifact = await ipcService.invoke('getArtifact', { id: artifactId });
+            return artifact?.metadata;
+        };
+
+        iframeWindow.listAvailableArtifacts = async () => {
+            return ipcService.invoke('listArtifacts');
+        };
+
+        // Cleanup
+        return () => {
+            delete iframeWindow.loadArtifact;
+            delete iframeWindow.getArtifactMetadata;
+            delete iframeWindow.listAvailableArtifacts;
+        };
+    }, [ipcService]);
 
     useEffect(() => {
         const webpageActions = [
