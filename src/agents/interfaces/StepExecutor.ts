@@ -82,7 +82,24 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
 
     protected startModel(params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
         const prompt = this.params.modelHelpers.createPrompt();
+        return this.createModelConversation(prompt, params, methodName);
+    }
+
+    protected cloneConversation(original: ModelConversation, params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
+        // Clone the underlying PromptBuilder by creating a new one and copying all data
+        const newPrompt = this.params.modelHelpers.createPrompt();
+        
+        // Copy all instructions and context from original to new prompt
+        const originalPrompt = (original as any)._prompt || original;
+        newPrompt.addInstruction(originalPrompt.getInstructions());
+        newPrompt.addContext(originalPrompt.getContext());
+        
+        return this.createModelConversation(newPrompt, params, methodName);
+    }
+
+    private createModelConversation(prompt: any, params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
         return {
+            _prompt: prompt, // Store reference to prompt for cloning
             addContext: prompt.addContext.bind(prompt),
             addInstruction: prompt.addInstruction.bind(prompt),
             getInstructions: prompt.getInstructions.bind(prompt),
