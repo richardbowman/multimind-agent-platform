@@ -4,7 +4,7 @@ import './register-paths';
 
 import { initializeConfig } from './helpers/config';
 import { app, BrowserWindow, ipcMain } from 'electron';
-import isDev from 'electron-is-dev';
+const isDev = (await import('electron-is-dev')).default;
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
@@ -55,6 +55,7 @@ ipcMain.handle('check-for-updates', checkForUpdates);
 setupUnhandledRejectionHandler();
 
 // Set app name based on environment
+const isDev = (await import('electron-is-dev')).default;
 const appName = isDev ? 'MultiMindDev' : 'MultiMind';
 app.setName(appName);
 
