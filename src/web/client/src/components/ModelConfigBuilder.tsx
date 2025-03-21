@@ -15,6 +15,7 @@ import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Settings } from '../../../../tools/settings';
+import ModelSelector from './ModelSelector';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
@@ -34,7 +35,15 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     onSettingsChange
 }) => {
     const [editingConfigId, setEditingConfigId] = useState<number | null>(null);
-    const [showModelSelector, setShowModelSelector] = useState(false);
+    const [modelDialog, setModelDialog] = useState<{
+        open: boolean;
+        key: string;
+        provider: string;
+    }>({
+        open: false,
+        key: '',
+        provider: ''
+    });
     const [configForm, setConfigForm] = useState<any>({});
 
     // Provider-specific default configurations
@@ -254,7 +263,11 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                         categories={configCategories}
                         onSettingChange={handleFormChange}
                         onModelSelect={(key, provider) => {
-                            // Handle model selection if needed
+                            setModelDialog({
+                                open: true,
+                                key,
+                                provider
+                            });
                         }}
                     />
                 </DialogContent>
@@ -266,6 +279,26 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                         Save
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+            {/* Model Selector Dialog */}
+            <Dialog
+                open={modelDialog.open}
+                onClose={() => setModelDialog(prev => ({ ...prev, open: false }))}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>Select Model</DialogTitle>
+                <DialogContent>
+                    <ModelSelector
+                        value={configForm[modelDialog.key]}
+                        onChange={(newValue) => {
+                            handleFormChange(modelDialog.key, newValue);
+                            setModelDialog(prev => ({ ...prev, open: false }));
+                        }}
+                        provider={modelDialog.provider}
+                    />
+                </DialogContent>
             </Dialog>
         </Box>
     );
