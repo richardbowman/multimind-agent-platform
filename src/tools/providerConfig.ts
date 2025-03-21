@@ -2,7 +2,7 @@ import { APIConfig } from "./settings";
 import { ClientSettings } from "./settingsDecorators";
 import { LLMProvider } from "../llm/types/LLMProvider";
 
-export class ProviderConfig {
+export class ProviderConfig extends APIConfig {
     @ClientSettings({
         label: 'Provider Type',
         category: 'LLM Settings',
@@ -12,10 +12,8 @@ export class ProviderConfig {
     })
     type: LLMProvider = LLMProvider.OPENAI;
 
-    api: APIConfig = new APIConfig();
-
     @ClientSettings({
-        label: 'Base URL',
+        label: 'Base URL', 
         category: 'LLM Settings',
         type: 'string',
         description: 'Custom API endpoint for the provider'
@@ -86,10 +84,9 @@ export const PROVIDER_CONFIG_DEFAULT: ProviderConfig[] = [
     {
         type: LLMProvider.OPENROUTER,
         baseUrl: 'https://openrouter.ai/api/v1',
-        rateLimiting: {
-            maxTokensPerMinute: 20000,
-            defaultDelayMs: 1000,
-            windowSizeMs: 60000
-        }
+        maxTokensPerMinute: 20000,
+        defaultDelayMs: 1000,
+        windowSizeMs: 60000,
+        key: ''
     }
 ];
