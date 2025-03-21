@@ -12,7 +12,7 @@ import {
     Slider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { ModelConfigBuilder } from './ModelConfigBuilder';
+import { SettingsListBuilder } from './ModelConfigBuilder';
 
 interface SettingsFormBuilderProps {
     settings: any;
@@ -86,32 +86,30 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
 
         switch (metadata.type) {
             case 'select':
-                if (metadata.key.startsWith('models.')) {
-                    const provider = metadata.key.includes('embedding') ?
-                        settings.providers?.embeddings :
-                        settings.providers?.chat;
-                    
-                    return (
-                        <Box sx={{ width: '100%' }}>
-                            <TextField
-                                value={value}
-                                label={metadata.label}
-                                variant="outlined"
-                                fullWidth
-                                InputProps={{
-                                    readOnly: true,
-                                    endAdornment: (
-                                        <IconButton 
-                                            onClick={() => onModelSelect(metadata.key, provider || '')}
-                                            edge="end"
-                                        >
-                                            <SearchIcon />
-                                        </IconButton>
-                                    )
-                                }}
-                            />
-                        </Box>
-                    );
+                if (metadata.selector?.component === 'ModelSelector') {                                                                            
+                    const provider = getNestedValue(settings, metadata.selector.providerField);                                                    
+                                                                                                                                                   
+                    return (                                                                                                                       
+                        <Box sx={{ width: '100%' }}>                                                                                               
+                            <TextField                                                                                                             
+                                value={value}                                                                                                      
+                                label={metadata.label}                                                                                             
+                                variant="outlined"                                                                                                 
+                                fullWidth                                                                                                          
+                                InputProps={{                                                                                                      
+                                    readOnly: true,                                                                                                
+                                    endAdornment: (                                                                                                
+                                        <IconButton                                                                                                
+                                            onClick={() => onModelSelect(metadata.key, provider || '')}                                            
+                                            edge="end"                                                                                             
+                                        >                                                                                                          
+                                            <SearchIcon />                                                                                         
+                                        </IconButton>                                                                                              
+                                    )                                                                                                              
+                                }}                                                                                                                 
+                            />                                                                                                                     
+                        </Box>                                                                                                                     
+                    );                                                                                                                             
                 }
 
                 return (
@@ -206,7 +204,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                     console.error('Error in ModelConfigBuilder:', error, errorInfo);
                                 }}
                             >
-                                <ModelConfigBuilder
+                                <SettingsListBuilder
                                     settings={settings}
                                     onSettingsChange={(settings) => {onSettingChange(metadataList[0].key, settings)}}
                                     configType={metadataList[0].key}  
