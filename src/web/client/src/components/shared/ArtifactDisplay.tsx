@@ -162,44 +162,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
 
             <Box 
                 sx={{ 
-                    p: 3,
-                    borderBottom: 1,
-                    borderColor: 'divider'
-                }}
-            >
-                <Box 
-                    sx={{ 
-                        display: 'flex',
-                        gap: 1,
-                        alignItems: 'center'
-                    }}
-                >
-                    <Box 
-                        sx={{ 
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            bgcolor: 'primary.light',
-                            color: 'primary.contrastText',
-                            fontSize: '0.75rem',
-                            fontWeight: 500
-                        }}
-                    >
-                        {artifact.type}
-                    </Box>
-                    <Box 
-                        component="span" 
-                        sx={{ 
-                            fontSize: '0.875rem',
-                            color: 'text.secondary'
-                        }}
-                    >
-                        #{artifact.id}
-                    </Box>
-                </Box>
-            </Box>
-            <Box 
-                sx={{ 
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'hidden',
@@ -247,9 +209,13 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                                 }}
                             >
                                 <Box component="tbody">
-                                    {artifact.metadata && Object.entries(artifact.metadata)
-                                        .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                        .map(([key, value]) => (
+                                    {[
+                                        ['Type', artifact.type],
+                                        ['ID', artifact.id],
+                                        ...Object.entries(artifact.metadata || {})
+                                    ]
+                                    .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                    .map(([key, value]) => (
                                             <Box 
                                                 component="tr" 
                                                 key={key} 
