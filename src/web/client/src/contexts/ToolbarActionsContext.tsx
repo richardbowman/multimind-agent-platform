@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useMemo } from 'react';
 
 interface ToolbarAction {
     id: string;
@@ -54,17 +54,19 @@ export const ToolbarActionsProvider: React.FC<{children: ReactNode}> = ({ childr
                 action.id === id ? { ...action, ...state } : action
             );
             // Only update if state actually changed
-            if (prev.some((a, i) => a.disabled !== newActions[i].disabled)) {
+            if (prev.some((a, i) => a.disabled !== newActions[i].disabled || a.label !== newActions[i].label)) {
                 return newActions;
             }
             return prev;
         });
     }, []);
 
+    const value : ToolbarActionsContextType = useMemo(() => ({
+        actions, registerActions, unregisterActions, updateActionState
+    }), [actions, registerActions, unregisterActions, updateActionState]);
+
     return (
-        <ToolbarActionsContext.Provider
-            value={{ actions, registerActions, unregisterActions, updateActionState }}
-        >
+        <ToolbarActionsContext.Provider value={value}>
             {children}
         </ToolbarActionsContext.Provider>
     );

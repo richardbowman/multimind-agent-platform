@@ -12,6 +12,10 @@ import { ModelMessageResponse, ModelResponse, ModelResponseMetadata } from 'src/
 import { WithMetadata } from 'typescript';
 import { WithTokens } from 'src/llm/modelHelpers';
 import { createUUID } from 'src/types/uuid';
+import { StringUtils } from 'src/utils/StringUtils';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { ContentType } from 'src/llm/promptBuilder';
+import { FilterCriteria } from 'src/types/FilterCriteria';
 
 
 export interface TaskNotification {
@@ -36,8 +40,9 @@ export interface StepExecutor<R extends StepResponse> {
 
 export type ModelConversationResponse = WithTokens<WithMetadata<ModelMessageResponse, ModelResponseMetadata>>;
 
-export interface ModelConversation extends InputPrompt {
+export interface ModelConversation<R extends StepResponse> extends InputPrompt {
     generate(input: Partial<GenerateInputParams>) : Promise<ModelConversationResponse>;
+    addProcedures(filter: FilterCriteria): Promise<void>;
 }
 
 export abstract class BaseStepExecutor<R extends StepResponse> implements StepExecutor<R> {
@@ -80,26 +85,14 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
         }
     }
 
-    protected startModel(params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
+    protected startModel<R extends StepResponse>(params: Partial<ExecuteParams>, methodName?: string) : ModelConversation<R> {
         const prompt = this.params.modelHelpers.createPrompt();
         return this.createModelConversation(prompt, params, methodName);
     }
 
-    protected cloneConversation(original: ModelConversation, params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
-        // Clone the underlying PromptBuilder by creating a new one and copying all data
-        const newPrompt = this.params.modelHelpers.createPrompt();
-        
-        // Copy all instructions and context from original to new prompt
-        const originalPrompt = (original as any)._prompt || original;
-        newPrompt.addInstruction(originalPrompt.getInstructions());
-        newPrompt.addContext(originalPrompt.getContext());
-        
-        return this.createModelConversation(newPrompt, params, methodName);
-    }
-
-    private createModelConversation(prompt: any, params: Partial<ExecuteParams>, methodName?: string) : ModelConversation {
+    private createModelConversation<R extends StepResponse>(prompt: any, params: Partial<ExecuteParams>, methodName?: string) : ModelConversation<R> {
+        const _step = this;
         return {
-            _prompt: prompt,
             setLastError: prompt.setLastError.bind(prompt),            
             addContext: prompt.addContext.bind(prompt),
             addInstruction: prompt.addInstruction.bind(prompt),
@@ -129,6 +122,39 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
                         ...response.metadata
                     }
                 } as ModelConversationResponse;
+            },
+            addProcedures: async (metadataFilter: FilterCriteria) : Promise<void> => {
+                // Get procedure guides already in use from previous responses
+                const pastGuideIds = params.previousResponses?.flatMap(response =>
+                    response.data?.steps?.flatMap(step =>
+                        step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
+                    ) || []
+                ) || [];
+        
+                // Get procedure guides from search, excluding any already in use
+                const searchedGuides = (await _step.params.artifactManager.searchArtifacts(
+                    `Procedure guides: ${StringUtils.truncateWithEllipsis(params.stepGoal||params.message||params.goal||"", 1000)}`,
+                    {
+                        type: ArtifactType.Document,
+                        subtype: DocumentSubtype.Procedure,
+                        ...metadataFilter
+                    },
+                    5,
+                    0
+                )).filter(guide => !pastGuideIds.includes(guide.artifact.id));
+        
+                // Load all guides in a single bulk operation
+                const procedureGuides = await _step.params.artifactManager.bulkLoadArtifacts([
+                    ...searchedGuides.map(p => p.artifact.id),
+                    ...pastGuideIds
+                ]);
+    
+        
+                // Format searched guides for prompt
+                const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
+                prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f) });
+                prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f) });
+                    
             }
         }
     }

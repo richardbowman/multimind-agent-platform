@@ -29,7 +29,7 @@ export interface DrawerPage {
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const { artifacts: allArtifacts, fetchAllArtifacts, deleteArtifact } = useArtifacts();
     const { showFileDialog } = useDataContext();
-    const [selectedArtifact, setSelectedArtifact] = useState<Artifact|null>(null);
+    const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [selectedArtifacts, setSelectedArtifacts] = useState<ArtifactItem[]>([]);
     const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
     const treeViewApiRef = useTreeViewApiRef();
@@ -83,13 +83,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const handleCreateArtifact = async (artifact: ArtifactItem) => {
         // Update the selected artifact
         selectArtifact(artifact);
-        
+
         // Update the artifact in the folders list
         setArtifactFolders(prevFolders => {
             const updatedFolders = { ...prevFolders };
             const type = artifact.type;
             const subtype = artifact.metadata?.subtype || 'Other';
-            
+
             // First remove the artifact from any existing location
             Object.entries(updatedFolders).forEach(([existingType, typeGroup]) => {
                 Object.entries(typeGroup.subtypes).forEach(([existingSubtype, artifacts]) => {
@@ -102,13 +102,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         }
                     }
                 });
-                
+
                 // Clean up empty type groups
                 if (Object.keys(typeGroup.subtypes).length === 0) {
                     delete updatedFolders[existingType];
                 }
             });
-            
+
             // Initialize type group if it doesn't exist
             if (!updatedFolders[type]) {
                 updatedFolders[type] = {
@@ -117,18 +117,18 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     subtypes: {}
                 };
             }
-            
+
             // Initialize subtype group if it doesn't exist
             if (!updatedFolders[type].subtypes[subtype]) {
                 updatedFolders[type].subtypes[subtype] = [];
             }
-            
+
             // Add the artifact to its new location
             updatedFolders[type].subtypes[subtype].push(artifact);
-            
+
             return updatedFolders;
         });
-        
+
         // Ensure the type and subtype are expanded
         setExpandedItems(prevExpanded => {
             const newExpanded = new Set(prevExpanded);
@@ -136,10 +136,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             newExpanded.add(`${artifact.type}-${artifact.metadata?.subtype || 'Other'}`);
             return Array.from(newExpanded);
         });
-        
+
         // Set the selected item
         setSelectedItemIds([artifact.id]);
-        
+
         // Refresh from server
         fetchAllArtifacts();
     };
@@ -150,13 +150,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             const firstArtifact = selectedArtifacts[0];
             const parentType = firstArtifact.type;
             const parentSubtype = firstArtifact.metadata?.subtype || 'Other';
-            
+
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
-            
+
             // Clear all selections and refresh state
             setSelectedArtifacts([]);
             setSelectedArtifact(null);
-            
+
             // Select the parent type/subtype folder and keep it expanded
             setSelectedItemIds([`${parentType}-${parentSubtype}`]);
             setExpandedItems(prevExpanded => {
@@ -165,13 +165,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 newExpanded.add(`${parentType}-${parentSubtype}`);
                 return Array.from(newExpanded);
             });
-            
+
             // Update bulk delete state
             updateActionState('bulk-delete', {
                 disabled: true,
                 label: 'Bulk Delete Selected (0)'
             });
-            
+
             setDeleteConfirmOpen(false);
         }
     };
@@ -197,7 +197,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             const folders = allArtifacts.reduce((acc, artifact) => {
                 const type = artifact.type;
                 const subtype = artifact.metadata?.subtype || 'Other';
-                
+
                 // Initialize type group if it doesn't exist
                 if (!acc[type]) {
                     acc[type] = {
@@ -206,17 +206,17 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         subtypes: {}
                     };
                 }
-                
+
                 // Initialize subtype group if it doesn't exist
                 if (!acc[type].subtypes[subtype]) {
                     acc[type].subtypes[subtype] = [];
                 }
-                
+
                 // Add artifact to subtype group
                 acc[type].subtypes[subtype].push(artifact);
                 return acc;
             }, {} as Record<string, { _type: 'type', artifacts: Artifact[], subtypes: Record<string, Artifact[]> }>);
-            
+
             setArtifactFolders(folders);
             // Set initial expanded state to all type groups
             setExpandedItems(Object.keys(folders));
@@ -227,7 +227,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         if (acceptedFiles.length > 0) {
             const file = acceptedFiles[0];
             const reader = new FileReader();
-            
+
             reader.onload = async (e) => {
                 const content = e.target?.result;
                 if (content) {
@@ -245,7 +245,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     await handleCreateArtifact(artifact);
                 }
             };
-            
+
             reader.readAsText(file);
         }
     }, [handleCreateArtifact]);
@@ -257,7 +257,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     });
 
     return (
-        <Box 
+        <Box
             sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}
             {...getRootProps()}
         >
@@ -297,7 +297,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 }}
             >
                 <Toolbar /> {/* For spacing under app bar */}
-                <Box sx={{ 
+                <Box sx={{
                     pt: 4,
                     p: 2
                 }}>
@@ -329,7 +329,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         />
                     </Box>
                 </Box>
-                <Box sx={{ 
+                <Box sx={{
                     overflowY: 'auto',
                     height: 'calc(100vh - 120px)',
                     ...CustomScrollbarStyles,
@@ -340,24 +340,24 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             // Filter artifacts within each subtype
                             const filteredSubtypes = Object.entries(typeGroup.subtypes).map(([subtype, artifacts]) => {
                                 const filteredArtifacts = artifacts.filter(artifact => {
-                                // Apply project filter
-                                if (selectedProject !== 'all' && 
-                                    (!artifact.metadata?.projects || 
-                                    !artifact.metadata.projects.includes(selectedProject))) {
-                                    return false;
-                                }
-                                
-                                // Apply text filter
-                                if (filterText) {
-                                    const searchText = filterText.toLowerCase();
-                                    return (
-                                        artifact.metadata?.title?.toLowerCase().includes(searchText) ||
-                                        artifact.type.toLowerCase().includes(searchText) ||
-                                        (artifact.content ? artifact.content.toString().toLowerCase().includes(searchText) : false)
-                                    );
-                                }
-                                return true;
-                            });
+                                    // Apply project filter
+                                    if (selectedProject !== 'all' &&
+                                        (!artifact.metadata?.projects ||
+                                            !artifact.metadata.projects.includes(selectedProject))) {
+                                        return false;
+                                    }
+
+                                    // Apply text filter
+                                    if (filterText) {
+                                        const searchText = filterText.toLowerCase();
+                                        return (
+                                            artifact.metadata?.title?.toLowerCase().includes(searchText) ||
+                                            artifact.type.toLowerCase().includes(searchText) ||
+                                            (artifact.content ? artifact.content.toString().toLowerCase().includes(searchText) : false)
+                                        );
+                                    }
+                                    return true;
+                                });
 
                                 return {
                                     id: `${type}-${subtype}`,
@@ -380,25 +380,25 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         selectedItems={selectedItemIds}
                         onSelectedItemsChange={(event, newSelection) => {
                             setSelectedItemIds(newSelection);
-                            
+
                             // Update selected artifacts
                             const newArtifacts = Object.values(artifactFolders)
-                                .flatMap(typeGroup => 
+                                .flatMap(typeGroup =>
                                     Object.values(typeGroup.subtypes).flat()
                                 )
                                 .filter(artifact => newSelection.includes(artifact.id));
                             setSelectedArtifacts(newArtifacts);
-                            
+
                             // Update bulk delete state
                             updateActionState('bulk-delete', {
                                 disabled: newSelection.length < 2,
                                 label: `Bulk Delete Selected (${newSelection.length})`
                             });
-                            
+
                             // If single selection, show the artifact
                             if (newSelection.length === 1) {
                                 const artifact = Object.values(artifactFolders)
-                                    .flatMap(typeGroup => 
+                                    .flatMap(typeGroup =>
                                         Object.values(typeGroup.subtypes).flat()
                                     )
                                     .find(a => a.id === newSelection[0]);
@@ -407,7 +407,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 }
                             }
                         }}
-                        slots={{ 
+                        slots={{
                             item: (props: TreeItem2Props & { item: { artifact?: Artifact } }) => {
                                 const artifact = props.item?.artifact;
                                 if (!artifact) {
@@ -449,7 +449,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     />
                 </Box>
             </Drawer>
-            <Box component="main" sx={{ 
+            <Box component="main" sx={{
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
@@ -459,61 +459,71 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 overflow: 'hidden',
                 position: 'relative'
             }}>
-                <ActionToolbar actions={toolbarActions} />
-                {selectedArtifact ? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>
-                            <ArtifactDisplay 
-                                artifact={selectedArtifact} 
-                                showMetadata={true}
-                                onDelete={() => setDeleteConfirmOpen(true)}
-                                onEdit={() => {
-                                    setEditorOpen(true);
-                                }}
-                            />
-                        </Box>
-                    </Box>
-                ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden', justifyContent: 'center', flex:1, color: '#666', fontStyle: 'italic' }}>
-                        Select an artifact to view its details
-                    </Box>
-                )}
-
-                <Dialog
-                    open={deleteConfirmOpen}
-                    onClose={() => setDeleteConfirmOpen(false)}
+                <Box
+                    component="main"
+                    sx={{
+                        flexGrow: 1,
+                        display: 'flex',
+                        flexDirection: "column",
+                        flex: 1,
+                        position: 'relative',
+                        overflow: 'hidden'
+                    }}
                 >
-                    <DialogTitle>Delete Artifact</DialogTitle>
-                    <DialogContent>
-                        <DialogContentText>
-                            Are you sure you want to delete {selectedArtifacts.length} selected artifact{selectedArtifacts.length > 1 ? 's' : ''}? This action cannot be undone.
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-                        <Button onClick={handleDelete} color="error" variant="contained">
-                            Delete
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                    {selectedArtifact ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>
+                                <ArtifactDisplay
+                                    artifact={selectedArtifact}
+                                    showMetadata={true}
+                                    onDelete={() => setDeleteConfirmOpen(true)}
+                                    onEdit={() => {
+                                        setEditorOpen(true);
+                                    }}
+                                />
+                            </Box>
+                        </Box>
+                    ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden', justifyContent: 'center', flex: 1, color: '#666', fontStyle: 'italic' }}>
+                            Select an artifact to view its details
+                        </Box>
+                    )}
+
+                    <Dialog
+                        open={deleteConfirmOpen}
+                        onClose={() => setDeleteConfirmOpen(false)}
+                    >
+                        <DialogTitle>Delete Artifact</DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                Are you sure you want to delete {selectedArtifacts.length} selected artifact{selectedArtifacts.length > 1 ? 's' : ''}? This action cannot be undone.
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions>
+                            <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                            <Button onClick={handleDelete} color="error" variant="contained">
+                                Delete
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
+                </Box>
+
+
+                {selectedArtifact ? (
+                    <ArtifactEditor
+                        open={editorOpen}
+                        onClose={() => setEditorOpen(false)}
+                        onCreate={handleCreateArtifact}
+                        onUpdate={handleCreateArtifact}
+                        artifact={selectedArtifact}
+                    />
+                ) : (
+                    <ArtifactEditor
+                        open={editorOpen}
+                        onClose={() => setEditorOpen(false)}
+                        onCreate={handleCreateArtifact}
+                    />
+                )}
             </Box>
-
-
-            {selectedArtifact ? (
-                <ArtifactEditor
-                    open={editorOpen}
-                    onClose={() => setEditorOpen(false)}
-                    onCreate={handleCreateArtifact}
-                    onUpdate={handleCreateArtifact}
-                    artifact={selectedArtifact}
-                />
-            ) : (
-                <ArtifactEditor
-                    open={editorOpen}
-                    onClose={() => setEditorOpen(false)}
-                    onCreate={handleCreateArtifact}
-                />
-            )}
-        </Box>
-    );
+        </Box>    );
 };

@@ -25,8 +25,8 @@ export class CombineArtifactsExecutor extends GenerateArtifactExecutor {
         super(params);
     }
 
-    protected getSupportedFormats(): string[] {
-        return ["markdown"];
+    protected getSupportedFormat(): string {
+        return "markdown";
     }
 
     getArtifactType(): ArtifactType {

@@ -31,6 +31,10 @@ export type WithTokens<T> = T extends object ? T & {
     };
 } : never;
 
+export type WithMetadata<T, M> = T & {
+    metadata?: M;
+};
+
 export class ModelHelpers {
     protected promptRegistry: PromptRegistry;
     protected context: LLMContext;

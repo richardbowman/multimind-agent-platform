@@ -31,8 +31,8 @@ export class OutlineExecutor extends GenerateArtifactExecutor {
 - Maintain consistent formatting throughout`);
     }
 
-    protected getSupportedFormats(): string[] {
-        return ['markdown'];
+    protected getSupportedFormat(): string {
+        return 'markdown';
     }
 
     getArtifactType(codeBlockType: string): ArtifactType {

@@ -36,7 +36,7 @@ export class AgentLoader {
         
         try {
             // Find all artifacts with AgentConfig subtype
-            const artifacts = await params.artifactManager.searchArtifacts("", {
+            const artifacts = await params.artifactManager.getArtifacts({
                 type: ArtifactType.Document,
                 subtype: DocumentSubtype.AgentConfig
             });

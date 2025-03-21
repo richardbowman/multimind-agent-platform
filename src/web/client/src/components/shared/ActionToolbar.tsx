@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
+import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface ActionToolbarProps {
     title?: string;
@@ -14,7 +15,9 @@ interface ActionToolbarProps {
     align?: 'left' | 'right' | 'center' | 'space-between';
 }
 
-export const ActionToolbar: React.FC<ActionToolbarProps> = ({ title, actions, align = 'right' }) => {
+export const ActionToolbar: React.FC<ActionToolbarProps> = ({ title, align = 'right' }) => {
+    const { actions } = useToolbarActions();
+
     return (
         <Box sx={{
             width: '100%',

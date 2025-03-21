@@ -102,8 +102,8 @@ console.log(artifacts);`);
     protected addContentFormattingRules(prompt: ModelConversation) {
     }
 
-    getSupportedFormats(): string[] {
-        return ['html', 'jsx'];
+    getSupportedFormat(): string {
+        return 'html';
     }
 
 

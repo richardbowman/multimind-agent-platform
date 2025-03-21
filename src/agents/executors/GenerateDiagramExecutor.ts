@@ -14,8 +14,8 @@ export class GenerateDiagramExecutor extends GenerateArtifactExecutor {
 - Include clear node labels and connections`);
     }
 
-    protected getSupportedFormats(): string[] {
-        return ['mermaid'];
+    protected getSupportedFormat(): string {
+        return 'mermaid';
     }
 
     getArtifactType(codeBlockType: string): ArtifactType {

@@ -29,7 +29,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     onSelect
 }) => {
     const theme = useTheme();
-    const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
+    const isMetadataExpanded = useRef(false);
     const artifactRef = useRef(artifact);
     const { actions: toolbarActions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
@@ -86,14 +86,22 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         window.URL.revokeObjectURL(url);
     };
 
+    const handleMetadataToggle = () => {
+        const newState = !isMetadataExpanded.current;
+        isMetadataExpanded.current = newState;
+        updateActionState('artifact-display-metadata', {
+            icon: newState ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />,
+            label: newState ? 'Collapse Metadata' : 'Expand Metadata'                
+        })
+    };
 
 
     const baseActions = useMemo(() => [
         {
             id: 'artifact-display-metadata',
-            icon: isMetadataExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />,
-            label: isMetadataExpanded ? 'Collapse Metadata' : 'Expand Metadata',
-            onClick: () => setIsMetadataExpanded(!isMetadataExpanded)
+            icon: isMetadataExpanded.current ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />,
+            label: isMetadataExpanded.current ? 'Collapse Metadata' : 'Expand Metadata',
+            onClick: handleMetadataToggle
         },
         {
             id: 'artifact-display-edit',
@@ -121,7 +129,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             label: 'Export Artifact',
             onClick: handleExport
         }
-    ], [onEdit, onDelete, handleExport, isMetadataExpanded]);
+    ], [onEdit, onDelete, handleExport, handleMetadataToggle, updateActionState]);
 
 
     useEffect(() => {
@@ -174,7 +182,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     flex: 1
                 }}
             >
-                {showMetadata && artifact.metadata && (
+                {showMetadata && artifact.metadata && isMetadataExpanded.current && (
                     <Box 
                         sx={{ 
                             mb: 2,
@@ -183,78 +191,76 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                             pb: 1
                         }}
                     >
-                        {isMetadataExpanded && (
-                            <Box 
-                                component="table" 
-                                sx={{ 
-                                    width: '100%',
-                                    fontSize: '0.875rem',
-                                    borderCollapse: 'collapse',
-                                    mb: 2
-                                }}
-                            >
-                                <Box component="tbody">
-                                    {[
-                                        ['Type', artifact.type],
-                                        ['ID', artifact.id],
-                                        ...Object.entries(artifact.metadata || {})
-                                    ]
-                                    .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                    .map(([key, value]) => (
+                        <Box 
+                            component="table" 
+                            sx={{ 
+                                width: '100%',
+                                fontSize: '0.875rem',
+                                borderCollapse: 'collapse',
+                                mb: 2
+                            }}
+                        >
+                            <Box component="tbody">
+                                {[
+                                    ['Type', artifact.type],
+                                    ['ID', artifact.id],
+                                    ...Object.entries(artifact.metadata || {})
+                                ]
+                                .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                .map(([key, value]) => (
+                                        <Box 
+                                            component="tr" 
+                                            key={key} 
+                                            sx={{ 
+                                                borderBottom: 1,
+                                                borderColor: 'divider'
+                                            }}
+                                        >
                                             <Box 
-                                                component="tr" 
-                                                key={key} 
+                                                component="td" 
                                                 sx={{ 
-                                                    borderBottom: 1,
-                                                    borderColor: 'divider'
+                                                    p: '4px 8px',
+                                                    fontWeight: 500,
+                                                    color: 'text.secondary',
+                                                    width: '30%'
                                                 }}
                                             >
-                                                <Box 
-                                                    component="td" 
-                                                    sx={{ 
-                                                        p: '4px 8px',
-                                                        fontWeight: 500,
-                                                        color: 'text.secondary',
-                                                        width: '30%'
-                                                    }}
-                                                >
-                                                    {key}
-                                                </Box>
-                                                <Box 
-                                                    component="td" 
-                                                    sx={{ 
-                                                        p: '4px 8px',
-                                                        color: 'text.primary',
-                                                        wordBreak: 'break-word'
-                                                    }}
-                                                >
-                                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : 
-                                                        (key.toLowerCase().includes('url') && typeof value === 'string' && value.startsWith('http') ? 
-                                                            <Box 
-                                                                component="a" 
-                                                                href={value} 
-                                                                target="_blank" 
-                                                                rel="noopener noreferrer"
-                                                                sx={{ 
-                                                                    color: 'primary.main', 
-                                                                    textDecoration: 'none',
-                                                                    '&:hover': {
-                                                                        textDecoration: 'underline'
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {value}
-                                                            </Box> : 
-                                                            value
-                                                        )
-                                                    }
-                                                </Box>
+                                                {key}
                                             </Box>
-                                        ))
-                                    }
-                                </Box>
+                                            <Box 
+                                                component="td" 
+                                                sx={{ 
+                                                    p: '4px 8px',
+                                                    color: 'text.primary',
+                                                    wordBreak: 'break-word'
+                                                }}
+                                            >
+                                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : 
+                                                    (key.toLowerCase().includes('url') && typeof value === 'string' && value.startsWith('http') ? 
+                                                        <Box 
+                                                            component="a" 
+                                                            href={value} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            sx={{ 
+                                                                color: 'primary.main', 
+                                                                textDecoration: 'none',
+                                                                '&:hover': {
+                                                                    textDecoration: 'underline'
+                                                                }
+                                                            }}
+                                                        >
+                                                            {value}
+                                                        </Box> : 
+                                                        value
+                                                    )
+                                                }
+                                            </Box>
+                                        </Box>
+                                    ))
+                                }
                             </Box>
-                        )}
+                        </Box>
                     </Box>
                 )}
                 <ContentRenderer 

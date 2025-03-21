@@ -10,16 +10,21 @@ import { ModelConversation } from '../interfaces/StepExecutor';
 @StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise a single Markdown document.')
 export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
     protected addContentFormattingRules(prompt: ModelConversation) {
-        prompt.addInstruction(`DOCUMENT FORMATTING RULES:
-- Use standard Markdown syntax
+        // prompt.addInstruction();
+    }
+
+    protected getContentRules(): string {
+        return `DOCUMENT FORMATTING RULES:
+- Use standard Markdown syntax INSIDE of the <markdown> blocks that demarcate the document contents.
 - Include proper headings and structure
 - Use lists, tables, and other formatting as needed
 - Ensure proper spacing between elements
-- When using fenced code blocks, use double backticks (6 \` characters) instead of single backticks`);
+- Code blocks should be properly fenced on both ends
+`;
     }
 
-    protected getSupportedFormats(): string[] {
-        return ['markdown'];
+    protected getSupportedFormat(): string {
+        return 'markdown';
     }
 
     getArtifactType(codeBlockType: string): ArtifactType {

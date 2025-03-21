@@ -12,7 +12,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "generate-icon": "node scripts/generate-icon.js",
-    "release": "electron-builder --publish always",
+    "release": "electron-builder --publish always --config ./electron-builder.ts",
     "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
     "watch:schemas": "chokidar 'src/schemas/**/*.ts' -c 'yarn schemas'",
     "start": "yarn electron:start:dev",
@@ -21,8 +21,8 @@
     "start:web": "webpack serve --mode development",
     "clean": "rimraf dist",
     "download-whisper-models": "node scripts/download-whisper-models.js",
-    "build:clean": "yarn clean && yarn generate-icon && yarn build:app",
-    "build:app": "concurrently \"yarn build:weblibs\" \"yarn build:worker\" \"yarn build:electron\" \"yarn build:preload\" \"yarn build:web\"",
+    "build:clean": "yarn clean && yarn build:app",
+    "build:app": "concurrently \"yarn generate-icon\" \"yarn build:weblibs\" \"yarn build:worker\" \"yarn build:electron\" \"yarn build:preload\" \"yarn build:web\"",
     "build:preload": "webpack --config webpack.preload.config.js --mode production",
     "build:electron": "webpack --config webpack.backend.config.js --mode production",
     "build:web": "webpack --config webpack.config.js --mode production",
@@ -36,18 +36,16 @@
     "watch:app": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"npm run watch:worker\"",
     "electron:dev": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"yarn watch:schemas\" \"yarn watch:worker\" \"wait-on dist/main.electron.js dist/web/bundle.js && yarn electron:start:dev\"",
     "electron:start:dev": "nodemon --watch 'dist/main.electron.js' --delay 3 --exec \"electron . --dev-mode --inspect\"",
-    "electron:build": "yarn download-whisper-models && electron-builder",
+    "electron:build": "yarn download-whisper-models && electron-builder --config ./electron-builder.ts",
     "electron:package": "yarn run electron-rebuild && yarn build:clean && yarn electron:build",
-    "electron:package:all": "electron-builder build --mac --win --linux",
-    "electron:deploy:linux": "electron-builder build --linux --publish always"
+    "electron:package:all": "electron-builder --config ./electron-builder.ts build --mac --win --linux",
+    "electron:deploy:linux": "electron-builder --config ./electron-builder.ts build --linux --publish always",
+    "postinstall": "electron-builder install-app-deps"
   },
   "keywords": [],
   "author": "Rick Bowman <your.email@example.com>",
   "license": "ISC",
   "description": "Multi-agent platform for AI assistants",
-  "build": {
-    "extends": "./electron-builder.json"
-  },
   "resolutions": {
     "react": "19.0.0",
     "react-dom": "19.0.0"
@@ -181,7 +179,6 @@
     "electron": "^34.0.0",
     "electron-builder": "^25.1.8",
     "electron-builder-squirrel-windows": "^25.1.8",
-    "electron-rebuild": "^3.2.9",
     "events": "^3.3.0",
     "fs-extra": "^11.3.0",
     "html-webpack-plugin": "^5.6.3",

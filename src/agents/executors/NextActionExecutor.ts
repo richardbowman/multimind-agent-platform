@@ -77,39 +77,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
             params.steps && prompt.addContext({ contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts });
 
-            // Get procedure guides already in use from previous responses
-            const pastGuideIds = params.previousResponses?.flatMap(response =>
-                response.data?.steps?.flatMap(step =>
-                    step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
-                ) || []
-            ) || [];
-
-            // Get procedure guides from search, excluding any already in use
-            const searchedGuides = (await this.artifactManager.searchArtifacts(
-                `Procedure guides to achieve ${StringUtils.truncateWithEllipsis(params.stepGoal, 1000)}`,
-                {
-                    type: ArtifactType.Document,
-                    subtype: DocumentSubtype.Procedure
-                },
-                50,
-                0
-            )).filter(guide => !pastGuideIds.includes(guide.artifact.id));
-
-            // Load all guides in a single bulk operation
-            const allGuides = await this.artifactManager.bulkLoadArtifacts([
-                ...searchedGuides.map(p => p.artifact.id),
-                ...pastGuideIds
-            ]);
-
-            // Filter by agent if specified
-            const procedureGuides = this.agentName ?
-                allGuides.filter(a => a.metadata?.agent === this.agentName) :
-                allGuides;
-
-            // Format searched guides for prompt
-            const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
-            prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f) });
-            prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f) });
+            prompt.addProcedures(this.agentName ? { agent: this.agentName }: {});
 
             const isConversation = params.executionMode === 'conversation'
             const completionAction = isConversation ? 'REPLY' : 'DONE';
@@ -135,7 +103,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.`);
 
 
-            prompt.addOutputInstructions({ outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema });
+            prompt.addOutputInstructions({ outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema, status: false});
 
             const validActions = new Set([
                 ...executorMetadata.map(m => m.key),

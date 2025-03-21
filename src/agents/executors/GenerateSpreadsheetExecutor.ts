@@ -18,8 +18,8 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
 - To escape double quotes, use two double quotes in a row ("")`);
     }
 
-    protected getSupportedFormats(): string[] {
-        return ['csv'];
+    protected getSupportedFormat(): string {
+        return 'csv';
     }
 
     getArtifactType(codeBlockType: string): ArtifactType {

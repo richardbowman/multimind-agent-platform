@@ -1,6 +1,6 @@
 import { ConversationContext } from "../chat/chatClient";
 import { EventEmitter } from "events";
-import { FilterCriteria } from "../schemas/FilterCriteria";
+import { FilterCriteria } from "../types/FilterCriteria";
 
 export interface SearchResult {
     id: string;

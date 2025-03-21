@@ -555,7 +555,8 @@ export class ArtifactManager {
       // Search the vector database
       let results;
       try {
-        results = await this.vectorDb.query([query], where, limit);
+        const debugNonFilteredResults = await this.vectorDb.query([query], {}, limit);
+        results = (await this.vectorDb.query([query], where, limit * 3)).slice(0, limit);
       } catch (e) {
         const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
         Logger.error(message, e)

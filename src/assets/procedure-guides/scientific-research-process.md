@@ -1,7 +1,7 @@
 ---
 agent: ResearchManager
+title: Advanced Research Report Process
 ---
-Advanced Research Report Process
 
 1. Develop screening criteria based on request
   Action Type: [generate-spreadsheet]
@@ -9,18 +9,16 @@ Advanced Research Report Process
 
 2. Screen top 50 papers
   Action Type: [delegation]
-  Ask @research-assistant to use PubMed to just search, but not perform link selection or scraping.
+  Ask @science-assistant to use PubMed to only perform search, but not review any further.
 
-Gather papers
-- Perform multiple searches using various related queriues
+3. Use the screening criteria to assess each paper.
+  Action Type: [csv-processor]
+- Ask @science-reviewer to review the absract of each paper provided in the spreadsheet and assess it against the screening criteria items.
 
-
+FUTURE (Skip these steps for now):
 Populating criteria
-
 Screening for match criteria 
-
-
-2. Extract from up to 10 papers
+Extract from up to 10 papers
 
 
 

@@ -52,7 +52,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const ipcService = useIPCService();
     const {handles} = useDataContext();
     const {deleteChannel, createChannel, fetchChannels} = useChannels();
-    const { setCurrentChannelId } = useMessages();
+    const { setCurrentChannelId, setCurrentThreadId } = useMessages();
     const [channelName, setChannelName] = useState<ChannelHandle|null>(null);
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
@@ -145,6 +145,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             onClose();
             await fetchChannels();
             setCurrentChannelId(newChannelId);
+            setCurrentThreadId(null);
         } catch (error) {
             console.error('Failed to save channel:', error);
         }

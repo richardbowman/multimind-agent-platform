@@ -48,7 +48,11 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
     protected artifactManager: ArtifactManager;
     protected taskManager?: TaskManager;
     protected addContentFormattingRules?(prompt: ModelConversation);
-    protected abstract getSupportedFormats(): string[];
+    protected abstract getSupportedFormat(): string;
+
+    protected getContentRules() : string {
+        return "the document contents"
+    }
 
     constructor(params: ExecutorConstructorParams) {
         super(params);
@@ -137,7 +141,7 @@ new replacement text
 
             // Add content formatting rules
             if (this.addContentFormattingRules) this.addContentFormattingRules(conversation);
-            conversation.addOutputInstructions({ outputType: OutputType.JSON_AND_MARKDOWN, schema, specialInstructions: "", type: this.getSupportedFormats().join(" OR ") });
+            conversation.addOutputInstructions({ outputType: OutputType.JSON_AND_XML, schema, specialInstructions: this.getContentRules(), type: this.getSupportedFormat() });
 
             // Add loaded artifact
             if (existingArtifact) {
@@ -151,18 +155,18 @@ new replacement text
                 });
 
                 const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
-                const md = StringUtils.extractCodeBlocks(unstructuredResult.message).filter(b => b.type !== 'json');
+                const documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, this.getSupportedFormat());
                 const message = StringUtils.extractNonCodeContent(unstructuredResult.message);
                 const result = {
                     ...json,
                     message
                 } as WithMessage<ArtifactGenerationResponse> & { content: string };
 
-                if (md && md.length == 0) {
-                    Logger.error(`No code block found in the response: ${unstructuredResult.message}`);
-                    throw new Error(`No code block found in the response: ${unstructuredResult.message}`);
+                if (!documentContent || documentContent?.length == 0) {
+                    Logger.error(`No document block found in the response: ${unstructuredResult.message}`);
+                    throw new Error(`No document block found in the response: ${unstructuredResult.message}`);
                 } else {
-                    result.content = md[0].code;
+                    result.content = documentContent;
 
                     // Handle requestFullContent operation
                     if (result.operation === 'requestFullContent')
@@ -183,11 +187,11 @@ new replacement text
 
                 // Prepare the artifact
                 const artifactUpdate: Partial<Artifact> = {
-                    type: this.getArtifactType(md[0].type?.toLowerCase()),
+                    type: this.getArtifactType(),
                     content: result.content,
                     metadata: {
                         title: result.title,
-                        blockType: md[0].type?.toLowerCase(),
+                        blockType: this.getSupportedFormat(),
                         operation: result.operation || 'create',
                         projectId: params.projectId,
                         ...(await this.prepareArtifactMetadata(result))
@@ -214,7 +218,7 @@ new replacement text
                         const existingArtifact = artifactUpdate.id && await this.artifactManager.loadArtifact(artifactUpdate.id);
 
                         // If types don't match, force create new artifact instead
-                        const newType = this.getArtifactType(md[0].type?.toLowerCase());
+                        const newType = this.getArtifactType();
                         if (existingArtifact?.type && newType !== existingArtifact.type) {
                             Logger.warn(`Type mismatch: existing=${existingArtifact.type}, new=${newType}. Forcing new artifact creation.`);
                             delete artifactUpdate.id; // Remove ID to force new artifact
