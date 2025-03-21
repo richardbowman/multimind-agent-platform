@@ -23,10 +23,11 @@ import { PROVIDER_CONFIG_DEFAULTS, ProviderConfig } from '../../../../tools/prov
 import { LLMProvider } from '../../../../llm/types/LLMProvider';
 
 interface SettingsListConfigBuilderProps {
-    settings: Settings;
-    onSettingsChange: (settings: Settings) => void;
-    configType?: 'modelConfigs' | 'providers';
-    configKey?: string;
+    settings: any;
+    onSettingsChange: (updatedConfigs: any) => void;
+    configType: string; // e.g. 'modelConfigs' or 'providers'
+    configClass: any; // The class to use for new configs (e.g. ModelProviderConfig or ProviderConfig)
+    defaults?: Record<string, any>; // Default configurations if needed
 }
 
 export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
@@ -50,9 +51,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     const providerDefaults = PROVIDER_CONFIG_DEFAULTS;
 
     const configMetadata = useMemo(() => {
-        const instance = configType === 'providers' ? 
-            new ProviderConfig() : 
-            new ModelProviderConfig();
+        const instance = new configClass();
         const metadata = getClientSettingsMetadata(instance);
         
         // Add key property to each metadata entry
@@ -63,8 +62,8 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
             ])
         );
         
-        // For providers, add API config fields
-        if (configType === 'providers') {
+        // Add any additional metadata fields if needed
+        if (configClass === ProviderConfig) {
             const apiMetadata = getClientSettingsMetadata(new APIConfig());
             Object.entries(apiMetadata).forEach(([key, meta]) => {
                 result[`api.${key}`] = {
@@ -158,10 +157,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
         }
         
         setEditingConfigId(null);
-        setConfigForm(configType === 'providers' ? 
-            new ProviderConfig() : 
-            new ModelProviderConfig()
-        );
+        setConfigForm(new configClass());
     };
 
     const handleDeleteConfig = (index: number) => {
@@ -252,16 +248,10 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
-                    rows={configType === 'providers' ?
-                        (settings?.providers || []).map((config, index) => ({
-                            id: index,
-                            ...config
-                        })) :
-                        (settings?.modelConfigs || []).map((config, index) => ({
-                            id: index,
-                            ...config
-                        }))
-                    }
+                    rows={(settings?.[configType] || []).map((config, index) => ({
+                        id: index,
+                        ...config
+                    }))}
                     columns={columns}
                     pageSizeOptions={[5, 10, 25]}
                     initialState={{

@@ -209,7 +209,17 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                     onSettingsChange={(updatedConfigs) => {
                                         onSettingChange(metadataList[0].key, updatedConfigs);
                                     }}
-                                    configType={metadataList[0].key}  
+                                    configType={metadataList[0].key}
+                                    configClass={
+                                        category === 'Models' ? 
+                                            ModelProviderConfig : 
+                                            ProviderConfig
+                                    }
+                                    defaults={
+                                        category === 'Providers' ? 
+                                            PROVIDER_CONFIG_DEFAULTS : 
+                                            undefined
+                                    }
                                 />
                             </ErrorBoundary>
                         </Box>
