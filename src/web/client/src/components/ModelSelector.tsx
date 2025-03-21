@@ -41,6 +41,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
 
     useEffect(() => {
         if (provider) {
+            // Clear previous models and load new ones
+            setModels([]);
+            setSelectedModel(null);
             loadModels();
         }
     }, [provider]);
@@ -126,7 +129,24 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                 searchTerm
             );
             if (result instanceof ClientError) throw result;
-            setModels(result);
+            
+            // Sort models by provider and name
+            const sortedModels = result.sort((a, b) => {
+                if (a.provider === b.provider) {
+                    return a.id.localeCompare(b.id);
+                }
+                return a.provider.localeCompare(b.provider);
+            });
+            
+            setModels(sortedModels);
+            
+            // If we have a value, try to select the corresponding model
+            if (value) {
+                const selected = sortedModels.find(m => m.id === value);
+                if (selected) {
+                    setSelectedModel(selected);
+                }
+            }
         } catch (err) {
             setError('Failed to load models');
             console.error(err);
