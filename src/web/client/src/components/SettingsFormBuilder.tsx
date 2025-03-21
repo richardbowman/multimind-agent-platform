@@ -162,6 +162,24 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
             p: 3
         }}>
             {categories.map(([category, metadataList]) => {
+                // Special handling for Model Configurations
+                if (category === 'Model Configurations') {
+                    return (
+                        <Box key={category} id={category}>
+                            <Typography variant="h6" gutterBottom>
+                                {category}
+                            </Typography>
+                            <ModelConfigBuilder
+                                settings={settings}
+                                onSettingsChange={(newSettings) => {
+                                    // Update settings in parent component
+                                    onSettingChange('modelConfigs', newSettings.modelConfigs);
+                                }}
+                            />
+                        </Box>
+                    );
+                }
+
                 // Filter model settings based on selected provider
                 const filteredList = category === 'LLM Settings' || category === 'Embeddings'
                     ? metadataList.filter(meta => {
