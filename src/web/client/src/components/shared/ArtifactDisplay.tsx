@@ -90,6 +90,12 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
 
     const baseActions = useMemo(() => [
         {
+            id: 'artifact-display-metadata',
+            icon: isMetadataExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />,
+            label: isMetadataExpanded ? 'Collapse Metadata' : 'Expand Metadata',
+            onClick: () => setIsMetadataExpanded(!isMetadataExpanded)
+        },
+        {
             id: 'artifact-display-edit',
             icon: <EditIcon fontSize="small" />,
             label: 'Edit Artifact',
@@ -115,7 +121,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             label: 'Export Artifact',
             onClick: handleExport
         }
-    ], [onEdit, onDelete, handleExport]);
+    ], [onEdit, onDelete, handleExport, isMetadataExpanded]);
 
 
     useEffect(() => {
@@ -177,27 +183,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                             pb: 1
                         }}
                     >
-                        <Box 
-                            component="button"
-                            onClick={() => setIsMetadataExpanded(!isMetadataExpanded)}
-                            sx={{
-                                background: 'none',
-                                border: 'none',
-                                color: 'text.secondary',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1,
-                                py: 0.25,
-                                fontSize: '0.875rem',
-                                '&:hover': {
-                                    color: 'text.primary'
-                                }
-                            }}
-                        >
-                            {isMetadataExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
-                            Metadata
-                        </Box>
                         {isMetadataExpanded && (
                             <Box 
                                 component="table" 
