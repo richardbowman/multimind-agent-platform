@@ -40,7 +40,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [showModelSelector, setShowModelSelector] = useState(false);
     const [configForm, setConfigForm] = useState<any>({
         type: 'conversation',
-        provider: 'openrouter',
+        providerId: 'openrouter-default',
         model: '',
         baseUrl: '',
         maxTokensPerMinute: 20000,
@@ -260,7 +260,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                             <DialogTitle>Select Model</DialogTitle>
                             <DialogContent>
                                 <ModelSelector
-                                    provider={configForm.provider}
+                                    provider={settings.providers?.find(p => p.id === configForm.providerId)?.type || ''}
                                     value={configForm.model}
                                     onChange={(value) => {
                                         handleFormChange('model', value);
