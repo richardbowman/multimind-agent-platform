@@ -1,31 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
-    Paper,
     Typography,
-    Button,
-    FormControl,
-    TextField,
-    Select,
-    MenuItem,
-    InputLabel,
-    FormControlLabel,
-    Checkbox,
     IconButton,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Stack,
-    InputAdornment
+    Stack
 } from '@mui/material';
-import ModelSelector from './ModelSelector';
-import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Settings } from '../../../../tools/settings';
+import { SettingsFormBuilder } from './SettingsFormBuilder';
 
 interface ModelConfigBuilderProps {
     settings: Settings;
@@ -38,15 +27,72 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
 }) => {
     const [editingConfigId, setEditingConfigId] = useState<number | null>(null);
     const [showModelSelector, setShowModelSelector] = useState(false);
-    const [configForm, setConfigForm] = useState<any>({
-        type: 'conversation',
-        providerId: 'openrouter-default',
-        model: '',
-        baseUrl: '',
-        maxTokensPerMinute: 20000,
-        defaultDelayMs: 1000,
-        windowSizeMs: 60000
-    });
+    const [configForm, setConfigForm] = useState<any>({});
+
+    const configMetadata = useMemo(() => ({
+        type: {
+            key: 'type',
+            label: 'Model Type',
+            type: 'select',
+            category: 'Model',
+            options: ['conversation', 'reasoning', 'advancedReasoning', 'document', 'embeddings'],
+            required: true
+        },
+        providerId: {
+            key: 'providerId',
+            label: 'Provider',
+            type: 'select',
+            category: 'Model',
+            options: settings.providers?.map(p => p.id) || [],
+            required: true
+        },
+        model: {
+            key: 'model',
+            label: 'Model',
+            type: 'text',
+            category: 'Model',
+            required: true
+        },
+        baseUrl: {
+            key: 'baseUrl',
+            label: 'Base URL',
+            type: 'text',
+            category: 'Connection',
+            required: false
+        },
+        maxTokensPerMinute: {
+            key: 'maxTokensPerMinute',
+            label: 'Max Tokens Per Minute',
+            type: 'number',
+            category: 'Rate Limiting',
+            required: true
+        },
+        defaultDelayMs: {
+            key: 'defaultDelayMs',
+            label: 'Default Delay (ms)',
+            type: 'number',
+            category: 'Rate Limiting',
+            required: true
+        },
+        windowSizeMs: {
+            key: 'windowSizeMs',
+            label: 'Window Size (ms)',
+            type: 'number',
+            category: 'Rate Limiting',
+            required: true
+        }
+    }), [settings.providers]);
+
+    const configCategories = useMemo(() => {
+        const categories: Record<string, any[]> = {};
+        Object.values(configMetadata).forEach(meta => {
+            if (!categories[meta.category]) {
+                categories[meta.category] = [];
+            }
+            categories[meta.category].push(meta);
+        });
+        return Object.entries(categories);
+    }, [configMetadata]);
 
     const handleEditClick = (index: number) => {
         setEditingConfigId(index);
