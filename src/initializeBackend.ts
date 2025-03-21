@@ -20,6 +20,8 @@ import { Message } from "./chat/chatClient";
 import _crypto from 'node:crypto';
 import { loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
 import { Sequelize } from "sequelize";
+import { Settings } from "./tools/settings";
+import { ILLMService } from "./llm/ILLMService";
 if (!global.crypto) {
     global.crypto = _crypto;
 }
