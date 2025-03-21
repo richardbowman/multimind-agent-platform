@@ -61,7 +61,7 @@ export namespace StringUtils {
     }
 
     export function extractCodeBlocks(text: string, type?: string): CodeBlock[] {
-        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n([\s\S]*?)(```|$)/g;
+        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n((?:(?!```).|[\s\S])*?)(```|$)/g;
         const matches: CodeBlock[] = [];
         let match: RegExpExecArray | null;
 
