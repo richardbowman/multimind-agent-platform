@@ -242,115 +242,15 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                     {editingConfigId === -1 ? 'Add New Model Configuration' : 'Edit Model Configuration'}
                 </DialogTitle>
                 <DialogContent>
-                    <Box sx={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr',
-                        gap: 2,
-                        pt: 2
-                    }}>
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Model Type</InputLabel>
-                            <Select
-                                value={configForm.type}
-                                label="Model Type"
-                                onChange={(e) => handleFormChange('type', e.target.value)}
-                            >
-                                <MenuItem value="conversation">Conversation</MenuItem>
-                                <MenuItem value="reasoning">Reasoning</MenuItem>
-                                <MenuItem value="advancedReasoning">Advanced Reasoning</MenuItem>
-                                <MenuItem value="document">Document</MenuItem>
-                                <MenuItem value="embeddings">Embeddings</MenuItem>
-                            </Select>
-                        </FormControl>
-
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Provider</InputLabel>
-                            <Select
-                                value={configForm.providerId}
-                                label="Provider"
-                                onChange={(e) => handleFormChange('providerId', e.target.value)}
-                            >
-                                {settings.providers?.map(provider => (
-                                    <MenuItem key={provider.id} value={provider.id}>
-                                        {provider.type} ({provider.id})
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-
-                        <TextField
-                            label="Model"
-                            value={configForm.model}
-                            onChange={(e) => handleFormChange('model', e.target.value)}
-                            fullWidth
-                            margin="normal"
-                            InputProps={{
-                                endAdornment: (
-                                    <InputAdornment position="end">
-                                        <IconButton
-                                            onClick={() => setShowModelSelector(true)}
-                                            edge="end"
-                                        >
-                                            <SearchIcon />
-                                        </IconButton>
-                                    </InputAdornment>
-                                )
-                            }}
-                        />
-                        <Dialog
-                            open={showModelSelector}
-                            onClose={() => setShowModelSelector(false)}
-                            maxWidth="md"
-                            fullWidth
-                        >
-                            <DialogTitle>Select Model</DialogTitle>
-                            <DialogContent>
-                                <ModelSelector
-                                    provider={settings.providers?.find(p => p.id === configForm.providerId)?.type || ''}
-                                    value={configForm.model}
-                                    onChange={(value) => {
-                                        handleFormChange('model', value);
-                                        setShowModelSelector(false);
-                                    }}
-                                />
-                            </DialogContent>
-                        </Dialog>
-
-                        <TextField
-                            label="Base URL"
-                            value={configForm.baseUrl}
-                            onChange={(e) => handleFormChange('baseUrl', e.target.value)}
-                            fullWidth
-                            margin="normal"
-                        />
-
-                        <TextField
-                            label="Max Tokens Per Minute"
-                            type="number"
-                            value={configForm.maxTokensPerMinute}
-                            onChange={(e) => handleFormChange('maxTokensPerMinute', Number(e.target.value))}
-                            fullWidth
-                            margin="normal"
-                        />
-
-                        <TextField
-                            label="Default Delay (ms)"
-                            type="number"
-                            value={configForm.defaultDelayMs}
-                            onChange={(e) => handleFormChange('defaultDelayMs', Number(e.target.value))}
-                            fullWidth
-                            margin="normal"
-                        />
-
-                        <TextField
-                            label="Window Size (ms)"
-                            type="number"
-                            value={configForm.windowSizeMs}
-                            onChange={(e) => handleFormChange('windowSizeMs', Number(e.target.value))}
-                            fullWidth
-                            margin="normal"
-                        />
-                    </Box>
+                    <SettingsFormBuilder
+                        settings={configForm}
+                        metadata={configMetadata}
+                        categories={configCategories}
+                        onSettingChange={handleFormChange}
+                        onModelSelect={(key, provider) => {
+                            // Handle model selection if needed
+                        }}
+                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setEditingConfigId(null)}>
