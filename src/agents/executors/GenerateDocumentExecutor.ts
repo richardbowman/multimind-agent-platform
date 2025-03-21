@@ -14,7 +14,8 @@ export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
 - Use standard Markdown syntax
 - Include proper headings and structure
 - Use lists, tables, and other formatting as needed
-- Ensure proper spacing between elements`);
+- Ensure proper spacing between elements
+- When using fenced code blocks, use double backticks (6 \` characters) instead of single backticks`);
     }
 
     protected getSupportedFormats(): string[] {
