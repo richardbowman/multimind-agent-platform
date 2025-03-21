@@ -163,7 +163,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
         }}>
             {categories.map(([category, metadataList]) => {
                 // Special handling for Model Configurations
-                if (category === 'Model Configurations') {
+                if (category === 'Models') {
                     return (
                         <Box key={category} id={category}>
                             <Typography variant="h6" gutterBottom>
