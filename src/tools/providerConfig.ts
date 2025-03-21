@@ -1,7 +1,17 @@
 import { APIConfig } from "./settings";
 import { ClientSettings } from "./settingsDecorators";
+import { LLMProvider } from "../llm/types/LLMProvider";
 
 export class ProviderConfig {
+    @ClientSettings({
+        label: 'Provider Type',
+        category: 'LLM Settings',
+        type: 'select',
+        options: Object.values(LLMProvider),
+        description: 'Type of LLM provider to use'
+    })
+    type: LLMProvider = LLMProvider.OPENAI;
+
     api: APIConfig = new APIConfig();
 
     @ClientSettings({
