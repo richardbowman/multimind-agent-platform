@@ -1,4 +1,4 @@
-import { APIConfig } from "./settings";
+import { APIConfig } from "./apiConfig";
 import { ClientSettings } from "./settingsDecorators";
 import { LLMProvider } from "../llm/types/LLMProvider";
 
