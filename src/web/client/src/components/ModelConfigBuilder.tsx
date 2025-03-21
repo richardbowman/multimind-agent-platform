@@ -54,13 +54,20 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
         );
     }, [settings.providers, configType]);
 
-    // Handle provider type change to apply defaults
+    // Handle provider type change to apply defaults if they exist
     const handleProviderTypeChange = (value: LLMProvider) => {
-        const defaults = providerDefaults[value] || {};
         setConfigForm(prev => ({
             ...prev,
-            ...defaults
+            type: value
         }));
+        
+        // Only apply defaults if they exist for this provider
+        if (providerDefaults[value]) {
+            setConfigForm(prev => ({
+                ...prev,
+                ...providerDefaults[value]
+            }));
+        }
     };
 
     const configCategories = useMemo(() => {
