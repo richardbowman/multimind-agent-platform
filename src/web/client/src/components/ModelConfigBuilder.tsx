@@ -19,6 +19,7 @@ import { SettingsFormBuilder } from './SettingsFormBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
 import { ProviderConfig } from '../../../../tools/providerConfig';
+import { LLMProvider } from '../../../../llm/types/LLMProvider';
 
 interface ModelConfigBuilderProps {
     settings: Settings;
@@ -36,6 +37,30 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [showModelSelector, setShowModelSelector] = useState(false);
     const [configForm, setConfigForm] = useState<any>({});
 
+    // Provider-specific default configurations
+    const providerDefaults = useMemo(() => ({
+        [LLMProvider.OPENROUTER]: {
+            type: LLMProvider.OPENROUTER,
+            baseUrl: 'https://openrouter.ai/api/v1',
+            model: 'openai/gpt-3.5-turbo'
+        },
+        [LLMProvider.OPENAI]: {
+            type: LLMProvider.OPENAI,
+            baseUrl: 'https://api.openai.com/v1',
+            model: 'gpt-3.5-turbo'
+        },
+        [LLMProvider.ANTHROPIC]: {
+            type: LLMProvider.ANTHROPIC,
+            baseUrl: 'https://api.anthropic.com/v1',
+            model: 'claude-3-haiku-20240307'
+        },
+        [LLMProvider.DEEPSEEK]: {
+            type: LLMProvider.DEEPSEEK,
+            baseUrl: 'https://api.deepseek.com/v1',
+            model: 'deepseek-chat'
+        }
+    }), []);
+
     const configMetadata = useMemo(() => {
         const instance = configType === 'providers' ? 
             new ProviderConfig() : 
@@ -49,6 +74,15 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
             ])
         );
     }, [settings.providers, configType]);
+
+    // Handle provider type change to apply defaults
+    const handleProviderTypeChange = (value: LLMProvider) => {
+        const defaults = providerDefaults[value] || {};
+        setConfigForm(prev => ({
+            ...prev,
+            ...defaults
+        }));
+    };
 
     const configCategories = useMemo(() => {
         const categories: Record<string, any[]> = {};
@@ -67,10 +101,15 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     };
 
     const handleFormChange = (field: string, value: any) => {
-        setConfigForm(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        // Special handling for provider type to apply defaults
+        if (field === 'type' && configType === 'providers') {
+            handleProviderTypeChange(value);
+        } else {
+            setConfigForm(prev => ({
+                ...prev,
+                [field]: value
+            }));
+        }
     };
 
     const handleSaveConfig = () => {
