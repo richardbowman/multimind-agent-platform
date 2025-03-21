@@ -1,4 +1,4 @@
-import { LLMServiceFactory } from "./llm/LLMServiceFactory";
+import { LLMServiceFactory, ModelType } from "./llm/LLMServiceFactory";
 import { LocalChatStorage, LocalTestClient } from "./chat/localChatClient";
 import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
@@ -28,6 +28,28 @@ declare global {
     interface Array<T> {
         defined(): Array<T>;
     }
+}
+
+async function createLLMServices(settings: Settings): Promise<Record<string, ILLMService>> {
+    const services: Record<string, ILLMService> = {};
+    
+    for (const config of settings.modelConfigs) {
+        try {
+            const service = LLMServiceFactory.createService(settings, config.provider);
+            await service.initializeChatModel(config.model);
+            
+            // Store the service using a combination of type and provider as the key
+            const serviceKey = `${config.type}-${config.provider}`;
+            services[serviceKey] = service;
+            
+            Logger.info(`Initialized ${config.type} service for provider ${config.provider}`);
+        } catch (error) {
+            Logger.error(`Failed to initialize ${config.type} service for provider ${config.provider}:`, error);
+            throw error;
+        }
+    }
+    
+    return services;
 }
 
 export async function initializeBackend(settingsManager: SettingsManager, options: {
@@ -63,8 +85,15 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         await sleep();
 
         Logger.progress('Initializing chat model...', 0.3, "loading");
-        const chatService = LLMServiceFactory.createService(_s);
-        await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
+        // Create all configured LLM services
+        const llmServices = await createLLMServices(_s);
+        
+        // Get the primary chat service
+        const chatServiceKey = `conversation-${_s.providers.chat}`;
+        const chatService = llmServices[chatServiceKey];
+        if (!chatService) {
+            throw new ConfigurationError(`No chat service found for provider ${_s.providers.chat}`);
+        }
         await sleep();
 
         Logger.progress('Loading vector database', 0.3, "loading");
