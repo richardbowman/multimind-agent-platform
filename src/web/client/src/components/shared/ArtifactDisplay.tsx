@@ -9,6 +9,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { ContentRenderer } from './ContentRenderer';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
+import { ActionToolbar } from './ActionToolbar';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -30,7 +31,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     const theme = useTheme();
     const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
     const artifactRef = useRef(artifact);
-    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
+    const { actions: toolbarActions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
     artifactRef.current = artifact;
 
@@ -140,8 +141,25 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 overflow: 'hidden',
                 cursor: 'pointer'
             }}
-            onClick={() => onSelect && onSelect(artifact, !isSelected)}
         >
+                    <Box
+                        sx={{
+                            p: 1,
+                            borderBottom: 1,
+                            borderColor: 'divider'
+                        }}
+                    >
+                        <Box
+                            component="h3"
+                            sx={{
+                                color: 'text.primary'
+                            }}
+                        >
+                            {artifact?.metadata?.title || artifact?.id}
+                        </Box>
+                    </Box>
+                    <ActionToolbar actions={toolbarActions} />
+
             <Box 
                 sx={{ 
                     p: 3,
@@ -149,15 +167,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     borderColor: 'divider'
                 }}
             >
-                <Box 
-                    component="h2" 
-                    sx={{ 
-                        mb: 1,
-                        color: 'text.primary'
-                    }}
-                >
-                    {artifact.metadata?.title || artifact.id}
-                </Box>
                 <Box 
                     sx={{ 
                         display: 'flex',
