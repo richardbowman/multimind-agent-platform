@@ -34,10 +34,18 @@ declare global {
 
 async function createLLMServices(settings: Settings): Promise<Record<string, ILLMService>> {
     const services: Record<string, ILLMService> = {};
+    const providerInstances: Record<string, ILLMService> = {};
     
     for (const config of settings.modelConfigs) {
         try {
-            const service = LLMServiceFactory.createService(settings, config.provider);
+            // Reuse provider instance if it exists
+            let service = providerInstances[config.provider];
+            if (!service) {
+                service = LLMServiceFactory.createService(settings, config.provider);
+                providerInstances[config.provider] = service;
+            }
+            
+            // Initialize the specific model
             await service.initializeChatModel(config.model);
             
             // Store the service using a combination of type and provider as the key
