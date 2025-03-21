@@ -40,7 +40,14 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
         const instance = configType === 'providers' ? 
             new ProviderConfig() : 
             new ModelProviderConfig();
-        return getClientSettingsMetadata(instance);
+        const metadata = getClientSettingsMetadata(instance);
+        // Add key property to each metadata entry
+        return Object.fromEntries(
+            Object.entries(metadata).map(([key, meta]) => [
+                key,
+                { ...meta, key }
+            ])
+        );
     }, [settings.providers, configType]);
 
     const configCategories = useMemo(() => {
