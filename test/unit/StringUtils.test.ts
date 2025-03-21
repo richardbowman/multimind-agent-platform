@@ -154,6 +154,28 @@ describe('StringUtils', () => {
             ]);
         });
 
+        it('should handle nested code blocks with 3 and 6 backticks', () => {
+            const text = `
+                \`\`\`markdown
+                # Document Title
+                
+                \`\`\`\`\`\`python
+                print("Nested code block")
+                \`\`\`\`\`\`
+                
+                Regular text
+                \`\`\`
+            `;
+            const result = StringUtils.extractCodeBlocks(text);
+            expect(result).toEqual([
+                { 
+                    type: 'markdown', 
+                    code: '# Document Title\n\n\`\`\`\`\`\`python\nprint("Nested code block")\n\`\`\`\`\`\`\n\nRegular text',
+                    attribute: undefined 
+                }
+            ]);
+        });
+
         it('should extract code blocks with attributes', () => {
             const text = `
                 \`\`\`js[main.js]
