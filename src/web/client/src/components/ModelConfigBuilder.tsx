@@ -154,12 +154,8 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                         setEditingConfigId(-1);
                         setConfigForm({
                             type: 'conversation',
-                            provider: 'openrouter',
-                            model: '',
-                            baseUrl: '',
-                            maxTokensPerMinute: 20000,
-                            defaultDelayMs: 1000,
-                            windowSizeMs: 60000
+                            providerId: 'openrouter-default',
+                            model: ''
                         });
                     }}
                     sx={{
