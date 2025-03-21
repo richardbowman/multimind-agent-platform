@@ -30,59 +30,70 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [showModelSelector, setShowModelSelector] = useState(false);
     const [configForm, setConfigForm] = useState<any>({});
 
-    const configMetadata = useMemo(() => ({
-        type: {
-            key: 'type',
+    class ModelConfig {
+        @ClientSettings({
             label: 'Model Type',
-            type: 'select',
             category: 'Model',
+            type: 'select',
             options: ['conversation', 'reasoning', 'advancedReasoning', 'document', 'embeddings'],
             required: true
-        },
-        providerId: {
-            key: 'providerId',
+        })
+        type: string = 'conversation';
+
+        @ClientSettings({
             label: 'Provider',
-            type: 'select',
             category: 'Model',
+            type: 'select',
             options: settings.providers?.map(p => p.id) || [],
             required: true
-        },
-        model: {
-            key: 'model',
+        })
+        providerId: string = 'openrouter-default';
+
+        @ClientSettings({
             label: 'Model',
-            type: 'text',
             category: 'Model',
-            required: true
-        },
-        baseUrl: {
-            key: 'baseUrl',
-            label: 'Base URL',
             type: 'text',
+            required: true
+        })
+        model: string = '';
+
+        @ClientSettings({
+            label: 'Base URL',
             category: 'Connection',
+            type: 'text',
             required: false
-        },
-        maxTokensPerMinute: {
-            key: 'maxTokensPerMinute',
+        })
+        baseUrl: string = '';
+
+        @ClientSettings({
             label: 'Max Tokens Per Minute',
-            type: 'number',
             category: 'Rate Limiting',
+            type: 'number',
             required: true
-        },
-        defaultDelayMs: {
-            key: 'defaultDelayMs',
+        })
+        maxTokensPerMinute: number = 20000;
+
+        @ClientSettings({
             label: 'Default Delay (ms)',
-            type: 'number',
             category: 'Rate Limiting',
+            type: 'number',
             required: true
-        },
-        windowSizeMs: {
-            key: 'windowSizeMs',
+        })
+        defaultDelayMs: number = 1000;
+
+        @ClientSettings({
             label: 'Window Size (ms)',
-            type: 'number',
             category: 'Rate Limiting',
+            type: 'number',
             required: true
-        }
-    }), [settings.providers]);
+        })
+        windowSizeMs: number = 60000;
+    }
+
+    const configMetadata = useMemo(() => {
+        const instance = new ModelConfig();
+        return getClientSettingsMetadata(instance);
+    }, [settings.providers]);
 
     const configCategories = useMemo(() => {
         const categories: Record<string, any[]> = {};
