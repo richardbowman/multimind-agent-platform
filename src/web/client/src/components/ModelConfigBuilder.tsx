@@ -18,16 +18,18 @@ import { Settings } from '../../../../tools/settings';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
+import { ProviderConfig } from '../../../../tools/providerConfig';
 
 interface ModelConfigBuilderProps {
     settings: Settings;
     onSettingsChange: (settings: Settings) => void;
-    configType?: 'model' | 'provider';
+    configType?: 'modelConfigs' | 'providers';
     configKey?: string;
 }
 
 export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     settings,
+    configType,
     onSettingsChange
 }) => {
     const [editingConfigId, setEditingConfigId] = useState<number | null>(null);
@@ -35,11 +37,11 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [configForm, setConfigForm] = useState<any>({});
 
     const configMetadata = useMemo(() => {
-        const instance = props.configType === 'provider' ? 
+        const instance = configType === 'providers' ? 
             new ProviderConfig() : 
             new ModelProviderConfig();
         return getClientSettingsMetadata(instance);
-    }, [settings.providers, props.configType]);
+    }, [settings.providers, configType]);
 
     const configCategories = useMemo(() => {
         const categories: Record<string, any[]> = {};
@@ -65,7 +67,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     };
 
     const handleSaveConfig = () => {
-        if (props.configType === 'provider') {
+        if (configType === 'providers') {
             const newProviders = [...settings.providers];
             
             if (editingConfigId !== null && editingConfigId >= 0) {
@@ -98,13 +100,9 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
         }
         
         setEditingConfigId(null);
-        setConfigForm(props.configType === 'provider' ? 
+        setConfigForm(configType === 'providers' ? 
             new ProviderConfig() : 
-            {
-                type: 'conversation',
-                providerId: 'openrouter-default',
-                model: ''
-            }
+            new ModelProviderConfig()
         );
     };
 
@@ -169,7 +167,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                     color="primary"
                     onClick={() => {
                         setEditingConfigId(-1);
-                        setConfigForm(props.configType === 'provider' ?
+                        setConfigForm(configType === 'providers' ?
                             new ProviderConfig() :
                             {
                                 type: 'conversation',
@@ -192,7 +190,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
-                    rows={props.configType === 'provider' ?
+                    rows={configType === 'providers' ?
                         settings?.providers?.map((config, index) => ({
                             id: index,
                             ...config
