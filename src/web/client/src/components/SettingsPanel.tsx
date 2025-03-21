@@ -161,6 +161,51 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         return path.split('.').reduce((current, part) => current?.[part], obj);
     };
 
+       // Convert to array and group by category
+        const categories = Object.entries(metadata).reduce((acc, [key, meta]) => {
+            if (!acc[meta.category]) {
+                acc[meta.category] = [];
+            }
+            acc[meta.category].push({
+                key,
+                ...meta
+            });
+            return acc;
+        }, {} as Record<string, Array<{
+            key: string;
+            label: string;
+            type: string;
+            category: string;
+            description?: string;
+            options?: string[];
+            defaultValue?: any;
+            sensitive?: boolean;
+            required?: boolean;
+        }>>);
+    
+        // Define the explicit category order with API Keys first
+        const categoryOrder = [
+            'API Keys',
+            'LLM Settings', 
+            'Models',
+            'Embeddings',
+            'Search Settings',
+            'Agents',
+            'Vector DB',
+            'Rate Limiting',
+            'Server Settings',
+            'UI Settings',
+        ];
+    
+        // Sort categories according to our defined order
+        const sortedCategories = Object.entries(categories).sort(([a], [b]) => {
+            const aIndex = categoryOrder.indexOf(a);
+            const bIndex = categoryOrder.indexOf(b);
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+        });
+
 
     return (
         <Box sx={{
@@ -243,6 +288,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     }}
                     >
                         <SettingsFormBuilder
+                            categories={sortedCategories}
                             settings={settings}
                             metadata={metadata}
                             onSettingChange={handleChange}

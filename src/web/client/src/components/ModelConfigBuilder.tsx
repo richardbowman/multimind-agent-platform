@@ -16,6 +16,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Settings } from '../../../../tools/settings';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
+import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
+import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
 
 interface ModelConfigBuilderProps {
     settings: Settings;
@@ -30,68 +32,8 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [showModelSelector, setShowModelSelector] = useState(false);
     const [configForm, setConfigForm] = useState<any>({});
 
-    class ModelConfig {
-        @ClientSettings({
-            label: 'Model Type',
-            category: 'Model',
-            type: 'select',
-            options: ['conversation', 'reasoning', 'advancedReasoning', 'document', 'embeddings'],
-            required: true
-        })
-        type: string = 'conversation';
-
-        @ClientSettings({
-            label: 'Provider',
-            category: 'Model',
-            type: 'select',
-            options: settings.providers?.map(p => p.id) || [],
-            required: true
-        })
-        providerId: string = 'openrouter-default';
-
-        @ClientSettings({
-            label: 'Model',
-            category: 'Model',
-            type: 'text',
-            required: true
-        })
-        model: string = '';
-
-        @ClientSettings({
-            label: 'Base URL',
-            category: 'Connection',
-            type: 'text',
-            required: false
-        })
-        baseUrl: string = '';
-
-        @ClientSettings({
-            label: 'Max Tokens Per Minute',
-            category: 'Rate Limiting',
-            type: 'number',
-            required: true
-        })
-        maxTokensPerMinute: number = 20000;
-
-        @ClientSettings({
-            label: 'Default Delay (ms)',
-            category: 'Rate Limiting',
-            type: 'number',
-            required: true
-        })
-        defaultDelayMs: number = 1000;
-
-        @ClientSettings({
-            label: 'Window Size (ms)',
-            category: 'Rate Limiting',
-            type: 'number',
-            required: true
-        })
-        windowSizeMs: number = 60000;
-    }
-
     const configMetadata = useMemo(() => {
-        const instance = new ModelConfig();
+        const instance = new ModelProviderConfig();
         return getClientSettingsMetadata(instance);
     }, [settings.providers]);
 
