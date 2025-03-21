@@ -51,7 +51,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 }) => {
     const ipcService = useIPCService();
     const {handles} = useDataContext();
-    const {deleteChannel, createChannel, fetchChannels} = useChannels();
+    const {channels, deleteChannel, createChannel, fetchChannels} = useChannels();
     const { setCurrentChannelId, setCurrentThreadId } = useMessages();
     const [channelName, setChannelName] = useState<ChannelHandle|null>(null);
     const [channelNameError, setChannelNameError] = useState(false);
@@ -158,6 +158,8 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                 fetchChannels();
                 setDeleteConfirmOpen(false);
                 onClose();
+                setCurrentChannelId(channels.length>0?channels[0].id:null);
+                setCurrentThreadId(null);
             } catch (error) {
                 console.error('Failed to delete channel:', error);
             }

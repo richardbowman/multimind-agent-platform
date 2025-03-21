@@ -63,6 +63,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
     onModelSelect
 }) => {
     const getNestedValue = (obj: any, path: string): any => {
+        console.debug(`getting nested value ${path}`);
         return path.split('.').reduce((current, part) => current?.[part], obj);
     };
 
@@ -196,12 +197,9 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
         }}>
             {categories.map(([category, metadataList]) => {
                 // Special handling for Model Configurations
-                if (category === 'Models') {
+                if (category === 'Models' || category === "Providers") {
                     return (
                         <Box key={category} id={category}>
-                            <Typography variant="h6" gutterBottom>
-                                {category}
-                            </Typography>
                             <ErrorBoundary
                                 fallback={<ModelConfigErrorFallback />}
                                 onError={(error, errorInfo) => {
@@ -210,27 +208,13 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                             >
                                 <ModelConfigBuilder
                                     settings={settings}
-                                    onSettingsChange={(newSettings) => {
-                                        // Update settings in parent component
-                                        onSettingChange('modelConfigs', newSettings.modelConfigs);
-                                    }}
+                                    onSettingsChange={(settings) => {onSettingChange(metadataList[0].key, settings)}}
+                                    configType={metadataList[0].key}  
                                 />
                             </ErrorBoundary>
                         </Box>
                     );
                 }
-
-                // Filter model settings based on selected provider
-                const filteredList = category === 'LLM Settings' || category === 'Embeddings'
-                    ? metadataList.filter(meta => {
-                        if (!meta.key.startsWith('models.')) return true;
-                        const providerType = meta.key.split('.')[2];
-                        if (meta.key.includes('embedding')) {
-                            return settings?.providers?.embeddings && providerType === settings.providers.embeddings;
-                        }
-                        return settings?.providers?.chat && providerType === settings.providers.chat;
-                    })
-                    : metadataList;
 
                 return (
                     <Box
@@ -242,7 +226,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                         </Typography>
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {filteredList.map(metadata => (
+                            {metadataList.map(metadata => (
                                 <FormControl key={metadata.key} fullWidth>
                                     {renderInput(metadata)}
                                     {metadata.description && (

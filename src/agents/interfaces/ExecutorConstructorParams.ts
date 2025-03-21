@@ -6,11 +6,14 @@ import { Settings } from 'src/tools/settings';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { UUID } from 'src/types/uuid';
+import { ModelType } from "src/llm/types/ModelType";
 
 
 export interface ExecutorConstructorParams {
     vectorDB: IVectorDatabase;
+    /** @deprecated */
     llmService: ILLMService;
+    llmServices: Record<ModelType, ILLMService>;
     taskManager: TaskManager;
     artifactManager: ArtifactManager;
     settings: Settings;

@@ -14,7 +14,7 @@ import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { StringUtils } from "src/utils/StringUtils";
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
-import { ModelType } from "src/llm/LLMServiceFactory";
+import { ModelType } from "src/llm/types/ModelType";
 import { asError } from "src/types/types";
 
 

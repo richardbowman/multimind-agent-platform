@@ -1,21 +1,21 @@
 import { ChatPost } from "src/chat/chatClient";
-import { ILLMService, LLMContext } from "./ILLMService";
+import { ILLMService, LLMContext, LLMServices } from "./ILLMService";
 import { ModelCache } from "./modelCache";
-import { ModelMessageResponse, ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
+import { ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
-import { Artifact } from "src/tools/artifact";
 import { StructuredOutputPrompt } from "./ILLMService";
-import { SearchResult } from "./IVectorDatabase";
 import { PromptBuilder, PromptRegistry } from "./promptBuilder";
 import { asError, isObject } from "src/types/types";
-import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { StringUtils } from "src/utils/StringUtils";
 import { withRetry } from "src/helpers/retry";
+import { ModelType } from "./types/ModelType";
 
 export interface ModelHelpersParams {
+    /** @deprecated */
     llmService: ILLMService;
+    llmServices: LLMServices;
     userId: string;
     purpose?: string;
     finalInstructions?: string;
@@ -38,7 +38,9 @@ export type WithMetadata<T, M> = T & {
 export class ModelHelpers {
     protected promptRegistry: PromptRegistry;
     protected context: LLMContext;
+    /** @deprecated */
     protected llmService: ILLMService;
+    protected llmServices: LLMServices;
     protected isMemoryEnabled: boolean = false;
     protected purpose: string = 'You are a helpful agent.';
     protected modelCache: ModelCache;
@@ -50,6 +52,7 @@ export class ModelHelpers {
     constructor(params: ModelHelpersParams) {
         this.userId = params.userId;
         this.llmService = params.llmService;
+        this.llmServices = params.llmServices;
         this.finalInstructions = params.finalInstructions;
         this.messagingHandle = params.messagingHandle;
         this.modelCache = new ModelCache();
@@ -223,7 +226,13 @@ export class ModelHelpers {
             return withRetry<T>(async () => {
                 try {
                     const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
-                    response = await this.llmService.generateStructured<T>(params.userPost ? params.userPost : params.message ? params : { message: "" }, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+                    // use fallback for now until we figure out all the spots
+                    const modernLookup = this.llmServices[params.modelType||ModelType.CONVERSATION]||this.llmServices.conversation;
+                    if (!modernLookup) {
+                        Logger.warn(`Modern LLM Service Lookup Failed for ${params.modelType} for agent ${params.context?.agentName} step ${params.context?.stepType}`);
+                    }
+                    const service = modernLookup || this.llmService;
+                    response = await service.generateStructured<T>(params.userPost ? params.userPost : params.message ? params : { message: "" }, augmentedStructuredInstructions, history, contextWindow, maxTokens);
                     return response;
                 } catch (error) {
                     Logger.error("Error generating", error);
@@ -272,7 +281,14 @@ export class ModelHelpers {
         // Augment instructions with context and generate a response
         const history = params.threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
         const response = await withRetry(() => {
-            return this.llmService.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
+            // use fallback for now until we figure out all the spots
+            const modernLookup = this.llmServices[params.modelType||ModelType.CONVERSATION]||this.llmServices.conversation;
+            if (!modernLookup) {
+                Logger.warn(`Modern LLM Service Lookup Failed for ${params.modelType} for agent ${params.context?.agentName} step ${params.context?.stepType}`);
+            }
+            const service = modernLookup || this.llmService;
+            
+            return service.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
                 modelType: params.modelType,
                 context: {
                     ...this.context,

@@ -8,7 +8,7 @@ import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, ProjectMetadata, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { ModelHelpers } from 'src/llm/modelHelpers';
-import { ILLMService, LLMContext } from 'src/llm/ILLMService';
+import { ILLMService, LLMContext, LLMServices } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
@@ -20,7 +20,7 @@ import { ContentType, PromptBuilder } from "src/llm/promptBuilder";
 import { ChatHandle } from "src/types/chatHandle";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
-import { ModelType } from "src/llm/LLMServiceFactory";
+import { ModelType } from "src/llm/types/ModelType";
 import { TaskEventType } from "../shared/TaskEventType";
 
 
@@ -95,7 +95,9 @@ export abstract class Agent {
     protected readonly chatClient: ChatClient;
     protected readonly threadSummaries: Map<string, ThreadSummary> = new Map();
 
+    /** @deprecated */
     protected readonly llmService: ILLMService;
+    protected readonly llmServices: LLMServices;
     protected readonly vectorDBService: IVectorDatabase;
     protected readonly promptBuilder: SystemPromptBuilder;
     protected readonly projects: TaskManager;
@@ -117,6 +119,7 @@ export abstract class Agent {
     constructor(params: AgentConstructorParams) {
         this.chatClient = params.chatClient;
         this.llmService = params.llmService;
+        this.llmServices = params.llmServices;
         this.userId = params.userId;
         this.vectorDBService = params.vectorDBService;
         this.projects = params.taskManager;
@@ -127,6 +130,7 @@ export abstract class Agent {
 
         this.modelHelpers = new ModelHelpers({
             llmService: params.llmService,
+            llmServices: params.llmServices,
             userId: params.userId,
             messagingHandle: params.messagingHandle,
             context: this.buildLLMContext()

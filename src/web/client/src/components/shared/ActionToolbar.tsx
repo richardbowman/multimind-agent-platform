@@ -15,9 +15,7 @@ interface ActionToolbarProps {
     align?: 'left' | 'right' | 'center' | 'space-between';
 }
 
-export const ActionToolbar: React.FC<ActionToolbarProps> = ({ title, align = 'right' }) => {
-    const { actions } = useToolbarActions();
-
+export const ActionToolbar: React.FC<ActionToolbarProps> = ({ title, actions, align = 'right' }) => {
     return (
         <Box sx={{
             width: '100%',

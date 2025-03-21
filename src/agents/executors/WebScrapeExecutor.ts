@@ -16,7 +16,7 @@ import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { StringUtils } from "src/utils/StringUtils";
 import { WebScrapeSummaryResponse } from "src/schemas/DateResponse";
-import { ModelType } from "src/llm/LLMServiceFactory";
+import { ModelType } from "src/llm/types/ModelType";
 import { SearchCategory } from "src/schemas/SearchQueryResponse";
 
 export interface ScrapeResult {

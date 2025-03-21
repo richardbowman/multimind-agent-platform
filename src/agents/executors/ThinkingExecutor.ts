@@ -10,7 +10,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ContentType } from 'src/llm/promptBuilder';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**

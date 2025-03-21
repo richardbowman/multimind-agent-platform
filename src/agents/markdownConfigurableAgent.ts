@@ -3,7 +3,7 @@ import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { ArtifactType } from "src/tools/artifact";
 import { UUID } from "src/types/uuid";
 import { ConfigurationError } from "src/errors/ConfigurationError";
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { TaskManager } from 'src/tools/taskManager';
 

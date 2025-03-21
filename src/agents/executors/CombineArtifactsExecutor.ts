@@ -2,7 +2,7 @@ import { ArtifactGenerationStepResponse, GenerateArtifactExecutor } from './Gene
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult, StepResponseType, ReplanType, StepResultType } from '../interfaces/StepResult';
 import { ArtifactType } from 'src/tools/artifact';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';

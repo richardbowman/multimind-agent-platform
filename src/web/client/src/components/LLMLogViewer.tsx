@@ -27,6 +27,7 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { LLMLogEntry } from '../../../../llm/LLMLogger';
+import { Model } from 'sequelize';
 
 interface FormattedDataViewProps {
     data: any;
@@ -268,7 +269,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
         <Box>
             <Box sx={{ 
                 display: 'grid',
-                gridTemplateColumns: '120px 1fr 1fr 80px 120px 120px 120px',
+                gridTemplateColumns: '120px 1fr 1fr 80px 120px 120px 120px 120px',
                 gap: 2,
                 px: 2,
                 py: 1,
@@ -281,6 +282,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                 <Typography variant="subtitle2" color="textSecondary">Output</Typography>
                 <Typography variant="subtitle2" color="textSecondary">Status</Typography>
                 <Typography variant="subtitle2" color="textSecondary">Agent</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Provider</Typography>
                 <Typography variant="subtitle2" color="textSecondary">Step Type</Typography>
                 <Typography variant="subtitle2" color="textSecondary">Task</Typography>
             </Box>
@@ -324,6 +326,11 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
                                         {log?.context?.agentName || 'N/A'}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ minWidth: 120 }}>
+                                    <Typography variant="body2" color="textSecondary">
+                                        {log?.context?.provider}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>

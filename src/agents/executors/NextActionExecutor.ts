@@ -8,7 +8,7 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
 import { EXECUTOR_METADATA_KEY, StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';

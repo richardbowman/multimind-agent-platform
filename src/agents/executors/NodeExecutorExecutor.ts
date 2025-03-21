@@ -13,7 +13,7 @@ import path from 'path';
 import { CodeBlock, StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { app } from 'electron';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { Artifact } from 'src/tools/artifact';
 import { ContentType } from 'src/llm/promptBuilder';
 import { UUID } from 'src/types/uuid';

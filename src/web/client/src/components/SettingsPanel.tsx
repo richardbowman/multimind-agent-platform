@@ -294,25 +294,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             onSettingChange={handleChange}
                             onModelSelect={(key, provider) => setModelDialog({ open: true, key, provider })}
                         />
-                        
-                        {sortedCategories.map(([category, metadataList]) => {
-                            if (category === 'Providers') {
-                                return (
-                                    <Box key={category} id={category}>
-                                        <Typography variant="h6" gutterBottom>
-                                            {category}
-                                        </Typography>
-                                        <ModelConfigBuilder
-                                            settings={settings}
-                                            onSettingsChange={setSettings}
-                                            configType="provider"
-                                        />
-                                    </Box>
-                                );
-                            }
-                            return null;
-                        })}
-
                     </ScrollView> {/* End of scrollable content */}
                 </Box>
                 <ActionToolbar

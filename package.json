@@ -37,7 +37,7 @@
     "electron:dev": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"yarn watch:schemas\" \"yarn watch:worker\" \"wait-on dist/main.electron.js dist/web/bundle.js && yarn electron:start:dev\"",
     "electron:start:dev": "nodemon --watch 'dist/main.electron.js' --delay 3 --exec \"electron . --dev-mode --inspect\"",
     "electron:build": "yarn download-whisper-models && electron-builder --config ./electron-builder.ts",
-    "electron:package": "yarn run electron-rebuild && yarn build:clean && yarn electron:build",
+    "electron:package": "yarn build:clean && yarn electron:build",
     "electron:package:all": "electron-builder --config ./electron-builder.ts build --mac --win --linux",
     "electron:deploy:linux": "electron-builder --config ./electron-builder.ts build --linux --publish always",
     "postinstall": "electron-builder install-app-deps"

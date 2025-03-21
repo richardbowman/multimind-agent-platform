@@ -5,17 +5,18 @@ import Logger from '../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { ILLMService } from 'src/llm/ILLMService';
+import { ILLMService, LLMServices } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
 import path from "path";
 import { UUID } from 'src/types/uuid';
 import { parseAsync } from '@babel/core';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { MarkdownConfigurableAgent } from 'src/agents/markdownConfigurableAgent';
+import { ModelType } from "src/llm/types/ModelType";
 
 
 export interface AgentLoaderParams {
-    llmService: ILLMService;
+    llmServices: LLMServices;
     vectorDBService: IVectorDatabase;
     artifactManager: ArtifactManager
     taskManager: TaskManager;
@@ -45,6 +46,7 @@ export class AgentLoader {
                 try {
                     const configParams: AgentConstructorParams = {
                         ...params,
+                        llmService: params.llmServices.conversation,
                         config: {
                             configArtifactId: artifact.id
                         },
@@ -94,6 +96,7 @@ export class AgentLoader {
                     // Create agent instance with merged params
                     const constructorParams: AgentConstructorParams = {
                         ...params,
+                        llmService: params.llmServices.conversation,
                         agentName: agentName,
                         userId: definition.userId,
                         messagingHandle: definition.handle,

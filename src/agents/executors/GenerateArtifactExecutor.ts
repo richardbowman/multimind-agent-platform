@@ -12,7 +12,7 @@ import { ArtifactGenerationResponse, OperationTypes } from 'src/schemas/Artifact
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { CSVUtils } from 'src/utils/CSVUtils';
 import { asUUID, isUUID, UUID } from 'src/types/uuid';
 import { RetryError, withRetry } from 'src/helpers/retry';

@@ -2,7 +2,7 @@ import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { Planner } from "./planners/planner";
 import { MultiStepPlanner } from "./planners/multiStepPlanner";
-import { ModelType } from "src/llm/LLMServiceFactory";
+import { ModelType } from "src/llm/types/ModelType";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
 import { ExecutorConstructorParams } from "./interfaces/ExecutorConstructorParams";
 

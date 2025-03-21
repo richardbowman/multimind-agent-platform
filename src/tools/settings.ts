@@ -1,7 +1,8 @@
 import { UUID } from 'src/types/uuid';
 import { ClientSettings } from './settingsDecorators';
 import { ChatHandle } from 'src/types/chatHandle';
-import { ModelProviderConfig } from './modelProviderConfig';
+import { modelConfigDefaults, ModelProviderConfig } from './modelProviderConfig';
+import { PROVIDER_CONFIG_DEFAULT, ProviderConfig } from './providerConfig';
 
 export class BedrockConfig {
     @ClientSettings({
@@ -158,10 +159,6 @@ export class APIConfig {
     key: string = "";
 }
 
-export class ProviderConfig {
-    api: APIConfig = new APIConfig();
-}
-
 export interface AgentDefinition {
     className: string;
     sourcePath: string;
@@ -173,15 +170,6 @@ export interface AgentDefinition {
     autoRespondChannelIds?: String[];
 }
 
-export class ProvidersConfig {
-    @ClientSettings({
-        label: 'Embeddings Provider',
-        category: 'Embeddings',
-        type: 'select',
-        options: ['openai', 'llama_cpp', 'lmstudio']
-    })
-    embeddings: string = 'llama_cpp';
-}
 
 export class LLMSettings {
     @ClientSettings({
@@ -308,37 +296,14 @@ export class SQLiteVecSettings{
 };
 
 
-export interface ProviderConfig {
-    id: string;
-    type: string;
-    baseUrl: string;
-    apiKey?: string;
-    rateLimiting?: {
-        maxTokensPerMinute: number;
-        defaultDelayMs: number;
-        windowSizeMs: number;
-    };
-}
-
 export class Settings {
     @ClientSettings({
         label: 'Providers',
-        category: 'Models',
+        category: 'Providers',
         type: 'section',
         description: 'Configure provider connections'
     })
-    providers: ProviderConfig[] = [
-        {
-            id: 'openrouter-default',
-            type: 'openrouter',
-            baseUrl: 'https://openrouter.ai/api/v1',
-            rateLimiting: {
-                maxTokensPerMinute: 20000,
-                defaultDelayMs: 1000,
-                windowSizeMs: 60000
-            }
-        }
-    ];
+    providers: ProviderConfig[] = PROVIDER_CONFIG_DEFAULT;
 
     @ClientSettings({
         label: 'Model Configurations',
@@ -346,13 +311,7 @@ export class Settings {
         type: 'Models',
         description: 'Configure different model types and their providers'
     })
-    modelConfigs: ModelProviderConfig[] = [
-        {
-            type: 'conversation',
-            providerId: 'openrouter-default',
-            model: ''
-        }
-    ];
+    modelConfigs: ModelProviderConfig[] = modelConfigDefaults.lmstudio;
 
     @ClientSettings({
         label: 'Text-to-Speech',
@@ -367,17 +326,6 @@ export class Settings {
         type: 'section'
     })
     agents: Record<string, AgentBuilderConfig> = {};
-
-    scrapeTimeout(arg0: () => void, scrapeTimeout: any): void {
-        throw new Error('Method not implemented.');
-    }
-
-    @ClientSettings({
-        label: 'Providers',
-        category: 'LLM Settings',
-        type: 'section'
-    })
-    providers: ProvidersConfig = new ProvidersConfig();
 
     @ClientSettings({
         label: 'Search Provider',
@@ -521,27 +469,6 @@ export class Settings {
     openDevToolsOnLoad: boolean = false;
 
     @ClientSettings({
-        label: 'Models',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'Model configurations for different tasks',
-        customComponent: 'ModelSelector'
-    })
-    models: LLMModels = new LLMModels();
-
-    @ClientSettings({
-        label: 'Llama.cpp Execution Mode',
-        category: 'LLM Settings',
-        type: 'select',
-        options: ['Auto', 'CPU-only'],
-        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)',
-        visibleWhen: (settings: Settings) => 
-            settings.providers?.chat === 'llama_cpp' || 
-            settings.providers?.embeddings === 'llama_cpp'
-    })
-    llama_cpp_execution_mode: string = 'Auto';
-
-    @ClientSettings({
         label: 'Tool Choice Behavior',
         category: 'LLM Settings',
         type: 'select',
@@ -653,11 +580,6 @@ export class Settings {
         type: 'section'
     })
     pubmed: PubMedConfig = new PubMedConfig();
-
-    // Agent configuration
-    agents!: {
-        [key: string]: AgentDefinition
-    };
 
     @ClientSettings({
         label: 'Bedrock Settings',

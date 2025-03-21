@@ -56,6 +56,7 @@ export abstract class StepBasedAgent extends Agent {
         // Create standardized params
         const executorParams = {
             llmService: this.llmService,
+            llmServices: this.llmServices,
             taskManager: this.projects,
             artifactManager: this.artifactManager,
             vectorDBService: this.vectorDBService,
@@ -64,6 +65,7 @@ export abstract class StepBasedAgent extends Agent {
             vectorDB: this.vectorDBService,
             modelHelpers: new ModelHelpers({
                 llmService: this.llmService,
+                llmServices: this.llmServices,
                 userId: this.userId,
                 messagingHandle: this.messagingHandle,
                 purpose: this.modelHelpers.getPurpose(),

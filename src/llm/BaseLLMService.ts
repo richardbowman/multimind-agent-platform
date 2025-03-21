@@ -2,7 +2,7 @@ import { ChatPost, Message } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { ILLMService, LLMOptions, LLMRequestParams, LLMTool, StructuredOutputPrompt } from "./ILLMService";
 import { LLMCallLogger } from "./LLMLogger";
-import { ModelType } from "./LLMServiceFactory";
+import { ModelType } from "./types/ModelType";
 import { ModelInfo } from "./types";
 import { PromptBuilder } from "./promptBuilder";
 
@@ -16,6 +16,7 @@ export abstract class BaseLLMService implements ILLMService {
     abstract countTokens(content: string): Promise<number>;
     abstract getAvailableModels(): Promise<ModelInfo[]>;
     abstract shutdown(): Promise<void>;
+    abstract providerType(): string;
 
     constructor(name: string) {
         this.logger = new LLMCallLogger(name);
@@ -43,7 +44,10 @@ export abstract class BaseLLMService implements ILLMService {
             messages,
             systemPrompt: instructions,
             modelType: opts?.modelType,
-            context: opts?.context
+            context: {
+                ...opts?.context,
+                ...this.providerType ? {provider: this.providerType()}: {}
+            }
         });
 
         return typeof result === "string" ? {message: result as string} as T : result.response;

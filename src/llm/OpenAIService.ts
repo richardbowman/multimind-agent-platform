@@ -10,7 +10,7 @@ import Logger from "src/helpers/logger";
 import { error } from "console";
 import { Settings } from "src/tools/settings";
 import { isObject } from "src/types/types";
-import { ModelType } from "./LLMServiceFactory";
+import { ModelType } from "./types/ModelType";
 
 
 export class OpenAIService extends BaseLLMService {
@@ -34,8 +34,8 @@ export class OpenAIService extends BaseLLMService {
     }
 
 
-    constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings) {
-        super("openai");
+    constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings, private serviceName: string = "openai") {
+        super(serviceName);
         const configuration: ClientOptions = ({
             apiKey: apiKey,
             baseURL: baseUrl
@@ -43,6 +43,10 @@ export class OpenAIService extends BaseLLMService {
         this.client = new OpenAI(configuration);
         this.embeddingModel = embeddingModel;
         this.settings = settings;
+    }
+
+    providerType() : string {
+        return this.serviceName;
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -218,7 +222,10 @@ export class OpenAIService extends BaseLLMService {
             }
 
             const modelType = params.modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
-            const model = this.settings?.models[modelType][this.settings?.providers.chat];
+            const model = this.settings?.modelConfigs.find(c => c.type === modelType)?.model;
+            if (!model) {
+                throw new Error("Cannot find model ${modelType} in configuration");
+            }
 
             const startTime = Date.now();
             response = await this.client.chat.completions.create({

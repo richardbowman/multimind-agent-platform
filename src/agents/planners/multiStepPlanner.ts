@@ -17,7 +17,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { ContentType } from 'src/llm/promptBuilder';
 import { exec } from 'child_process';
 import { Agents } from 'src/utils/AgentLoader';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 

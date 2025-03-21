@@ -168,7 +168,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                 borderColor: 'divider'
             }}>
                 <Typography variant="h6" gutterBottom>
-                    Model Configurations
+                    {configType}
                 </Typography>
                 <IconButton
                     color="primary"
@@ -176,11 +176,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                         setEditingConfigId(-1);
                         setConfigForm(configType === 'providers' ?
                             new ProviderConfig() :
-                            {
-                                type: 'conversation',
-                                providerId: 'openrouter-default',
-                                model: ''
-                            }
+                            new ModelProviderConfig()
                         );
                     }}
                     sx={{

@@ -7,7 +7,7 @@ import { ArtifactManager } from "src/tools/artifactManager";
 import { Artifact, ArtifactType } from "src/tools/artifact";
 import { ModelHelpers } from "src/llm/modelHelpers";
 import { ContentType } from "src/llm/promptBuilder";
-import { ModelType } from "src/llm/LLMServiceFactory";
+import { ModelType } from "src/llm/types/ModelType";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { session, BrowserWindow } from 'electron';
 import { v4 as uuidv4 } from 'uuid';

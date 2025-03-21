@@ -8,7 +8,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { ModelConversation } from '../interfaces/StepExecutor';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_WEBSITE, 'Create/revise code for React-based website/app')

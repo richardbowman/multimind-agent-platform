@@ -113,7 +113,7 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
                         traceId: traceId
                     }
                 }
-                const response = await this.params.modelHelpers.generate(tracedinput);
+                const response = await this.params.modelHelpers.generate(tracedinput, this.params.llmServices);
                 return {
                     ...response,
                     metadata: {

@@ -6,25 +6,8 @@ import { LlamaCppService } from "./LlamaCppService";
 import { Settings } from "../tools/settings";
 import { OpenAIService } from "./OpenAIService";
 import { ConfigurationError } from "src/errors/ConfigurationError";
-
-export enum LLMProvider {
-    LMSTUDIO = "lmstudio",
-    BEDROCK = "bedrock",
-    ANTHROPIC = "anthropic",
-    LLAMA_CPP = "llama_cpp",
-    OPENAI = "openai",
-    OPENROUTER = "openrouter",
-    DEEPSEEK = "deepseek",
-    GITHUB = "github"
-}
-
-
-export enum ModelType {
-    CONVERSATION = "conversation",
-    REASONING = "reasoning",
-    ADVANCED_REASONING = "advancedReasoning",
-    DOCUMENT = "document"
-}
+import { ModelProviderConfig } from "src/tools/modelProviderConfig";
+import { LLMProvider } from "./types/LLMProvider";
 
 export class LLMServiceFactory {
     static createEmbeddingService(settings: Settings): IEmbeddingService {
@@ -52,13 +35,9 @@ export class LLMServiceFactory {
                 throw new Error(`Unsupported embedding provider: ${settings.providers.embeddings}`);
         }
     }
-    static createService(settings: Settings, modelType: ModelType = ModelType.CONVERSATION): ILLMService {
-        return this.createServiceByName(settings.providers?.chat, settings, modelType);
-    }
-
-    static createServiceByName(name: string, settings: Settings, modelType: ModelType = ModelType.CONVERSATION): ILLMService {
+    static createService(settings: Settings, config: ModelProviderConfig): ILLMService {
             // Create main chat service
-        switch (name) {
+        switch (config.provider) {
             case LLMProvider.LMSTUDIO:
                 return new LMStudioService(settings.llmSettings.lmStudioBaseUrl);
             case LLMProvider.BEDROCK:
@@ -69,7 +48,7 @@ export class LLMServiceFactory {
             case LLMProvider.ANTHROPIC:
                 return new AnthropicService(
                     settings.anthropic.api.key,
-                    settings.models.conversation.anthropic,
+                    config.model,
                     settings
                 );
             case LLMProvider.LLAMA_CPP:
@@ -92,7 +71,8 @@ export class LLMServiceFactory {
                     settings.openrouter.api.key,
                     undefined,
                     "https://openrouter.ai/api/v1",
-                    settings
+                    settings,
+                    config.provider
                 );
             case LLMProvider.DEEPSEEK:
                 if (!settings.deepseek?.api?.key) {
@@ -102,7 +82,8 @@ export class LLMServiceFactory {
                     settings.deepseek?.api.key,
                     undefined,
                     "https://api.deepseek.com/v1",
-                    settings
+                    settings,
+                    config.provider
                 );
             case LLMProvider.GITHUB:
                 if (!settings.github?.api?.key) {
@@ -112,7 +93,8 @@ export class LLMServiceFactory {
                     settings.github.api.key,
                     undefined,
                     "https://models.inference.ai.azure.com",
-                    settings
+                    settings,
+                    config.provider
                 );
             default:
                 throw new ConfigurationError(`Unsupported chat provider: ${settings.providers.chat}`);

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef, useMemo } from 'react';
 
-interface ToolbarAction {
+export interface ToolbarAction {
     id: string;
     icon: ReactNode;
     label: string;

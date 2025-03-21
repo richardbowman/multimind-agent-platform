@@ -5,7 +5,7 @@ import { AsyncQueue } from "../helpers/asyncQueue";
 import { BaseLLMService } from "./BaseLLMService";
 import JSON5 from 'json5';
 import Anthropic from '@anthropic-ai/sdk';
-import { ModelType } from "./LLMServiceFactory";
+import { ModelType } from "./types/ModelType";
 import { Settings } from "src/tools/settings";
 
 export class AnthropicService extends BaseLLMService {

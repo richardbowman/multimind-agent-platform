@@ -1,9 +1,13 @@
 import { useDropzone } from 'react-dropzone';
 import React, { useState, useEffect } from 'react';
 import { ModelInfo } from '../../../../llm/types';
-import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider, Dialog, DialogTitle, DialogContent, Button, CircularProgress } from '@mui/material';
+import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider, CircularProgress } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
+import './ModelSelector.css';
+import { useIPCService } from '../contexts/IPCContext';
+import { ClientError } from '../../../../shared/RPCInterface';
+import { useSnackbar } from '../contexts/SnackbarContext';
 
 // Helper function to convert ArrayBuffer to base64
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -15,12 +19,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
     }
     return window.btoa(binary);
 }
-import './ModelSelector.css';
-import { useIPCService } from '../contexts/IPCContext';
-import { useDataContext } from '../contexts/DataContext';
-import { ClientError } from '../../../../shared/RPCInterface';
-import { useSnackbar } from '../contexts/SnackbarContext';
-import { BrowserElectron } from '../../../../browserExport';
 // import { webUtils } from 'electron';
 
 interface ModelSelectorProps {
@@ -42,7 +40,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
     const [uploadError, setUploadError] = useState<string>('');
 
     useEffect(() => {
-        loadModels();
+        if (provider) {
+            loadModels();
+        }
     }, [provider]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -171,7 +171,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
 
                 <Box className="model-list-container">
                     <List>
-                        {models.map((model) => (
+                        {models?.map((model) => (
                             <React.Fragment key={model.id}>
                                 <ListItem
                                     onClick={() => handleSelect(model)}

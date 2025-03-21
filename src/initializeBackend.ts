@@ -1,4 +1,5 @@
-import { LLMServiceFactory, ModelType } from "./llm/LLMServiceFactory";
+import { LLMServiceFactory } from "./llm/LLMServiceFactory";
+import { ModelType } from "./llm/types/ModelType";
 import { LocalChatStorage, LocalTestClient } from "./chat/localChatClient";
 import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
@@ -32,16 +33,20 @@ declare global {
     }
 }
 
-async function createLLMServices(settings: Settings): Promise<Record<string, ILLMService>> {
+async function createLLMServices(settings: Settings): Promise<Record<ModelType, ILLMService>> {
     const services: Record<string, ILLMService> = {};
     const providerInstances: Record<string, ILLMService> = {};
     
     for (const config of settings.modelConfigs) {
         try {
+            if (!Object.values(ModelType).includes(config.type)) {
+                Logger.info(`Invalid model type ${config.type} service for provider ${config.provider}, skipping...`);
+            }
+
             // Reuse provider instance if it exists
             let service = providerInstances[config.provider];
             if (!service) {
-                service = LLMServiceFactory.createService(settings, config.provider);
+                service = LLMServiceFactory.createService(settings, config);
                 providerInstances[config.provider] = service;
             }
             
@@ -49,7 +54,7 @@ async function createLLMServices(settings: Settings): Promise<Record<string, ILL
             await service.initializeChatModel(config.model);
             
             // Store the service using a combination of type and provider as the key
-            const serviceKey = `${config.type}-${config.provider}`;
+            const serviceKey = config.type;
             services[serviceKey] = service;
             
             Logger.info(`Initialized ${config.type} service for provider ${config.provider}`);
@@ -99,8 +104,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         const llmServices = await createLLMServices(_s);
         
         // Get the primary chat service
-        const chatServiceKey = `conversation-${_s.providers.chat}`;
-        const chatService = llmServices[chatServiceKey];
+        const chatService = llmServices.conversation;
         if (!chatService) {
             throw new ConfigurationError(`No chat service found for provider ${_s.providers.chat}`);
         }
@@ -172,7 +176,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         // Load all agents dynamically
         const jsonAgentObjects = await AgentLoader.loadAgents({
-            llmService: chatService,
+            llmServices,
             vectorDBService: vectorDB,
             taskManager: tasks,
             artifactManager,
@@ -183,7 +187,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         // Load all agents dynamically
         const markdownAgentObjects = await AgentLoader.loadMarkdownConfigurableAgents({
-            llmService: chatService,
+            llmServices,
             vectorDBService: vectorDB,
             taskManager: tasks,
             artifactManager,

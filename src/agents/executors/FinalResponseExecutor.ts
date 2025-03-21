@@ -10,7 +10,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ModelType } from "src/llm/types/ModelType";
 import { ContentType } from 'src/llm/promptBuilder';
 import { ScrapeResult, ScrapeStepResponse } from './WebScrapeExecutor';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';

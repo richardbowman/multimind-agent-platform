@@ -1,7 +1,7 @@
 import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
-import { ModelType } from "./LLMServiceFactory";
+import { ModelType } from "./types/ModelType";
 import { ModelInfo } from "./types";
 import { PromptBuilder } from "./promptBuilder";
 import { UUID } from "src/types/uuid";
@@ -33,7 +33,11 @@ export interface LLMOptions extends Record<string, any> {
     context: LLMContext;
 }
 
+export type LLMServices = Record<ModelType, ILLMService>; 
+
 export interface ILLMService {
+    providerType() : string;
+
     shutdown(): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
@@ -95,6 +99,7 @@ export interface LLMContext {
     taskId?: string;
     projectId?: string;
     goal?: string;
+    provider?: string;
     stepGoal?: string;
 }
 
@@ -105,6 +110,7 @@ export interface LLMRequestParams {
     parseJSON?: boolean;
     modelType?: ModelType;
     embeddingFunction?: IEmbeddingFunction;
+    provider?: string;
     context?: LLMContext;
 }
 

@@ -1,16 +1,7 @@
+import { ModelType } from "src/llm/types/ModelType";
 import { ClientSettings } from './settingsDecorators';
+import { LLMProvider } from "src/llm/types/LLMProvider";
 
-export const appDefaultModelConfigs = [
-    {
-        type: 'conversation',
-        provider: 'openrouter',
-        model: 'google/gemini-2.0-flash-001',
-        baseUrl: '',
-        maxTokensPerMinute: 20000,
-        defaultDelayMs: 1000,
-        windowSizeMs: 60000
-    }
-];
 
 export class ModelByProvider {
     @ClientSettings({
@@ -68,36 +59,32 @@ export class ModelByProvider {
         description: 'Model identifier for GitHub Models'
     })
     github: string = 'gpt-4';
-
-    @ClientSettings({
-        label: 'Llama.cpp Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model path for Llama.cpp'
-    })
-    llama_cpp: string = 'MaziyarPanahi/Qwen2-1.5B-Instruct-GGUF/Qwen2-1.5B-Instruct.Q4_K_S.gguf';
-
-    @ClientSettings({
-        label: 'Advanced Reasoning Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model for complex reasoning and problem solving tasks'
-    })
-    advancedReasoning: string = 'anthropic/claude-3-opus';
 }
 
-export const defaults = {
-    'openrouter': {
+export const modelConfigDefaults: Record<LLMProvider, ModelProviderConfig[]> = {
+    openrouter: [{
         model: 'google/gemini-2.0-flash-001',
-        baseUrl: '',
-        maxTokensPerMinute: 20000,
-        defaultDelayMs: 1000,
-        windowSizeMs: 60000
+        provider: 'openrouter',
+        type: ModelType.CONVERSATION
+    }],
+    lmstudio: [{
+        model: 'MaziyarPanahi/Qwen2-1.5B-Instruct-GGUF/Qwen2-1.5B-Instruct.Q4_K_S.gguf',
+        provider: 'lmstudio',
+        type: ModelType.CONVERSATION
+    }],
+    anthropic: [{
+        model: 'anthropic/claude-3-opus',
+        provider: 'anthropic',
+        type: ModelType.ADVANCED_REASONING
     },
-    'lmstudio': {
-        baseUrl: 'ws://localhost:1234'
+    {
+        model: 'claude-3-5-sonnet-20241022',
+        provider: 'anthropic',
+        type: ModelType.CONVERSATION
     }
+    ]
 }
+//baseUrl: 'ws://localhost:1234'
 
 export class ModelProviderConfig {
     @ClientSettings({
@@ -107,7 +94,7 @@ export class ModelProviderConfig {
         options: ['conversation', 'reasoning', 'advancedReasoning', 'document', 'embeddings'],
         description: 'Type of model configuration'
     })
-    type: string;
+    type: ModelType = ModelType.CONVERSATION;
 
     @ClientSettings({
         label: 'Provider',
@@ -124,36 +111,4 @@ export class ModelProviderConfig {
         description: 'Model identifier for the selected provider'
     })
     model: string = '';
-
-    @ClientSettings({
-        label: 'Base URL',
-        category: 'LLM Settings',
-        type: 'string',
-        description: 'Custom API endpoint for the provider'
-    })
-    baseUrl: string = '';
-
-    @ClientSettings({
-        label: 'Max Tokens',
-        category: 'Rate Limiting',
-        type: 'number',
-        description: 'Maximum tokens per minute for this provider'
-    })
-    maxTokensPerMinute: number = 20000;
-
-    @ClientSettings({
-        label: 'Default Delay (ms)',
-        category: 'Rate Limiting',
-        type: 'number',
-        description: 'Default delay between requests'
-    })
-    defaultDelayMs: number = 1000;
-
-    @ClientSettings({
-        label: 'Window Size (ms)',
-        category: 'Rate Limiting',
-        type: 'number',
-        description: 'Time window for rate limiting'
-    })
-    windowSizeMs: number = 60000;
 }
