@@ -134,10 +134,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                 newConfigs.push(configForm);
             }
             
-            onSettingsChange({
-                ...settings,
-                modelConfigs: newConfigs
-            });
+            onSettingsChange(newConfigs);
         }
         
         setEditingConfigId(null);
