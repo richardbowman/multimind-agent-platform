@@ -1,6 +1,7 @@
 import { UUID } from 'src/types/uuid';
 import { ClientSettings } from './settingsDecorators';
 import { ChatHandle } from 'src/types/chatHandle';
+import { ModelProviderConfig } from './modelProviderConfig';
 
 export class BedrockConfig {
     @ClientSettings({
@@ -118,79 +119,6 @@ export class EmbeddingsModelByProvider {
     lmstudio: string = 'text-embedding-nomic-embed-text-v1.5';
 }
 
-export class ModelByProvider {
-    @ClientSettings({
-        label: 'LM Studio Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model path or identifier for LM Studio'
-    })
-    lmstudio: string = 'qwen2.5-coder-14b-instruct';
-
-    @ClientSettings({
-        label: 'Anthropic Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model identifier for Anthropic'
-    })
-    anthropic: string = 'claude-3-5-sonnet-20241022';
-
-    @ClientSettings({
-        label: 'Bedrock Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model identifier for AWS Bedrock'
-    })
-    bedrock: string = 'anthropic.claude-3-sonnet-20240229-v1:0';
-
-    @ClientSettings({
-        label: 'OpenAI Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model identifier for OpenAI'
-    })
-    openai: string = 'gpt-4-turbo-preview';
-
-    @ClientSettings({
-        label: 'OpenRouter Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model identifier for OpenRouter'
-    })
-    openrouter: string = 'qwen/qwen-2.5-72b-instruct';
-
-    @ClientSettings({
-        label: 'DeepSeek Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model identifier for DeepSeek',
-    })
-    deepseek: string = 'deepseek-chat';
-
-    @ClientSettings({
-        label: 'GitHub Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model identifier for GitHub Models'
-    })
-    github: string = 'gpt-4';
-
-    @ClientSettings({
-        label: 'Llama.cpp Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model path for Llama.cpp'
-    })
-    llama_cpp: string = 'MaziyarPanahi/Qwen2-1.5B-Instruct-GGUF/Qwen2-1.5B-Instruct.Q4_K_S.gguf';
-
-    @ClientSettings({
-        label: 'Advanced Reasoning Model',
-        category: 'LLM Settings',
-        type: 'select',
-        description: 'Model for complex reasoning and problem solving tasks'
-    })
-    advancedReasoning: string = 'anthropic/claude-3-opus';
-}
 
 export enum PlannerType {
     NextStep = "nextStep"
@@ -220,48 +148,6 @@ export interface AgentConfig {
     stepSequences?: StepSequenceConfig[];
 }
 
-export class LLMModels {
-    @ClientSettings({
-        label: 'Conversation Models',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'Models for conversation tasks'
-    })
-    conversation: ModelByProvider = new ModelByProvider();
-
-    @ClientSettings({
-        label: 'Reasoning Models',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'Models for reasoning tasks'
-    })
-    reasoning: ModelByProvider = new ModelByProvider();
-
-    @ClientSettings({
-        label: 'Advanced Reasoning Models',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'Models for complex reasoning and problem solving tasks'
-    })
-    advancedReasoning: ModelByProvider = new ModelByProvider();
-
-    @ClientSettings({
-        label: 'Document Models',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'Models for document processing tasks'
-    })
-    document: ModelByProvider = new ModelByProvider();
-
-    @ClientSettings({
-        label: 'Embeddings Models',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'Models for generating embeddings'
-    })
-    embeddings: EmbeddingsModelByProvider = new EmbeddingsModelByProvider();
-}
-
 export class APIConfig {
     @ClientSettings({
         label: 'API Key',
@@ -288,14 +174,6 @@ export interface AgentDefinition {
 }
 
 export class ProvidersConfig {
-    @ClientSettings({
-        label: 'Chat Provider',
-        category: 'LLM Settings',
-        type: 'select',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek', 'github']
-    })
-    chat: string = 'openrouter';
-
     @ClientSettings({
         label: 'Embeddings Provider',
         category: 'Embeddings',
@@ -334,7 +212,7 @@ export class AgentBuilderConfig {
 
     @ClientSettings({
         label: 'Description',
-        category: 'Agentsf',
+        category: 'Agents',
         type: 'string'
     })
     description: string = '';
@@ -429,12 +307,11 @@ export class SQLiteVecSettings{
     journalMode: string = 'WAL';
 };
 
-import { ModelProviderConfig } from './modelProviderConfig';
 
 export class Settings {
     @ClientSettings({
         label: 'Model Configurations',
-        category: 'LLM Settings',
+        category: 'Models',
         type: 'Models',
         description: 'Configure different model types and their providers'
     })
