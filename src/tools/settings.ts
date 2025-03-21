@@ -308,7 +308,38 @@ export class SQLiteVecSettings{
 };
 
 
+export interface ProviderConfig {
+    id: string;
+    type: string;
+    baseUrl: string;
+    apiKey?: string;
+    rateLimiting?: {
+        maxTokensPerMinute: number;
+        defaultDelayMs: number;
+        windowSizeMs: number;
+    };
+}
+
 export class Settings {
+    @ClientSettings({
+        label: 'Providers',
+        category: 'Models',
+        type: 'section',
+        description: 'Configure provider connections'
+    })
+    providers: ProviderConfig[] = [
+        {
+            id: 'openrouter-default',
+            type: 'openrouter',
+            baseUrl: 'https://openrouter.ai/api/v1',
+            rateLimiting: {
+                maxTokensPerMinute: 20000,
+                defaultDelayMs: 1000,
+                windowSizeMs: 60000
+            }
+        }
+    ];
+
     @ClientSettings({
         label: 'Model Configurations',
         category: 'Models',
@@ -318,12 +349,8 @@ export class Settings {
     modelConfigs: ModelProviderConfig[] = [
         {
             type: 'conversation',
-            provider: 'openrouter',
-            model: '',
-            baseUrl: '',
-            maxTokensPerMinute: 20000,
-            defaultDelayMs: 1000,
-            windowSizeMs: 60000
+            providerId: 'openrouter-default',
+            model: ''
         }
     ];
 

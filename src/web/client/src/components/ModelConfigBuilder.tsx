@@ -78,12 +78,8 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
         setEditingConfigId(null);
         setConfigForm({
             type: 'conversation',
-            provider: 'openrouter',
-            model: '',
-            baseUrl: '',
-            maxTokensPerMinute: 20000,
-            defaultDelayMs: 1000,
-            windowSizeMs: 60000
+            providerId: 'openrouter-default',
+            model: ''
         });
     };
 
@@ -228,18 +224,15 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                         <FormControl fullWidth margin="normal">
                             <InputLabel>Provider</InputLabel>
                             <Select
-                                value={configForm.provider}
+                                value={configForm.providerId}
                                 label="Provider"
-                                onChange={(e) => handleFormChange('provider', e.target.value)}
+                                onChange={(e) => handleFormChange('providerId', e.target.value)}
                             >
-                                <MenuItem value="lmstudio">LM Studio</MenuItem>
-                                <MenuItem value="anthropic">Anthropic</MenuItem>
-                                <MenuItem value="bedrock">Bedrock</MenuItem>
-                                <MenuItem value="openai">OpenAI</MenuItem>
-                                <MenuItem value="openrouter">OpenRouter</MenuItem>
-                                <MenuItem value="llama_cpp">Llama.cpp</MenuItem>
-                                <MenuItem value="deepseek">DeepSeek</MenuItem>
-                                <MenuItem value="github">GitHub</MenuItem>
+                                {settings.providers.map(provider => (
+                                    <MenuItem key={provider.id} value={provider.id}>
+                                        {provider.type} ({provider.id})
+                                    </MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
 
