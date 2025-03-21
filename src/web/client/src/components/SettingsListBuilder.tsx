@@ -124,19 +124,14 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     const handleSaveConfig = () => {
         let newConfigs;
         
-        if (configType === 'providers') {
-            newConfigs = [...settings.providers || []];
-            
-            // Apply provider-specific defaults if needed
-            const providerType = configForm.type;
-            if (providerType && PROVIDER_CONFIG_DEFAULTS[providerType]) {
-                configForm = {
-                    ...PROVIDER_CONFIG_DEFAULTS[providerType],
-                    ...configForm
-                };
-            }
-        } else {
-            newConfigs = [...settings.modelConfigs || []];
+        const newConfigs = [...settings[configType] || []];
+        
+        // Apply defaults if needed
+        if (defaults && configForm.type && defaults[configForm.type]) {
+            configForm = {
+                ...defaults[configForm.type],
+                ...configForm
+            };
         }
         
         if (editingConfigId !== null && editingConfigId >= 0) {
@@ -147,14 +142,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
             newConfigs.push(configForm);
         }
         
-        if (configType === 'providers') {
-            onSettingsChange({
-                ...settings,
-                providers: newConfigs
-            });
-        } else {
-            onSettingsChange(newConfigs);
-        }
+        onSettingsChange(newConfigs);
         
         setEditingConfigId(null);
         setConfigForm(new configClass());
