@@ -311,6 +311,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const categoryOrder = [
         'API Keys',
         'LLM Settings', 
+        'Models',
         'Embeddings',
         'Search Settings',
         'Agents',
