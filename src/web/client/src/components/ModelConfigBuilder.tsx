@@ -224,7 +224,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                                 label="Provider"
                                 onChange={(e) => handleFormChange('providerId', e.target.value)}
                             >
-                                {settings.providers.map(provider => (
+                                {settings.providers?.map(provider => (
                                     <MenuItem key={provider.id} value={provider.id}>
                                         {provider.type} ({provider.id})
                                     </MenuItem>
