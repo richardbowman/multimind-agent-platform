@@ -228,11 +228,11 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
                     rows={configType === 'providers' ?
-                        settings?.providers?.map((config, index) => ({
+                        (settings?.providers || []).map((config, index) => ({
                             id: index,
                             ...config
                         })) :
-                        settings?.modelConfigs?.map((config, index) => ({
+                        (settings?.modelConfigs || []).map((config, index) => ({
                             id: index,
                             ...config
                         }))

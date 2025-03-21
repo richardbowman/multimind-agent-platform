@@ -205,7 +205,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                 }}
                             >
                                 <SettingsListBuilder
-                                    settings={settings}
+                                    settings={settings || {}}
                                     onSettingsChange={(settings) => {onSettingChange(metadataList[0].key, settings)}}
                                     configType={metadataList[0].key}  
                                 />
