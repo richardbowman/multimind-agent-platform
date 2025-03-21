@@ -167,7 +167,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
-                    rows={settings.modelConfigs.map((config, index) => ({
+                    rows={settings?.modelConfigs?.map((config, index) => ({
                         id: index,
                         ...config
                     }))}
