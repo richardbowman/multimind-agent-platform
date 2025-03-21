@@ -20,7 +20,7 @@ export type FilterValue =
     | number[];
 
 export interface FilterCriteria {
-    [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria[];
+    [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria;
     $and?: FilterCriteria[];
     $or?: FilterCriteria[];
     $nor?: FilterCriteria[];
