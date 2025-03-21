@@ -108,32 +108,28 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     };
 
     const handleSaveConfig = () => {
+        let newConfigs;
+        
         if (configType === 'providers') {
-            const newProviders = [...settings.providers];
-            
-            if (editingConfigId !== null && editingConfigId >= 0) {
-                // Editing existing provider
-                newProviders[editingConfigId] = configForm;
-            } else {
-                // Adding new provider
-                newProviders.push(configForm);
-            }
-            
+            newConfigs = [...settings.providers || []];
+        } else {
+            newConfigs = [...settings.modelConfigs || []];
+        }
+        
+        if (editingConfigId !== null && editingConfigId >= 0) {
+            // Editing existing config
+            newConfigs[editingConfigId] = configForm;
+        } else {
+            // Adding new config
+            newConfigs.push(configForm);
+        }
+        
+        if (configType === 'providers') {
             onSettingsChange({
                 ...settings,
-                providers: newProviders
+                providers: newConfigs
             });
         } else {
-            const newConfigs = [...settings.modelConfigs];
-            
-            if (editingConfigId !== null && editingConfigId >= 0) {
-                // Editing existing config
-                newConfigs[editingConfigId] = configForm;
-            } else {
-                // Adding new config
-                newConfigs.push(configForm);
-            }
-            
             onSettingsChange(newConfigs);
         }
         
@@ -147,10 +143,14 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     const handleDeleteConfig = (index: number) => {
         const newConfigs = [...settings.modelConfigs];
         newConfigs.splice(index, 1);
-        onSettingsChange({
-            ...settings,
-            modelConfigs: newConfigs
-        });
+        if (configType === 'providers') {
+            onSettingsChange({
+                ...settings,
+                providers: newConfigs
+            });
+        } else {
+            onSettingsChange(newConfigs);
+        }
     };
 
     const columns = useMemo(() => {
