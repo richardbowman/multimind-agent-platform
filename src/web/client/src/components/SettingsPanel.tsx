@@ -292,7 +292,10 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             settings={settings}
                             metadata={metadata}
                             onSettingChange={handleChange}
-                            onModelSelect={(key, provider) => setModelDialog({ open: true, key, provider })}
+                            onModelSelect={(key, provider) => {
+                                console.log('Opening model selector for:', key, provider);
+                                setModelDialog({ open: true, key, provider });
+                            }}
                         />
                     </ScrollView> {/* End of scrollable content */}
                 </Box>
@@ -444,6 +447,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     <ModelSelector
                         value={getNestedValue(settings, modelDialog.key)}
                         onChange={(newValue) => {
+                            console.log('Selected model:', newValue);
                             handleChange(modelDialog.key, newValue);
                             setModelDialog(prev => ({ ...prev, open: false }));
                         }}
