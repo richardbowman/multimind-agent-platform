@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ErrorInfo } from 'react';
 import {
     Box, Typography,
     TextField,
@@ -21,6 +21,39 @@ interface SettingsFormBuilderProps {
     onSettingChange: (key: string, value: string | number | boolean) => void;
     onModelSelect: (key: string, provider: string) => void;
 }
+
+interface ErrorBoundaryProps {
+    fallback: React.ReactNode;
+    onError?: (error: Error, errorInfo: ErrorInfo) => void;
+    children: React.ReactNode;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
+    state = { hasError: false };
+
+    static getDerivedStateFromError() {
+        return { hasError: true };
+    }
+
+    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+        this.props.onError?.(error, errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return this.props.fallback;
+        }
+        return this.props.children;
+    }
+}
+
+const ModelConfigErrorFallback = () => (
+    <Box sx={{ p: 2, border: '1px solid', borderColor: 'error.main', borderRadius: 1 }}>
+        <Typography color="error">
+            Error loading model configurations. Try resetting to factory defaults.
+        </Typography>
+    </Box>
+);
 
 export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
     settings,
@@ -169,13 +202,20 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                             <Typography variant="h6" gutterBottom>
                                 {category}
                             </Typography>
-                            <ModelConfigBuilder
-                                settings={settings}
-                                onSettingsChange={(newSettings) => {
-                                    // Update settings in parent component
-                                    onSettingChange('modelConfigs', newSettings.modelConfigs);
+                            <ErrorBoundary
+                                fallback={<ModelConfigErrorFallback />}
+                                onError={(error, errorInfo) => {
+                                    console.error('Error in ModelConfigBuilder:', error, errorInfo);
                                 }}
-                            />
+                            >
+                                <ModelConfigBuilder
+                                    settings={settings}
+                                    onSettingsChange={(newSettings) => {
+                                        // Update settings in parent component
+                                        onSettingChange('modelConfigs', newSettings.modelConfigs);
+                                    }}
+                                />
+                            </ErrorBoundary>
                         </Box>
                     );
                 }
