@@ -12,6 +12,7 @@ import {
     Slider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { ModelConfigBuilder } from './ModelConfigBuilder';
 
 interface SettingsFormBuilderProps {
     settings: any;
