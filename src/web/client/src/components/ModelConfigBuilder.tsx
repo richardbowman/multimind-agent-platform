@@ -16,8 +16,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Stack
+    Stack,
+    InputAdornment
 } from '@mui/material';
+import ModelSelector from './ModelSelector';
+import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
@@ -34,6 +37,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     onSettingsChange
 }) => {
     const [editingConfigId, setEditingConfigId] = useState<number | null>(null);
+    const [showModelSelector, setShowModelSelector] = useState(false);
     const [configForm, setConfigForm] = useState<any>({
         type: 'conversation',
         provider: 'openrouter',
@@ -236,7 +240,37 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                             onChange={(e) => handleFormChange('model', e.target.value)}
                             fullWidth
                             margin="normal"
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={() => setShowModelSelector(true)}
+                                            edge="end"
+                                        >
+                                            <SearchIcon />
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
                         />
+                        <Dialog
+                            open={showModelSelector}
+                            onClose={() => setShowModelSelector(false)}
+                            maxWidth="md"
+                            fullWidth
+                        >
+                            <DialogTitle>Select Model</DialogTitle>
+                            <DialogContent>
+                                <ModelSelector
+                                    provider={configForm.provider}
+                                    value={configForm.model}
+                                    onChange={(value) => {
+                                        handleFormChange('model', value);
+                                        setShowModelSelector(false);
+                                    }}
+                                />
+                            </DialogContent>
+                        </Dialog>
 
                         <TextField
                             label="Base URL"
