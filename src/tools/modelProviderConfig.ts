@@ -2,7 +2,7 @@ import { ModelType } from "src/llm/types/ModelType";
 import { ClientSettings } from './settingsDecorators';
 import { LLMProvider } from "src/llm/types/LLMProvider";
 
-export class ModelProviderConfig< {
+export class ModelProviderConfig {
     @ClientSettings({
         label: 'Model Type',
         category: 'LLM Settings',

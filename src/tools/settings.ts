@@ -1,7 +1,7 @@
 import { UUID } from 'src/types/uuid';
 import { ClientSettings } from './settingsDecorators';
 import { ChatHandle } from 'src/types/chatHandle';
-import { modelConfigDefaults, ModelProviderConfig } from './modelProviderConfig';
+import { MODEL_CONFIG_DEFAULT, ModelProviderConfig } from './modelProviderConfig';
 import { PROVIDER_CONFIG_DEFAULT, ProviderConfig } from './providerConfig';
 
 export class BedrockConfig {
@@ -182,8 +182,7 @@ export class LLMSettings {
     @ClientSettings({
         label: 'LM Studio Base URL',
         category: 'LLM Settings',
-        type: 'string',
-        visibleWhen: (settings: Settings) => settings.providers?.chat === 'lmstudio'
+        type: 'string'
     })
     lmStudioBaseUrl: string = 'ws://localhost:1234';
 
@@ -311,7 +310,7 @@ export class Settings {
         type: 'Models',
         description: 'Configure different model types and their providers'
     })
-    modelConfigs: ModelProviderConfig[] = modelConfigDefaults.lmstudio;
+    modelConfigs: ModelProviderConfig[] = MODEL_CONFIG_DEFAULT;
 
     @ClientSettings({
         label: 'Text-to-Speech',

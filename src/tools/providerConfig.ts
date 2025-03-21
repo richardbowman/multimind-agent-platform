@@ -59,10 +59,32 @@ export class LMStudioProviderConfig extends ProviderConfig {
     llama_cpp_execution_mode: string = 'Auto';
 }
 
+export const PROVIDER_CONFIG_DEFAULTS : Record<LLMProvider, ProviderConfig> = {
+    [LLMProvider.ANTHROPIC]: {
+        type: LLMProvider.ANTHROPIC,
+        baseUrl: 'https://api.anthropic.com/v1'                                                                                      
+    },
+    [LLMProvider.OPENROUTER]: {
+        type: LLMProvider.OPENROUTER,
+        baseUrl: 'https://openrouter.ai/api/v1'                                                                                             
+    },
+    [LLMProvider.OPENAI]: {
+        type: LLMProvider.OPENAI,
+        baseUrl: 'https://api.openai.com/v1'                                                                                          
+    },
+    [LLMProvider.DEEPSEEK]: {
+        type: LLMProvider.DEEPSEEK,
+        baseUrl: 'https://api.deepseek.com/v1'                                                                                             
+    },
+    [LLMProvider.LMSTUDIO]: {
+        type: LLMProvider.LMSTUDIO,
+        baseUrl: 'http://127.0.0.1:1234'
+    }
+}
+
 export const PROVIDER_CONFIG_DEFAULT: ProviderConfig[] = [
     {
-        id: 'openrouter-default',
-        type: 'openrouter',
+        type: LLMProvider.OPENROUTER,
         baseUrl: 'https://openrouter.ai/api/v1',
         rateLimiting: {
             maxTokensPerMinute: 20000,
