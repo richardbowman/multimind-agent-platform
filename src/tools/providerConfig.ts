@@ -1,6 +1,6 @@
-import { APIConfig } from "./apiConfig";
 import { ClientSettings } from "./settingsDecorators";
 import { LLMProvider } from "../llm/types/LLMProvider";
+import { APIConfig } from "./settings";
 
 export class ProviderConfig extends APIConfig {
     @ClientSettings({
