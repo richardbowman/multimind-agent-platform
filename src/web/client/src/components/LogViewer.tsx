@@ -33,7 +33,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     const currentLogTypeRef = useRef(currentLogTab);
     
-    const previousLogsRef = useRef<string>('');
+    const lastLogTimestampRef = useRef<number>(0);
     
     const refreshLogs = useCallback(async () => {
         try {
@@ -44,13 +44,19 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 forceRefresh: true
             });
             
-            // Compare with previous logs
-            const currentLogsString = JSON.stringify(result);
-            if (currentLogsString !== previousLogsRef.current) {
+            // Check if we have new logs by comparing the latest timestamp
+            const latestTimestamp = result.logs[0]?.timestamp;
+            if (latestTimestamp && latestTimestamp > lastLogTimestampRef.current) {
+                lastLogTimestampRef.current = latestTimestamp;
                 setIsLoading(true);
-                previousLogsRef.current = currentLogsString;
-                setLoadedLogs([]);
-                setHasMore(true);
+                setLoadedLogs(prev => {
+                    // Only update if we have new logs
+                    const newLogs = result.logs.filter(newLog => 
+                        !prev.some(existingLog => existingLog.timestamp === newLog.timestamp)
+                    );
+                    return newLogs.length > 0 ? [...newLogs, ...prev] : prev;
+                });
+                setHasMore(result.total > result.logs.length);
                 setIsLoading(false);
             }
         } catch (error) {
@@ -67,15 +73,15 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         refreshLogs();
 
         // Set up polling interval for updates
-        // const pollInterval = setInterval(() => {
-        //     refreshLogs();
-        // }, 5000); // Poll every 5 seconds
+        const pollInterval = setInterval(() => {
+            refreshLogs();
+        }, 10000); // Poll every 10 seconds
 
         return () => {
             logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
-            // clearInterval(pollInterval);
+            clearInterval(pollInterval);
         };
-    }, [currentLogTab, refreshLogs, logger]);
+    }, [currentLogTab, logger]); // Remove refreshLogs from dependencies
 
     const filterLog = (content: string) => {
         if (!filterText) return true;
@@ -145,17 +151,17 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     }, [hasMore, isLoadingMore, loadMoreLogs]);
 
     useEffect(() => {
-        // Reset loaded logs when log type, filter, or verbose toggle changes
-        setLoadedLogs([]);
-        setHasMore(true);
-        
+        // Only reset logs if log type changes
         if (currentLogTab === 'llm') {
             // LLM logs are already loaded in full
+            setLoadedLogs([]);
             setHasMore(false);
         } else {
+            setLoadedLogs([]);
+            setHasMore(true);
             loadMoreLogs();
         }
-    }, [currentLogTab, filterText, verboseToggleTimestamp]);
+    }, [currentLogTab]); // Remove filterText and verboseToggleTimestamp from dependencies
 
     // Track open/closed state for LLM log entries
     const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
