@@ -18,17 +18,17 @@ import { Settings } from '../../../../tools/settings';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
-import { ProviderConfig } from '../../../../tools/providerConfig';
+import { PROVIDER_CONFIG_DEFAULTS, ProviderConfig } from '../../../../tools/providerConfig';
 import { LLMProvider } from '../../../../llm/types/LLMProvider';
 
-interface ModelConfigBuilderProps {
+interface SettingsListConfigBuilderProps {
     settings: Settings;
     onSettingsChange: (settings: Settings) => void;
     configType?: 'modelConfigs' | 'providers';
     configKey?: string;
 }
 
-export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
+export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     settings,
     configType,
     onSettingsChange
@@ -38,28 +38,7 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [configForm, setConfigForm] = useState<any>({});
 
     // Provider-specific default configurations
-    const providerDefaults = useMemo(() => ({
-        [LLMProvider.OPENROUTER]: {
-            type: LLMProvider.OPENROUTER,
-            baseUrl: 'https://openrouter.ai/api/v1',
-            model: 'openai/gpt-3.5-turbo'
-        },
-        [LLMProvider.OPENAI]: {
-            type: LLMProvider.OPENAI,
-            baseUrl: 'https://api.openai.com/v1',
-            model: 'gpt-3.5-turbo'
-        },
-        [LLMProvider.ANTHROPIC]: {
-            type: LLMProvider.ANTHROPIC,
-            baseUrl: 'https://api.anthropic.com/v1',
-            model: 'claude-3-haiku-20240307'
-        },
-        [LLMProvider.DEEPSEEK]: {
-            type: LLMProvider.DEEPSEEK,
-            baseUrl: 'https://api.deepseek.com/v1',
-            model: 'deepseek-chat'
-        }
-    }), []);
+    const providerDefaults = PROVIDER_CONFIG_DEFAULTS;
 
     const configMetadata = useMemo(() => {
         const instance = configType === 'providers' ? 
