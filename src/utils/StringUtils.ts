@@ -61,15 +61,23 @@ export namespace StringUtils {
     }
 
     export function extractCodeBlocks(text: string, type?: string): CodeBlock[] {
-        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n((?:(?!```).|[\s\S])*?)(```|$)/g;
+        // First replace any 6-backtick blocks with a placeholder
+        const placeholder = '_NESTED_CODE_';
+        const modifiedText = text.replace(/``````/g, placeholder);
+        
+        // Extract code blocks from modified text
+        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n([\s\S]*?)(```|$)/g;
         const matches: CodeBlock[] = [];
         let match: RegExpExecArray | null;
 
-        while ((match = codeBlockRegex.exec(text)) !== null) {
+        while ((match = codeBlockRegex.exec(modifiedText)) !== null) {
             // If the match ends with the closing ```, use the full match
             // If it ends with $ (end of string), it's an incomplete block
             const isComplete = match[4] === '```';
-            const code = isComplete ? match[3].trim() : match[3].trim() + '\n```';
+            let code = isComplete ? match[3].trim() : match[3].trim() + '\n```';
+            
+            // Restore any placeholders back to 3 backticks
+            code = code.replace(new RegExp(placeholder, 'g'), '```');
 
             matches.push({
                 type: match[1],
