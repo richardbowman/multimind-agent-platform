@@ -22,6 +22,8 @@ import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
 interface ModelConfigBuilderProps {
     settings: Settings;
     onSettingsChange: (settings: Settings) => void;
+    configType?: 'model' | 'provider';
+    configKey?: string;
 }
 
 export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
@@ -33,9 +35,11 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     const [configForm, setConfigForm] = useState<any>({});
 
     const configMetadata = useMemo(() => {
-        const instance = new ModelProviderConfig();
+        const instance = props.configType === 'provider' ? 
+            new ProviderConfig() : 
+            new ModelProviderConfig();
         return getClientSettingsMetadata(instance);
-    }, [settings.providers]);
+    }, [settings.providers, props.configType]);
 
     const configCategories = useMemo(() => {
         const categories: Record<string, any[]> = {};
@@ -61,26 +65,47 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     };
 
     const handleSaveConfig = () => {
-        const newConfigs = [...settings.modelConfigs];
-        
-        if (editingConfigId !== null && editingConfigId >= 0) {
-            // Editing existing config
-            newConfigs[editingConfigId] = configForm;
+        if (props.configType === 'provider') {
+            const newProviders = [...settings.providers];
+            
+            if (editingConfigId !== null && editingConfigId >= 0) {
+                // Editing existing provider
+                newProviders[editingConfigId] = configForm;
+            } else {
+                // Adding new provider
+                newProviders.push(configForm);
+            }
+            
+            onSettingsChange({
+                ...settings,
+                providers: newProviders
+            });
         } else {
-            // Adding new config
-            newConfigs.push(configForm);
+            const newConfigs = [...settings.modelConfigs];
+            
+            if (editingConfigId !== null && editingConfigId >= 0) {
+                // Editing existing config
+                newConfigs[editingConfigId] = configForm;
+            } else {
+                // Adding new config
+                newConfigs.push(configForm);
+            }
+            
+            onSettingsChange({
+                ...settings,
+                modelConfigs: newConfigs
+            });
         }
         
-        onSettingsChange({
-            ...settings,
-            modelConfigs: newConfigs
-        });
         setEditingConfigId(null);
-        setConfigForm({
-            type: 'conversation',
-            providerId: 'openrouter-default',
-            model: ''
-        });
+        setConfigForm(props.configType === 'provider' ? 
+            new ProviderConfig() : 
+            {
+                type: 'conversation',
+                providerId: 'openrouter-default',
+                model: ''
+            }
+        );
     };
 
     const handleDeleteConfig = (index: number) => {
@@ -144,11 +169,14 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                     color="primary"
                     onClick={() => {
                         setEditingConfigId(-1);
-                        setConfigForm({
-                            type: 'conversation',
-                            providerId: 'openrouter-default',
-                            model: ''
-                        });
+                        setConfigForm(props.configType === 'provider' ?
+                            new ProviderConfig() :
+                            {
+                                type: 'conversation',
+                                providerId: 'openrouter-default',
+                                model: ''
+                            }
+                        );
                     }}
                     sx={{
                         backgroundColor: 'primary.main',
@@ -164,10 +192,16 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
 
             <Box sx={{ height: 400, width: '100%' }}>
                 <DataGrid
-                    rows={settings?.modelConfigs?.map((config, index) => ({
-                        id: index,
-                        ...config
-                    }))}
+                    rows={props.configType === 'provider' ?
+                        settings?.providers?.map((config, index) => ({
+                            id: index,
+                            ...config
+                        })) :
+                        settings?.modelConfigs?.map((config, index) => ({
+                            id: index,
+                            ...config
+                        }))
+                    }
                     columns={columns}
                     pageSizeOptions={[5, 10, 25]}
                     initialState={{
