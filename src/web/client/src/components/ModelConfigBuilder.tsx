@@ -150,32 +150,22 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
         });
     };
 
-    const columns: GridColDef[] = [
-        {
-            field: 'type',
-            headerName: 'Type',
-            flex: 1,
-            renderCell: (params) => (
-                <Typography variant="body2">{params.value}</Typography>
-            )
-        },
-        {
-            field: 'provider',
-            headerName: 'Provider',
-            flex: 1,
-            renderCell: (params) => (
-                <Typography variant="body2">{params.value}</Typography>
-            )
-        },
-        {
-            field: 'model',
-            headerName: 'Model',
-            flex: 1,
-            renderCell: (params) => (
-                <Typography variant="body2">{params.value}</Typography>
-            )
-        },
-        {
+    const columns = useMemo(() => {
+        const baseColumns: GridColDef[] = Object.entries(configMetadata)
+            .filter(([_, meta]) => !meta.sensitive) // Exclude sensitive fields
+            .map(([key, meta]) => ({
+                field: key,
+                headerName: meta.label,
+                flex: 1,
+                renderCell: (params) => (
+                    <Typography variant="body2">
+                        {params.value}
+                    </Typography>
+                )
+            }));
+
+        // Add actions column
+        baseColumns.push({
             field: 'actions',
             type: 'actions',
             width: 100,
@@ -192,8 +182,10 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                     color="error"
                 />
             ]
-        }
-    ];
+        });
+
+        return baseColumns;
+    }, [configMetadata]);
 
     return (
         <Box>
