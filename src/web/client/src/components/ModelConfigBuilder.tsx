@@ -61,22 +61,20 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
     };
 
     const handleSaveConfig = () => {
-        if (editingConfigId !== null) {
-            const newConfigs = [...settings.modelConfigs];
+        const newConfigs = [...settings.modelConfigs];
+        
+        if (editingConfigId !== null && editingConfigId >= 0) {
+            // Editing existing config
             newConfigs[editingConfigId] = configForm;
-            onSettingsChange({
-                ...settings,
-                modelConfigs: newConfigs
-            });
         } else {
-            onSettingsChange({
-                ...settings,
-                modelConfigs: [
-                    ...settings.modelConfigs,
-                    configForm
-                ]
-            });
+            // Adding new config
+            newConfigs.push(configForm);
         }
+        
+        onSettingsChange({
+            ...settings,
+            modelConfigs: newConfigs
+        });
         setEditingConfigId(null);
         setConfigForm({
             type: 'conversation',
@@ -156,7 +154,18 @@ export const ModelConfigBuilder: React.FC<ModelConfigBuilderProps> = ({
                 </Typography>
                 <IconButton
                     color="primary"
-                    onClick={() => setEditingConfigId(-1)}
+                    onClick={() => {
+                        setEditingConfigId(-1);
+                        setConfigForm({
+                            type: 'conversation',
+                            provider: 'openrouter',
+                            model: '',
+                            baseUrl: '',
+                            maxTokensPerMinute: 20000,
+                            defaultDelayMs: 1000,
+                            windowSizeMs: 60000
+                        });
+                    }}
                     sx={{
                         backgroundColor: 'primary.main',
                         color: 'primary.contrastText',
