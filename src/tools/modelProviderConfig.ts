@@ -24,7 +24,11 @@ export class ModelProviderConfig< {
         label: 'Model',
         category: 'LLM Settings',
         type: 'select',
-        description: 'Model identifier for the selected provider'
+        description: 'Model identifier for the selected provider',
+        selector: {
+            component: 'ModelSelector',
+            providerField: 'provider'
+        }
     })
     model: string = '';
 }
