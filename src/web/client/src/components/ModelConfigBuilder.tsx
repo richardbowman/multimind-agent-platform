@@ -54,13 +54,28 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
             new ProviderConfig() : 
             new ModelProviderConfig();
         const metadata = getClientSettingsMetadata(instance);
+        
         // Add key property to each metadata entry
-        return Object.fromEntries(
+        const result = Object.fromEntries(
             Object.entries(metadata).map(([key, meta]) => [
                 key,
                 { ...meta, key }
             ])
         );
+        
+        // For providers, add API config fields
+        if (configType === 'providers') {
+            const apiMetadata = getClientSettingsMetadata(new APIConfig());
+            Object.entries(apiMetadata).forEach(([key, meta]) => {
+                result[`api.${key}`] = {
+                    ...meta,
+                    key: `api.${key}`,
+                    category: 'API Configuration'
+                };
+            });
+        }
+        
+        return result;
     }, [settings.providers, configType]);
 
     // Handle provider type change to apply defaults if they exist
@@ -112,6 +127,15 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
         
         if (configType === 'providers') {
             newConfigs = [...settings.providers || []];
+            
+            // Apply provider-specific defaults if needed
+            const providerType = configForm.type;
+            if (providerType && PROVIDER_CONFIG_DEFAULTS[providerType]) {
+                configForm = {
+                    ...PROVIDER_CONFIG_DEFAULTS[providerType],
+                    ...configForm
+                };
+            }
         } else {
             newConfigs = [...settings.modelConfigs || []];
         }
@@ -141,14 +165,18 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     };
 
     const handleDeleteConfig = (index: number) => {
-        const newConfigs = [...settings.modelConfigs];
-        newConfigs.splice(index, 1);
+        let newConfigs;
+        
         if (configType === 'providers') {
+            newConfigs = [...settings.providers || []];
+            newConfigs.splice(index, 1);
             onSettingsChange({
                 ...settings,
                 providers: newConfigs
             });
         } else {
+            newConfigs = [...settings.modelConfigs || []];
+            newConfigs.splice(index, 1);
             onSettingsChange(newConfigs);
         }
     };
