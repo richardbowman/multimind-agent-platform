@@ -139,7 +139,14 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                         return (
                             <Checkbox
                                 checked={Boolean(params.value)}
-                                disabled
+                                onChange={(e) => {
+                                    const newConfigs = [...settings[configType]];
+                                    newConfigs[params.row.id] = {
+                                        ...newConfigs[params.row.id],
+                                        [key]: e.target.checked
+                                    };
+                                    onSettingsChange(newConfigs);
+                                }}
                                 sx={{ p: 0 }}
                             />
                         );
