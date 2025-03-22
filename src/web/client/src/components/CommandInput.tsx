@@ -494,50 +494,58 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                     }}
                 />
                 {tasks && tasks.length > 0 && (
-                    <div style={{
+                    <Box sx={{
                         display: 'flex',
-                        backgroundColor: '#444',
+                        backgroundColor: 'background.paper',
                         borderRadius: '6px',
                         padding: '4px',
                         marginLeft: '8px'
                     }}>
-                        <button
+                        <Box
+                            component="button"
                             onClick={() => onToggleWelcome(false)}
-                            style={{
+                            sx={{
                                 cursor: 'pointer',
                                 padding: '6px 8px',
                                 border: 'none',
                                 borderRadius: '4px',
-                                backgroundColor: showWelcome ? 'transparent' : '#646cff',
-                                color: showWelcome ? '#aaa' : '#fff',
+                                backgroundColor: showWelcome ? 'transparent' : 'primary.main',
+                                color: showWelcome ? 'text.secondary' : 'primary.contrastText',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    backgroundColor: showWelcome ? 'action.hover' : 'primary.dark'
+                                }
                             }}
                             title="Switch to Chat View"
                         >
                             <ChatIcon fontSize="small" />
-                        </button>
-                        <button
+                        </Box>
+                        <Box
+                            component="button"
                             onClick={() => onToggleWelcome(true)}
-                            style={{
+                            sx={{
                                 cursor: 'pointer',
                                 padding: '6px 8px',
                                 border: 'none',
                                 borderRadius: '4px',
-                                backgroundColor: showWelcome ? '#646cff' : 'transparent',
-                                color: showWelcome ? '#fff' : '#aaa',
+                                backgroundColor: showWelcome ? 'primary.main' : 'transparent',
+                                color: showWelcome ? 'primary.contrastText' : 'text.secondary',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                transition: 'all 0.2s ease'
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    backgroundColor: showWelcome ? 'primary.dark' : 'action.hover'
+                                }
                             }}
                             title="Switch to Welcome View"
                         >
                             <HomeIcon fontSize="small" />
-                        </button>
-                    </div>
+                        </Box>
+                    </Box>
                 )}
                 <MicrophoneButton />
             </div>
