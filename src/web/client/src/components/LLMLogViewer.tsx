@@ -246,32 +246,10 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
         refreshLogs();
     }, [refreshLogs]);
 
-    const handleOpenDetails = React.useCallback((log: any, index: number) => {
+    const handleOpenDetails = React.useCallback((log: any) => {
         setSelectedLog(log);
-        setSelectedLogIndex(prevIndex => {
-            // Only create the sorted array if we don't have one yet
-            if (allLogs.length === 0) {
-                const logsArray = logs
-                    .flatMap(([service, entries]) =>
-                        (Array.isArray(entries) ? [...entries] : [])
-                            .filter(log =>
-                                filterLog(JSON.stringify({
-                                    method: log?.method,
-                                    input: log?.input,
-                                    output: log?.output,
-                                    error: log?.error
-                                }))
-                            )
-                            .map(log => ({ ...log, service }))
-                    )
-                    .sort((a, b) => b.timestamp - a.timestamp);
-
-                setAllLogs(logsArray);
-                return logsArray.findIndex(l => l.timestamp === log.timestamp && l.service === log.service);
-            }
-            return allLogs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service);
-        });
-    }, [allLogs, logs, filterLog]);
+        setSelectedLogIndex(logs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
+    }, [logs]);
 
     const handleNavigate = (direction: 'prev' | 'next') => {
         const newIndex = direction === 'prev' ? selectedLogIndex - 1 : selectedLogIndex + 1;
