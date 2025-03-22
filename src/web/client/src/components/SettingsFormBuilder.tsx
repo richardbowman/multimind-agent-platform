@@ -12,7 +12,9 @@ import {
     Slider
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import { SettingsListBuilder } from './ModelConfigBuilder';
+import { SettingsListBuilder } from './SettingsListBuilder';
+import { PROVIDER_CONFIG_DEFAULTS, ProviderConfig } from '../../../../tools/providerConfig';
+import { MODEL_CONFIG_DEFAULTS, ModelProviderConfig } from '../../../../tools/modelProviderConfig';
 
 interface SettingsFormBuilderProps {
     settings: any;
@@ -216,9 +218,9 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                             ProviderConfig
                                     }
                                     defaults={
-                                        category === 'Providers' ? 
-                                            PROVIDER_CONFIG_DEFAULTS : 
-                                            undefined
+                                        category === 'Models' ? 
+                                            MODEL_CONFIG_DEFAULTS : 
+                                            PROVIDER_CONFIG_DEFAULTS
                                     }
                                 />
                             </ErrorBoundary>

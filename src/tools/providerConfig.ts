@@ -1,8 +1,15 @@
 import { ClientSettings } from "./settingsDecorators";
 import { LLMProvider } from "../llm/types/LLMProvider";
-import { APIConfig } from "./settings";
 
-export class ProviderConfig extends APIConfig {
+export class ProviderConfig {
+    @ClientSettings({
+        label: 'API Key',
+        category: 'API Keys',
+        type: 'string',
+        sensitive: true
+    })
+    key: string = "";
+
     @ClientSettings({
         label: 'Provider Type',
         category: 'LLM Settings',
