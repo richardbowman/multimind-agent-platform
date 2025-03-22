@@ -9,8 +9,10 @@ import {
     Toolbar,
     IconButton,
     Grid2 as Grid,
-    Tooltip
+    Tooltip,
+    Dialog
 } from '@mui/material';
+import { TaskDialog } from './TaskDialog';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { ScrollView } from './shared/ScrollView';
 import CloseIcon from '@mui/icons-material/Close';
@@ -59,6 +61,8 @@ export const TaskStatusPanel: React.FC = () => {
     const { tasks } = useTasks();
     const ipcService = useIPCService();
     const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
     
     // Track task positions for animation
     useEffect(() => {
@@ -215,8 +219,15 @@ export const TaskStatusPanel: React.FC = () => {
                                 >
                                     <TaskCard 
                                         task={task}
-                                        onClick={() => {}}
-                                        onCheckboxClick={() => {}}
+                                        onClick={() => {
+                                            setSelectedTask(task);
+                                            setDialogOpen(true);
+                                        }}
+                                        onCheckboxClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTask(task);
+                                            setDialogOpen(true);
+                                        }}
                                     />
                                 </ListItem>
                             ))}
@@ -226,5 +237,15 @@ export const TaskStatusPanel: React.FC = () => {
                 ))}
             </Box>
         </Box>
+        <TaskDialog
+            open={dialogOpen}
+            onClose={() => {
+                setDialogOpen(false);
+                setSelectedTask(null);
+            }}
+            selectedTask={selectedTask}
+            setSelectedTask={setSelectedTask}
+            tasks={tasks}
+        />
     );
 };
