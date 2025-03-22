@@ -8,38 +8,39 @@ import { OpenAIService } from "./OpenAIService";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { ModelProviderConfig } from "src/tools/modelProviderConfig";
 import { LLMProvider } from "./types/LLMProvider";
+import { ProviderConfig } from "src/tools/providerConfig";
 
 export class LLMServiceFactory {
-    static createEmbeddingService(settings: Settings): IEmbeddingService {
-        switch (settings.providers.embeddings) {
+    static createEmbeddingService(settings: Settings, config: ProviderConfig): IEmbeddingService {
+        switch (config.type) {
             case LLMProvider.LMSTUDIO:
-                return new LMStudioService(settings.llmSettings.lmStudioBaseUrl);
+                return new LMStudioService(config.baseUrl);
             case LLMProvider.BEDROCK:
                 return new BedrockService(
-                    settings.models.conversation.bedrock,
+                    undefined,
                     undefined
                 );
             case LLMProvider.OPENAI:
-                if (!settings.openai?.api?.key) {
+                if (!config.key) {
                     throw new Error("OpenAI API key is required for embeddings");
                 }
                 return new OpenAIService(
-                    settings.openai.api.key,
-                    settings.models.conversation.openai || "gpt-3.5-turbo",
-                    settings.models.embeddings.openai || "text-embedding-ada-002",
+                    config.key,
+                    undefined,
+                    undefined,
                     settings
                 );
             case LLMProvider.LLAMA_CPP:
-                return new LlamaCppService(settings.llama_cpp_execution_mode);
+                return new LlamaCppService(config.llama_cpp_execution_mode);
             default:
-                throw new Error(`Unsupported embedding provider: ${settings.providers.embeddings}`);
+                throw new Error(`Unsupported embedding provider: ${config.type}`);
         }
     }
-    static createService(settings: Settings, config: ModelProviderConfig): ILLMService {
+    static createService(settings: Settings, config: ProviderConfig): ILLMService {
             // Create main chat service
-        switch (config.provider) {
+        switch (config.type) {
             case LLMProvider.LMSTUDIO:
-                return new LMStudioService(settings.llmSettings.lmStudioBaseUrl);
+                return new LMStudioService(config.baseUrl);
             case LLMProvider.BEDROCK:
                 return new BedrockService(
                     settings.models.conversation.bedrock,
@@ -47,57 +48,56 @@ export class LLMServiceFactory {
                 );
             case LLMProvider.ANTHROPIC:
                 return new AnthropicService(
-                    settings.anthropic.api.key,
-                    config.model,
+                    config.key,
                     settings
                 );
             case LLMProvider.LLAMA_CPP:
-                return new LlamaCppService(settings.llama_cpp_execution_mode);
+                return new LlamaCppService(config.llama_cpp_execution_mode);
             case LLMProvider.OPENAI:
-                if (!settings.openai?.api?.key) {
+                if (!config.key) {
                     throw new ConfigurationError("OpenAI API key is required");
                 }
                 return new OpenAIService(
-                    settings.openai.api.key,
-                    settings.models.embeddings.openai || "text-embedding-ada-002",
+                    config.key,
+                    undefined,
                     undefined,
                     settings
                 );
             case LLMProvider.OPENROUTER:
-                if (!settings.openrouter?.api?.key) {
+                if (!config.key) {
                     throw new ConfigurationError("OpenRouter API key is required");
                 }
                 return new OpenAIService(
-                    settings.openrouter.api.key,
+                    config.key,
                     undefined,
-                    "https://openrouter.ai/api/v1",
+                    config.baseUrl||"https://openrouter.ai/api/v1",
                     settings,
-                    config.provider
+                    config.type
                 );
             case LLMProvider.DEEPSEEK:
-                if (!settings.deepseek?.api?.key) {
+                if (!config.key) {
                     throw new ConfigurationError("DeepSeek API key is required");
                 }
                 return new OpenAIService(
-                    settings.deepseek?.api.key,
+                    config.key,
                     undefined,
-                    "https://api.deepseek.com/v1",
+                    config.baseUrl||"https://api.deepseek.com/v1",
                     settings,
-                    config.provider
+                    config.type
                 );
             case LLMProvider.GITHUB:
-                if (!settings.github?.api?.key) {
+                if (!config.key) {
                     throw new ConfigurationError("GitHub API key is required");
                 }
                 return new OpenAIService(
-                    settings.github.api.key,
+                    config.key,
                     undefined,
                     "https://models.inference.ai.azure.com",
                     settings,
-                    config.provider
+                    config.type
                 );
             default:
-                throw new ConfigurationError(`Unsupported chat provider: ${settings.providers.chat}`);
+                throw new ConfigurationError(`Unsupported chat provider: ${config.type}`);
         }
     }
 }

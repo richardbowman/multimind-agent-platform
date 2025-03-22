@@ -7,14 +7,16 @@ import JSON5 from 'json5';
 import Anthropic from '@anthropic-ai/sdk';
 import { ModelType } from "./types/ModelType";
 import { Settings } from "src/tools/settings";
+import { ConfigurationError } from "src/errors/ConfigurationError";
+import { LLMProvider } from "./types/LLMProvider";
 
 export class AnthropicService extends BaseLLMService {
     private client: Anthropic;
     private queue: AsyncQueue = new AsyncQueue();
     private embeddingService?: ILLMService;
 
-    constructor(apiKey: string, private model: string, private settings: Settings, embeddingService?: ILLMService) {
-        super("anthropic");
+    constructor(apiKey: string, private settings: Settings, embeddingService?: ILLMService) {
+        super(LLMProvider.ANTHROPIC);
         this.client = new Anthropic({
             apiKey: apiKey
         });
@@ -25,24 +27,12 @@ export class AnthropicService extends BaseLLMService {
         return;
     }
 
-    async initializeEmbeddingModel(modelPath: string): Promise<void> {
-        if (this.embeddingService) {
-            await this.embeddingService.initializeEmbeddingModel(modelPath);
-            Logger.info("Using external embedding service for Anthropic");
-        } else {
-            Logger.warn("No embedding service configured for Anthropic - embeddings will not be available");
-        }
+    providerType(): string {
+        return LLMProvider.ANTHROPIC;
     }
 
     async initializeChatModel(modelPath: string): Promise<void> {
-        Logger.info(`Anthropic service ready using model: ${this.model}`);
-    }
-
-    getEmbeddingModel(): IEmbeddingFunction {
-        if (!this.embeddingService) {
-            throw new Error("No embedding service configured for Anthropic");
-        }
-        return this.embeddingService.getEmbeddingModel();
+        Logger.info(`Anthropic service ready using model: ${modelPath}`);
     }
 
     private async makeAnthropicRequest(messages: any[], modelType?: ModelType, systemPrompt?: string, opts: any = {}) {
@@ -57,11 +47,18 @@ export class AnthropicService extends BaseLLMService {
         }));
 
         try {
-            const modelTypeDef = modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
-            const model = this.settings?.models[modelTypeDef][this.settings?.providers.chat];
+            modelType = modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
+            let model = this.settings?.modelConfigs.find(c => c.provider === LLMProvider.ANTHROPIC && c.enabled && c.type === modelType)?.model;
+            if (!model) {
+                model = this.settings?.modelConfigs.find(c => c.provider === LLMProvider.ANTHROPIC && c.enabled && c.type === ModelType.CONVERSATION)?.model;
+                
+                if (!model) {
+                    throw new Error(`Cannot find model ${modelType} in configuration after trying to fallback to conversation type.`);
+                }
+            }
 
             const response = await this.client.messages.create({
-                model: model,
+                model,
                 messages: messages,
                 system: systemPrompt || "",
                 max_tokens: opts.maxTokens || 2048,

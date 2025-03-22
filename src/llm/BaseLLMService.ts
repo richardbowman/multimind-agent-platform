@@ -9,9 +9,7 @@ import { PromptBuilder } from "./promptBuilder";
 export abstract class BaseLLMService implements ILLMService {
     protected logger: LLMCallLogger;
 
-    abstract initializeEmbeddingModel(modelPath: string): Promise<void>;
     abstract initializeChatModel(modelPath: string): Promise<void>;
-    abstract getEmbeddingModel(): any;
     abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
     abstract getAvailableModels(): Promise<ModelInfo[]>;

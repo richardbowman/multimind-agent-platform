@@ -86,9 +86,7 @@ export class UnderstandGoalsExecutor extends BaseStepExecutor<StepResponse> {
         prompt.addInstruction(`You are a tool step called by the agent. Tell the agent if we have sufficient information to move forward on achieving the goal.
 If you would like to think about the problem to start, use <thinking> tags.
 
-${params.executionMode === 'conversation' ? `Then, once you have decided if you want to more information from the user, respond with a message that
-asks the user the necessary information. If you have enough information to achieve the goal,
-explain to the user that we'll continue.` : ""}
+${params.executionMode === 'conversation' ? `Then, once you have decided if you want to more information from the user, respond with the information you would like from the user.` : ""}
 
 In the the JSON attributes, you will generate a concise restatement of the user's goal that will be used by
 future steps in the agent workflow. 

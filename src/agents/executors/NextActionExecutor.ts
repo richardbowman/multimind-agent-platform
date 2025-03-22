@@ -77,7 +77,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
             params.steps && prompt.addContext({ contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts });
 
-            prompt.addProcedures(this.agentName ? { agent: this.agentName }: {});
+            const procedureGuides = await prompt.addProcedures(this.agentName ? { agent: this.agentName }: {});
 
             const isConversation = params.executionMode === 'conversation'
             const completionAction = isConversation ? 'REPLY' : 'DONE';

@@ -5,6 +5,7 @@ import { ModelType } from "./types/ModelType";
 import { ModelInfo } from "./types";
 import { PromptBuilder } from "./promptBuilder";
 import { UUID } from "src/types/uuid";
+import { LLMProvider } from "./types/LLMProvider";
 
 export interface EmbedderModelInfo extends ModelInfo {
     pipelineTag: string;
@@ -33,6 +34,7 @@ export interface LLMOptions extends Record<string, any> {
     context: LLMContext;
 }
 
+export type LLMProviders = Record<LLMProvider, ILLMService>;
 export type LLMServices = Record<ModelType, ILLMService>; 
 
 export interface ILLMService {

@@ -4,5 +4,6 @@ export enum ModelType {
     CONVERSATION = "conversation",
     REASONING = "reasoning",
     ADVANCED_REASONING = "advancedReasoning",
-    DOCUMENT = "document"
+    DOCUMENT = "document",
+    EMBEDDINGS = 'embeddings'
 }

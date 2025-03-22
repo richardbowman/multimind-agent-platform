@@ -11,6 +11,11 @@ export function ClientSettings(metadata: {
     max?: number;
     step?: number;
     sensitive?: boolean;
+    matchDefaults?: boolean;
+    selector?: {
+        component: string,
+        providerField: string
+    }
     required?: boolean;
     visibleWhen?: (settings: Settings) => boolean;
 }) {

@@ -96,7 +96,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         }
 
         try {
-            this.chatModel = await this.lmStudioClient.llm.get(modelPath);
+            this.chatModel = await this.lmStudioClient.llm.createDynamicHandle(modelPath);
             Logger.info("Connected to existing LLaMA model.");
         } catch (error) {
             Logger.error("Failed to connect to LLaMA model:", error);

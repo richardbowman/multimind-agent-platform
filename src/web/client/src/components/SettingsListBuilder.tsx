@@ -79,23 +79,33 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     };
 
     const handleFormChange = (field: string, value: any) => {
-        setConfigForm(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        const defaultKeys = Object.entries(configMetadata).filter(([field, meta]) => meta.matchDefaults).map(([field, meta]) => field);
+
+        setConfigForm(prev => {
+            let newData = {
+                ...prev,
+                [field]: value
+            }
+
+            // Apply defaults if user changed a key field
+            if (defaults && defaultKeys?.includes(field)) {
+                // see if a default key matches a vlaue in the 
+                const match = defaults.find(d => defaultKeys.every(k => d[k] === newData[k]));
+
+                newData = {
+                    ...newData,
+                    ...match,
+                };
+            }
+        
+            return newData;
+        });
     };
 
     const handleSaveConfig = () => {
         const newConfigs = [...settings[configType] || []];
         
-        // Apply defaults if needed
-        if (defaults && configForm.type && defaults[configForm.type]) {
-            setConfigForm({
-                ...defaults[configForm.type],
-                ...configForm
-            });
-        }
-        
+
         if (editingConfigId !== null && editingConfigId >= 0) {
             // Editing existing config
             newConfigs[editingConfigId] = configForm;
@@ -151,7 +161,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
         });
 
         return baseColumns;
-    }, [configMetadata]);
+    }, [configMetadata, settings]);
 
     return (
         <Box>

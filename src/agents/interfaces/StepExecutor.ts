@@ -13,7 +13,7 @@ import { WithMetadata } from 'typescript';
 import { WithTokens } from 'src/llm/modelHelpers';
 import { createUUID } from 'src/types/uuid';
 import { StringUtils } from 'src/utils/StringUtils';
-import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { Artifact, ArtifactItem, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { ContentType } from 'src/llm/promptBuilder';
 import { FilterCriteria } from 'src/types/FilterCriteria';
 
@@ -42,7 +42,7 @@ export type ModelConversationResponse = WithTokens<WithMetadata<ModelMessageResp
 
 export interface ModelConversation<R extends StepResponse> extends InputPrompt {
     generate(input: Partial<GenerateInputParams>) : Promise<ModelConversationResponse>;
-    addProcedures(filter: FilterCriteria): Promise<void>;
+    addProcedures(filter: FilterCriteria): Promise<Artifact>;
 }
 
 export abstract class BaseStepExecutor<R extends StepResponse> implements StepExecutor<R> {
@@ -154,7 +154,8 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
                 const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
                 prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f) });
                 prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f) });
-                    
+                
+                return procedureGuides;
             }
         }
     }

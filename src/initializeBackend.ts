@@ -22,7 +22,8 @@ import _crypto from 'node:crypto';
 import { loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
 import { Sequelize } from "sequelize";
 import { Settings } from "./tools/settings";
-import { ILLMService } from "./llm/ILLMService";
+import { ILLMService, LLMProviders, LLMServices } from "./llm/ILLMService";
+import { LLMProvider } from "./llm/types/LLMProvider";
 if (!global.crypto) {
     global.crypto = _crypto;
 }
@@ -33,22 +34,29 @@ declare global {
     }
 }
 
-async function createLLMServices(settings: Settings): Promise<Record<ModelType, ILLMService>> {
-    const services: Record<string, ILLMService> = {};
-    const providerInstances: Record<string, ILLMService> = {};
+async function createLLMProviders(settings: Settings): Promise<LLMProviders> {
+    const providerInstances: LLMProviders = {};
     
-    for (const config of settings.modelConfigs) {
+    for(const config of settings.providers) {
+        const service = LLMServiceFactory.createService(settings, config);
+        providerInstances[config.type] = service;
+    }
+    
+    return providerInstances;
+}
+
+async function createLLMServices(providers: LLMProviders, settings: Settings): Promise<LLMServices> {
+    const services: LLMServices = {};
+
+    const enabledConfigs = settings.modelConfigs.filter(c => c.enabled);
+
+    for (const config of enabledConfigs) {
         try {
             if (!Object.values(ModelType).includes(config.type)) {
                 Logger.info(`Invalid model type ${config.type} service for provider ${config.provider}, skipping...`);
             }
 
-            // Reuse provider instance if it exists
-            let service = providerInstances[config.provider];
-            if (!service) {
-                service = LLMServiceFactory.createService(settings, config);
-                providerInstances[config.provider] = service;
-            }
+            let service = providers[config.provider];
             
             // Initialize the specific model
             await service.initializeChatModel(config.model);
@@ -75,33 +83,45 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     
     // Initialize the models
     try {
-        if (!_s.providers.embeddings) {
-            throw new ConfigurationError("No embeddings model provider is selected");
-        }
-        if (!_s.models.embeddings[_s.providers.embeddings]) {
-            throw new ConfigurationError("No embeddings model is selected");
-        }
+        //TODO: bring back this validation
 
-        if (!_s.providers.chat) {
-            throw new ConfigurationError("No chat provider is selected");
-        }
-        if (!_s.models.conversation[_s.providers.chat]) {
-            throw new ConfigurationError("No chat model is selected");
-        }
+
+        // if (!_s.providers.chat) {
+        //     throw new ConfigurationError("No chat provider is selected");
+        // }
+        // if (!_s.models.conversation[_s.providers.chat]) {
+        //     throw new ConfigurationError("No chat model is selected");
+        // }
 
         //        Logger.progress('Initializing LLM services...', 0.1);
 
-        const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
+
+        const embeddingConfig = _s.modelConfigs.find(c => c.type === ModelType.EMBEDDINGS);
+
+        if (!embeddingConfig) {
+            throw new ConfigurationError("No embeddings model configuration avaiable.");
+        }
+
+        const embeddingProvider = _s.providers.find(p => p.type === embeddingConfig?.provider);
+
+        if (!embeddingProvider) {
+            throw new ConfigurationError("No embeddings provider matches the embedding configuration");
+        }
+
+        const embeddingService = LLMServiceFactory.createEmbeddingService(_s, embeddingProvider);
         Logger.progress('Initializing embedding model...', 0.2, "loading");
 
 
-        await embeddingService.initializeEmbeddingModel(_s.models.embeddings[_s.providers.embeddings]);
+        await embeddingService.initializeEmbeddingModel(embeddingConfig.model);
 
         await sleep();
 
         Logger.progress('Initializing chat model...', 0.3, "loading");
+        
+        const providers = await createLLMProviders(_s);
+        
         // Create all configured LLM services
-        const llmServices = await createLLMServices(_s);
+        const llmServices = await createLLMServices(providers, _s);
         
         // Get the primary chat service
         const chatService = llmServices.conversation;

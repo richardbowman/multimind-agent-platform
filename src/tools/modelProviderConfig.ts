@@ -7,8 +7,9 @@ export class ModelProviderConfig {
         label: 'Model Type',
         category: 'LLM Settings',
         type: 'select',
-        options: ['conversation', 'reasoning', 'advancedReasoning', 'document', 'embeddings'],
-        description: 'Type of model configuration'
+        options: Object.values(ModelType),
+        description: 'Type of model configuration',
+        matchDefaults: true
     })
     type: ModelType = ModelType.CONVERSATION;
 
@@ -16,7 +17,8 @@ export class ModelProviderConfig {
         label: 'Provider',
         category: 'LLM Settings',
         type: 'select',
-        options: Object.values(LLMProvider)
+        options: Object.values(LLMProvider),
+        matchDefaults: true
     })
     provider: LLMProvider = LLMProvider.LMSTUDIO;
 
@@ -31,31 +33,91 @@ export class ModelProviderConfig {
         }
     })
     model: string = '';
+
+    @ClientSettings({
+        label: 'Context Size',
+        category: 'LLM Settings',
+        type: 'number'
+    })
+    contextSize: number = 16384;
+
+    @ClientSettings({
+        label: 'Enabled',
+        category: 'LLM Settings',
+        type: 'boolean'
+    })
+    enabled: boolean = true;
+
 }
 
-export const MODEL_CONFIG_DEFAULTS : Record<LLMProvider, ModelProviderConfig> = {
-    [LLMProvider.OPENROUTER]: {                                                                                                                
+export const MODEL_CONFIG_DEFAULTS = [
+    {                                                                                                                
         type: ModelType.CONVERSATION,
         provider: LLMProvider.OPENROUTER,                                                                                                          
         model: 'openai/gpt-3.5-turbo'                                                                                                          
     },                                                                                                                                         
-    [LLMProvider.OPENAI]: {                                                                                                                    
+    {                                                                                                                    
         type: ModelType.CONVERSATION,
         provider: LLMProvider.OPENAI,                                                                                                              
         model: 'gpt-3.5-turbo'                                                                                                                 
     },                                                                                                                                         
-    [LLMProvider.ANTHROPIC]: {                                                                                                                 
+    {                                                                                                                 
         type: ModelType.CONVERSATION,
         provider: LLMProvider.ANTHROPIC,
         model: 'claude-3-haiku-20240307'                                                                                                       
     },                                                                                                                                         
-    [LLMProvider.DEEPSEEK]: {                                                                                                                  
+    {                                                                                                                  
         type: ModelType.CONVERSATION,
         provider: LLMProvider.DEEPSEEK,                                                                                                            
         model: 'deepseek-chat'                                                                                                                 
+    },
+    {
+        type: ModelType.EMBEDDINGS,
+        provider: LLMProvider.LLAMA_CPP,
+        model: 'nomic-ai/nomic-embed-text-v1.5-GGUF/nomic-embed-text-v1.5.Q4_K_M.gguf'
+    },
+    {
+        type: ModelType.EMBEDDINGS,
+        provider: LLMProvider.OPENAI,
+        model: 'text-embedding-3-small'
+    },
+    {
+        type: ModelType.EMBEDDINGS,
+        provider: LLMProvider.LMSTUDIO,
+        model: 'text-embedding-nomic-embed-text-v1.5'
     }
-}
+];
+
+// export const MODEL_CONFIG_DEFAULTS : Record<LLMProvider, Record<ModelType, Partial<ModelProviderConfig>>> = {
+//     [LLMProvider.OPENROUTER]: {
+//         {                                                                                                                
+//         type: ModelType.CONVERSATION,
+//         provider: LLMProvider.OPENROUTER,                                                                                                          
+//         model: 'openai/gpt-3.5-turbo'                                                                                                          
+//     },                                                                                                                                         
+//     [LLMProvider.OPENAI]: {                                                                                                                    
+//         type: ModelType.CONVERSATION,
+//         provider: LLMProvider.OPENAI,                                                                                                              
+//         model: 'gpt-3.5-turbo'                                                                                                                 
+//     },                                                                                                                                         
+//     [LLMProvider.ANTHROPIC]: {                                                                                                                 
+//         type: ModelType.CONVERSATION,
+//         provider: LLMProvider.ANTHROPIC,
+//         model: 'claude-3-haiku-20240307'                                                                                                       
+//     },                                                                                                                                         
+//     [LLMProvider.DEEPSEEK]: {                                                                                                                  
+//         type: ModelType.CONVERSATION,
+//         provider: LLMProvider.DEEPSEEK,                                                                                                            
+//         model: 'deepseek-chat'                                                                                                                 
+//     },
+//     [LLMProvider.LLAMA_CPP]: {
+//         type: ModelType.EMBEDDINGS,
+//         provider: LLMProvider.LLAMA_CPP,
+//         model: 'nomic-ai/nomic-embed-text-v1.5-GGUF/nomic-embed-text-v1.5.Q4_K_M.gguf'
+//     }
+// }
 
 export const MODEL_CONFIG_DEFAULT = [
-    MODEL_CONFIG_DEFAULTS[LLMProvider.OPENAI]
+    MODEL_CONFIG_DEFAULTS.find(m => m.provider === LLMProvider.OPENAI && m.type === ModelType.CONVERSATION)!,
+    MODEL_CONFIG_DEFAULTS.find(m => m.provider === LLMProvider.LLAMA_CPP && m.type === ModelType.EMBEDDINGS)!
 ]

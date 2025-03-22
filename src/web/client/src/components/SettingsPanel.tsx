@@ -80,9 +80,9 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         console.log('handleChange:', key, value);
         // Get metadata using reflection
         const fieldMeta = metadata[key];
-        const processedValue = 
-            fieldMeta?.type === 'boolean' ? Boolean(value) : 
-            fieldMeta?.type === 'number' ? Number(value) : value;
+        const processedValue =
+            fieldMeta?.type === 'boolean' ? Boolean(value) :
+                fieldMeta?.type === 'number' ? Number(value) : value;
 
         // Handle nested keys (e.g. "providers.chat")
         const parts = key.split('.');
@@ -161,50 +161,51 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         return path.split('.').reduce((current, part) => current?.[part], obj);
     };
 
-       // Convert to array and group by category
-        const categories = Object.entries(metadata).reduce((acc, [key, meta]) => {
-            if (!acc[meta.category]) {
-                acc[meta.category] = [];
-            }
-            acc[meta.category].push({
-                key,
-                ...meta
-            });
-            return acc;
-        }, {} as Record<string, Array<{
-            key: string;
-            label: string;
-            type: string;
-            category: string;
-            description?: string;
-            options?: string[];
-            defaultValue?: any;
-            sensitive?: boolean;
-            required?: boolean;
-        }>>);
-    
-        // Define the explicit category order with API Keys first
-        const categoryOrder = [
-            'API Keys',
-            'LLM Settings', 
-            'Models',
-            'Embeddings',
-            'Search Settings',
-            'Agents',
-            'Vector DB',
-            'Rate Limiting',
-            'Server Settings',
-            'UI Settings',
-        ];
-    
-        // Sort categories according to our defined order
-        const sortedCategories = Object.entries(categories).sort(([a], [b]) => {
-            const aIndex = categoryOrder.indexOf(a);
-            const bIndex = categoryOrder.indexOf(b);
-            if (aIndex === -1) return 1;
-            if (bIndex === -1) return -1;
-            return aIndex - bIndex;
+    // Convert to array and group by category
+    const categories = Object.entries(metadata).reduce((acc, [key, meta]) => {
+        if (!acc[meta.category]) {
+            acc[meta.category] = [];
+        }
+        acc[meta.category].push({
+            key,
+            ...meta
         });
+        return acc;
+    }, {} as Record<string, Array<{
+        key: string;
+        label: string;
+        type: string;
+        category: string;
+        description?: string;
+        options?: string[];
+        defaultValue?: any;
+        sensitive?: boolean;
+        required?: boolean;
+    }>>);
+
+    // Define the explicit category order with API Keys first
+    const categoryOrder = [
+        'Providers',
+        'Models',
+        'API Keys',
+        'LLM Settings',
+        'Embeddings',
+        'Search Settings',
+        'Agents',
+        'Vector DB',
+        'Rate Limiting',
+        'Server Settings',
+        'UI Settings',
+    ];
+
+    // Sort categories according to our defined order
+    const sortedCategories = Object.entries(categories).sort(([a], [b]) => {
+        const aIndex = categoryOrder.indexOf(a);
+        const bIndex = categoryOrder.indexOf(b);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+    });
 
 
     return (
@@ -382,7 +383,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     <Button onClick={() => setRebuildDialogOpen(false)} color="primary">
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={async () => {
                             setRebuildDialogOpen(false);
                             try {
@@ -416,7 +417,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     <Button onClick={() => setResetDialogOpen(false)} color="primary">
                         Cancel
                     </Button>
-                    <Button 
+                    <Button
                         onClick={async () => {
                             setResetDialogOpen(false);
                             try {

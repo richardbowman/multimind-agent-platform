@@ -11,6 +11,7 @@ import { error } from "console";
 import { Settings } from "src/tools/settings";
 import { isObject } from "src/types/types";
 import { ModelType } from "./types/ModelType";
+import { LLMProvider } from "./types/LLMProvider";
 
 
 export class OpenAIService extends BaseLLMService {
@@ -34,7 +35,7 @@ export class OpenAIService extends BaseLLMService {
     }
 
 
-    constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings, private serviceName: string = "openai") {
+    constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings, private serviceName: LLMProvider = LLMProvider.OPENAI) {
         super(serviceName);
         const configuration: ClientOptions = ({
             apiKey: apiKey,
@@ -45,7 +46,7 @@ export class OpenAIService extends BaseLLMService {
         this.settings = settings;
     }
 
-    providerType() : string {
+    providerType() : LLMProvider {
         return this.serviceName;
     }
 
@@ -222,9 +223,13 @@ export class OpenAIService extends BaseLLMService {
             }
 
             const modelType = params.modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
-            const model = this.settings?.modelConfigs.find(c => c.type === modelType)?.model;
+            let model = this.settings?.modelConfigs.find(c => c.eanbled && c.provider === this.providerType() &&  c.type === modelType)?.model;
             if (!model) {
-                throw new Error("Cannot find model ${modelType} in configuration");
+                model = this.settings?.modelConfigs.find(c => c.type === ModelType.CONVERSATION)?.model;
+                
+                if (!model) {
+                    throw new Error(`Cannot find model ${modelType} in configuration after trying to fallback to conversation type.`);
+                }
             }
 
             const startTime = Date.now();

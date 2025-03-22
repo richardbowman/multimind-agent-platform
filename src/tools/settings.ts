@@ -4,30 +4,6 @@ import { ChatHandle } from 'src/types/chatHandle';
 import { MODEL_CONFIG_DEFAULT, ModelProviderConfig } from './modelProviderConfig';
 import { PROVIDER_CONFIG_DEFAULT, ProviderConfig } from './providerConfig';
 
-export class BedrockConfig {
-    @ClientSettings({
-        label: 'Bedrock Max Tokens/Min',
-        category: 'Rate Limiting',
-        type: 'number'
-    })
-    maxTokensPerMinute: number = 20000;
-
-    @ClientSettings({
-        label: 'Bedrock Default Delay (ms)',
-        category: 'Rate Limiting',
-        type: 'number'
-    })
-    defaultDelayMs: number = 1000;
-
-    @ClientSettings({
-        label: 'Bedrock Window Size (ms)',
-        category: 'Rate Limiting',
-        type: 'number'
-    })
-    windowSizeMs: number = 60000;
-}
-
-
 export class PubMedConfig {
     @ClientSettings({
         label: 'PubMed Max Results',
@@ -94,32 +70,6 @@ export class BraveConfig {
     endpoint: string = 'https://api.search.brave.com/res/v1/web/search';
 }
 
-export class EmbeddingsModelByProvider {
-    @ClientSettings({
-        label: 'OpenAI Embeddings Model',
-        category: 'Embeddings',
-        type: 'select',
-        description: 'Model identifier for OpenAI embeddings'
-    })
-    openai: string = 'text-embedding-3-small';
-
-    @ClientSettings({
-        label: 'Llama.cpp Embeddings Model',
-        category: 'Embeddings',
-        type: 'select',
-        description: 'Model path for Llama.cpp embeddings'
-    })
-    llama_cpp: string = 'nomic-ai/nomic-embed-text-v1.5-GGUF/nomic-embed-text-v1.5.Q4_K_M.gguf';
-
-    @ClientSettings({
-        label: 'LM Studio Model',
-        category: 'Embeddings',
-        type: 'select',
-        description: 'Model path or identifier for LM Studio'
-    })
-    lmstudio: string = 'text-embedding-nomic-embed-text-v1.5';
-}
-
 
 export enum PlannerType {
     NextStep = "nextStep"
@@ -170,23 +120,6 @@ export interface AgentDefinition {
     autoRespondChannelIds?: String[];
 }
 
-
-export class LLMSettings {
-    @ClientSettings({
-        label: 'Context Size',
-        category: 'LLM Settings',
-        type: 'number'
-    })
-    contextSize: number = 16384;
-
-    @ClientSettings({
-        label: 'LM Studio Base URL',
-        category: 'LLM Settings',
-        type: 'string'
-    })
-    lmStudioBaseUrl: string = 'ws://localhost:1234';
-
-}
 
 export class AgentBuilderConfig {
     @ClientSettings({
@@ -302,7 +235,7 @@ export class Settings {
         type: 'section',
         description: 'Configure provider connections'
     })
-    providers: ProviderConfig[] = PROVIDER_CONFIG_DEFAULT;
+    providers: Partial<ProviderConfig>[] = PROVIDER_CONFIG_DEFAULT;
 
     @ClientSettings({
         label: 'Model Configurations',
@@ -310,7 +243,7 @@ export class Settings {
         type: 'Models',
         description: 'Configure different model types and their providers'
     })
-    modelConfigs: ModelProviderConfig[] = MODEL_CONFIG_DEFAULT;
+    modelConfigs: Partial<ModelProviderConfig>[] = MODEL_CONFIG_DEFAULT;
 
     @ClientSettings({
         label: 'Text-to-Speech',
@@ -398,15 +331,6 @@ export class Settings {
     })
     displayScrapeBrowser: boolean = false;
 
-
-    @ClientSettings({
-        label: 'LLM Settings',
-        category: 'LLM Settings',
-        type: 'section',
-        description: 'General LLM configuration settings'
-    })
-    llmSettings: LLMSettings = new LLMSettings();
-
     @ClientSettings({
         label: 'UI Zoom Level',
         category: 'UI Settings',
@@ -476,70 +400,6 @@ export class Settings {
     })
     tool_choice: string = 'auto';
 
-    // API Keys
-    @ClientSettings({
-        label: 'Anthropic Configuration',
-        category: 'API Keys',
-        type: 'section',
-        sensitive: true
-    })
-    anthropic: ProviderConfig = new ProviderConfig();
-
-    @ClientSettings({
-        label: 'OpenAI Configuration',
-        category: 'API Keys',
-        type: 'section',
-        sensitive: true
-    })
-    openai: ProviderConfig = new ProviderConfig();
-
-    @ClientSettings({
-        label: 'OpenRouter Configuration',
-        category: 'API Keys',
-        type: 'section',
-        sensitive: true
-    })
-    openrouter: ProviderConfig = new ProviderConfig();
-
-    @ClientSettings({
-        label: 'DeepSeek Configuration',
-        category: 'API Keys',
-        type: 'section',
-        sensitive: true
-    })
-    deepseek: ProviderConfig = new ProviderConfig();
-
-    @ClientSettings({
-        label: 'GitHub Configuration',
-        category: 'API Keys',
-        type: 'section',
-        sensitive: true
-    })
-    github: ProviderConfig = new ProviderConfig();
-
-    // Rate Limiting
-    @ClientSettings({
-        label: 'Anthropic Max Tokens/Min',
-        category: 'Rate Limiting',
-        type: 'number'
-    })
-    anthropicMaxTokensPerMinute!: number;
-
-    @ClientSettings({
-        label: 'Anthropic Default Delay (ms)',
-        category: 'Rate Limiting',
-        type: 'number'
-    })
-    anthropicDefaultDelayMs!: number;
-
-    @ClientSettings({
-        label: 'Anthropic Window Size (ms)',
-        category: 'Rate Limiting',
-        type: 'number'
-    })
-    anthropicWindowSizeMs!: number;
-
-
     // Vector DB Settings
     @ClientSettings({
         label: 'Vector Database Type',
@@ -579,11 +439,4 @@ export class Settings {
         type: 'section'
     })
     pubmed: PubMedConfig = new PubMedConfig();
-
-    @ClientSettings({
-        label: 'Bedrock Settings',
-        category: 'Rate Limiting',
-        type: 'section'
-    })
-    bedrock: BedrockConfig = new BedrockConfig();
 }

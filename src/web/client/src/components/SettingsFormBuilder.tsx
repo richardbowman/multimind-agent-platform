@@ -192,8 +192,8 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
     return (
         <Box sx={{
             flex: 1,
-            overflowY: 'auto',
-            p: 3
+            mb: 1,
+            mt: 1
         }}>
             {categories.map(([category, metadataList]) => {
                 // Special handling for Model Configurations
