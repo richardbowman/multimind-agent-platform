@@ -181,17 +181,10 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     onLogUpdate(update: LogParam) {
-        // if (update.type === 'llm') {
-        //     this.contextMethods.setLogs(prev => ({
-        //         ...prev,
-        //         llm: {
-        //             ...prev.llm,
-        //             [update.entry.service]: [
-        //                 ...(prev.llm[update.entry.service] || []),
-        //                 update.entry
-        //             ]
-        //         }
-        //     }));
+        if (update.type === 'llm') {
+            // LLM logs are now handled by the LLMLogContext
+            return;
+        }
         if (update.type === 'system') {
             this.contextMethods.setLogs(prev => ({
                 ...prev,
