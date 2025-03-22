@@ -104,11 +104,13 @@ export const TaskStatusPanel: React.FC = () => {
             [TaskStatus.InProgress]: [],
             [TaskStatus.Completed]: [],
             [TaskStatus.Cancelled]: []
-        };
+        } as Record<TaskStatus, typeof tasks>;
 
         // Group by status first
         tasks.forEach(task => {
-            groups[task.status].push(task);
+            if (task?.status && groups[task.status]) {
+                groups[task.status].push(task);
+            }
         });
 
         // Then sort each group by update_at (most recently updated first)
