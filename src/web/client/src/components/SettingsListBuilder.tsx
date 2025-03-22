@@ -16,25 +16,25 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModelSelector from './ModelSelector';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
-import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
-import { PROVIDER_CONFIG_DEFAULTS } from '../../../../tools/providerConfig';
-import { LLMProvider } from '../../../../llm/types/LLMProvider';
+import { getClientSettingsMetadata, SettingMetadata } from '../../../../tools/settingsDecorators';
 
 interface SettingsListConfigBuilderProps {
     settings: any;
     onSettingsChange: (updatedConfigs: any) => void;
-    configType: string; // e.g. 'modelConfigs' or 'providers'
+    metadata: SettingMetadata,
     configClass: any; // The class to use for new configs (e.g. ModelProviderConfig or ProviderConfig)
     defaults?: Record<string, any>; // Default configurations if needed
 }
 
 export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     settings,
-    configType,
+    metadata,
     defaults,
     configClass,
     onSettingsChange
 }) => {
+    const { key: configType, label: header } = metadata;
+
     const [editingConfigId, setEditingConfigId] = useState<number | null>(null);
     const [modelDialog, setModelDialog] = useState<{
         open: boolean;
@@ -128,7 +128,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
 
     const columns = useMemo(() => {
         const baseColumns: GridColDef[] = Object.entries(configMetadata)
-            .filter(([_, meta]) => !meta.sensitive) // Exclude sensitive fields
+            .filter(([_, meta]) => !meta.sensitive && meta.showInList)
             .map(([key, meta]) => ({
                 field: key,
                 headerName: meta.label,
@@ -164,16 +164,21 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     }, [configMetadata, settings]);
 
     return (
-        <Box>
+        <Box sx={{mt: 3}}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{
                 mb: 2,
-                pb: 1,
-                borderBottom: '1px solid',
-                borderColor: 'divider'
+                pb: 1
             }}>
-                <Typography variant="h6" gutterBottom>
-                    {configType}
-                </Typography>
+                <Box>
+                    <Typography variant="h6" gutterBottom>
+                        {header}
+                    </Typography>
+                    {metadata.description && (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                            {metadata.description}
+                        </Typography>
+                    )}
+                </Box>
                 <IconButton
                     color="primary"
                     onClick={() => {
