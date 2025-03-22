@@ -183,8 +183,8 @@ export class ScheduleTaskExecutor extends BaseStepExecutor<StepResponse> {
 
                 if (assigneeId) await this.taskManager.assignTaskToAgent(task, assigneeId);
             } else if (action === UpdateActions.Create) {
-                // Parse due date if provided
-                const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
+                // Parse due date if provided - handles both ISO strings and duration strings
+                const parsedDueDate = dueDate ? parseDueDate(dueDate) : undefined;
 
                 task = await this.taskManager.addTask(channelProject, {
                     type: recurrencePattern === 'One-time' ? TaskType.Standard : TaskType.Recurring,
