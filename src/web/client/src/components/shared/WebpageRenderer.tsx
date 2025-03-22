@@ -1,8 +1,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Paper, Typography, IconButton } from '@mui/material';
+import { Box, Paper, Typography, IconButton, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import TerminalIcon from '@mui/icons-material/Terminal';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import { useIPCService } from '../../contexts/IPCContext';
 import { ArtifactMetadata } from '../../../../../tools/artifact';
@@ -16,6 +17,8 @@ interface WebpageRendererProps {
 export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metadata }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [scale, setScale] = useState(1.0);
+    const [logs, setLogs] = useState<Array<{ type: string; message: string; timestamp: number }>>([]);
+    const [showLogs, setShowLogs] = useState(false);
     const { registerActions, unregisterActions } = useToolbarActions();
     const ipcService = useIPCService();
 
@@ -44,6 +47,20 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
         if (!iframeWindow) return;
 
         // Handle messages from the iframe
+        // Handle console logs from iframe
+        const handleConsoleMessage = (event: MessageEvent) => {
+            if (event.source !== iframeWindow) return;
+            
+            if (event.data.type === 'console') {
+                setLogs(prev => [...prev, {
+                    type: event.data.level,
+                    message: event.data.message,
+                    timestamp: Date.now()
+                }]);
+            }
+        };
+
+        // Handle other messages
         const handleMessage = async (event: MessageEvent) => {
             if (event.source !== iframeWindow) return;
 
@@ -94,11 +111,55 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
             }
         };
 
+        // Inject console logger into iframe
+        const injectConsoleLogger = () => {
+            if (!iframeRef.current?.contentWindow) return;
+            
+            const script = `
+                const originalConsole = {
+                    log: console.log,
+                    warn: console.warn,
+                    error: console.error,
+                    info: console.info,
+                    debug: console.debug
+                };
+                
+                ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
+                    console[method] = (...args) => {
+                        originalConsole[method](...args);
+                        window.parent.postMessage({
+                            type: 'console',
+                            level: method,
+                            message: args.map(arg => 
+                                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                                .join(' ')
+                        }, '*');
+                    };
+                });
+            `;
+            
+            const scriptEl = iframeRef.current.contentDocument?.createElement('script');
+            if (scriptEl) {
+                scriptEl.text = script;
+                iframeRef.current.contentDocument?.head.appendChild(scriptEl);
+            }
+        };
+
+        // Wait for iframe to load before injecting
+        iframeRef.current?.addEventListener('load', injectConsoleLogger);
+        
+        window.addEventListener('message', handleConsoleMessage);
         window.addEventListener('message', handleMessage);
-        return () => window.removeEventListener('message', handleMessage);
+        return () => {
+            window.removeEventListener('message', handleConsoleMessage);
+            window.removeEventListener('message', handleMessage);
+            iframeRef.current?.removeEventListener('load', injectConsoleLogger);
+        };
     }, [ipcService]);
 
     useEffect(() => {
+        const clearLogs = useCallback(() => setLogs([]), []);
+
         const webpageActions = [
             {
                 id: 'webpage-zoom-in',
@@ -116,6 +177,19 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
                 id: 'webpage-fullscreen',
                 label: 'Toggle Fullscreen',
                 onClick: toggleFullscreen
+            },
+            {
+                id: 'webpage-show-logs',
+                icon: <TerminalIcon />,
+                label: `Show Console Logs (${logs.length})`,
+                onClick: () => setShowLogs(true),
+                disabled: logs.length === 0
+            },
+            {
+                id: 'webpage-clear-logs',
+                label: 'Clear Console Logs',
+                onClick: clearLogs,
+                disabled: logs.length === 0
             }
         ];
 
@@ -150,6 +224,27 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
                     sandbox="allow-scripts allow-same-origin"
                 />
             </Paper>
+
+            <Dialog open={showLogs} onClose={() => setShowLogs(false)} maxWidth="md" fullWidth>
+                <DialogTitle>Iframe Console Logs</DialogTitle>
+                <DialogContent>
+                    <List dense>
+                        {logs.map((log, index) => (
+                            <ListItem key={index}>
+                                <ListItemText
+                                    primary={log.message}
+                                    secondary={`${new Date(log.timestamp).toLocaleTimeString()} [${log.type}]`}
+                                    sx={{
+                                        fontFamily: 'monospace',
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word'
+                                    }}
+                                />
+                            </ListItem>
+                        ))}
+                    </List>
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 };
