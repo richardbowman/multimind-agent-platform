@@ -11,17 +11,9 @@ import {
     FormControlLabel,
     TextField,
     Typography,
-    Box,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TableSortLabel,
-    Paper
+    Box
 } from '@mui/material';
-import { visuallyHidden } from '@mui/utils';
+import { DataGrid, GridColDef, GridRowSelectionModel } from '@mui/x-data-grid';
 
 // Define possible subtypes for each artifact type
 const SUBTYPE_MAPPING: Record<ArtifactType, string[]> = {
@@ -53,20 +45,42 @@ interface ArtifactSelectionDialogProps {
     onClose: () => void;
 }
 
-type Order = 'asc' | 'desc';
-
-interface HeadCell {
-    id: keyof Asset['metadata'];
-    label: string;
-    sortable: boolean;
-}
-
-const headCells: readonly HeadCell[] = [
-    { id: 'title', label: 'Title', sortable: true },
-    { id: 'type', label: 'Type', sortable: true },
-    { id: 'createdAt', label: 'Created', sortable: true },
-    { id: 'updatedAt', label: 'Last Updated', sortable: true },
-    { id: 'description', label: 'Description', sortable: false }
+const columns: GridColDef[] = [
+    { 
+        field: 'title', 
+        headerName: 'Title', 
+        width: 200,
+        sortable: true
+    },
+    { 
+        field: 'type', 
+        headerName: 'Type', 
+        width: 150,
+        sortable: true
+    },
+    { 
+        field: 'createdAt', 
+        headerName: 'Created', 
+        width: 180,
+        sortable: true,
+        valueFormatter: (params) => 
+            params.value ? new Date(params.value).toLocaleString() : 'N/A'
+    },
+    { 
+        field: 'updatedAt', 
+        headerName: 'Last Updated', 
+        width: 180,
+        sortable: true,
+        valueFormatter: (params) => 
+            params.value ? new Date(params.value).toLocaleString() : 'N/A'
+    },
+    { 
+        field: 'description', 
+        headerName: 'Description', 
+        width: 300,
+        sortable: false,
+        valueFormatter: (params) => params.value || 'No description'
+    }
 ];
 
 export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = ({ assets, onSelect, onClose }) => {
@@ -74,8 +88,7 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTypes, setSelectedTypes] = useState<ArtifactType[]>([]);
     const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
-    const [order, setOrder] = useState<Order>('desc');
-    const [orderBy, setOrderBy] = useState<keyof Asset['metadata']>('updatedAt');
+    const [rowSelectionModel, setRowSelectionModel] = useState<GridRowSelectionModel>([]);
 
     // Get available subtypes based on selected types
     const availableSubtypes = useMemo(() => {
@@ -103,33 +116,12 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
 
                 return matchesSearch && matchesType && matchesSubtype;
             })
-            .sort((a, b) => {
-                const aValue = a.metadata[orderBy] || '';
-                const bValue = b.metadata[orderBy] || '';
-                
-                if (order === 'asc') {
-                    return aValue > bValue ? 1 : -1;
-                }
-                return aValue < bValue ? 1 : -1;
-            });
-    }, [assets, searchTerm, selectedTypes, selectedSubtypes, order, orderBy]);
-
-    const handleRequestSort = (
-        event: React.MouseEvent<unknown>,
-        property: keyof Asset['metadata'],
-    ) => {
-        const isAsc = orderBy === property && order === 'asc';
-        setOrder(isAsc ? 'desc' : 'asc');
-        setOrderBy(property);
-    };
-
-    const handleSelect = (assetId: string) => {
-        setSelectedAssets(prev =>
-            prev.includes(assetId)
-                ? prev.filter(id => id !== assetId)
-                : [...prev, assetId]
-        );
-    };
+            .map(asset => ({
+                id: asset.id,
+                ...asset.metadata,
+                type: asset.type
+            }));
+    }, [assets, searchTerm, selectedTypes, selectedSubtypes]);
 
     return createPortal(
         <Dialog
@@ -219,107 +211,29 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
 
                 {/* Main Content */}
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                        <TableContainer component={Paper} sx={{ maxHeight: '60vh' }}>
-                            <Table stickyHeader size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell padding="checkbox">
-                                            <Checkbox
-                                                indeterminate={
-                                                    selectedAssets.length > 0 &&
-                                                    selectedAssets.length < filteredAssets.length
-                                                }
-                                                checked={
-                                                    filteredAssets.length > 0 &&
-                                                    selectedAssets.length === filteredAssets.length
-                                                }
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedAssets(filteredAssets.map(a => a.id));
-                                                    } else {
-                                                        setSelectedAssets([]);
-                                                    }
-                                                }}
-                                            />
-                                        </TableCell>
-                                        {headCells.map((headCell) => (
-                                            <TableCell
-                                                key={headCell.id}
-                                                sortDirection={orderBy === headCell.id ? order : false}
-                                            >
-                                                {headCell.sortable ? (
-                                                    <TableSortLabel
-                                                        active={orderBy === headCell.id}
-                                                        direction={orderBy === headCell.id ? order : 'asc'}
-                                                        onClick={(e) => handleRequestSort(e, headCell.id)}
-                                                    >
-                                                        {headCell.label}
-                                                        {orderBy === headCell.id ? (
-                                                            <Box component="span" sx={visuallyHidden}>
-                                                                {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                                            </Box>
-                                                        ) : null}
-                                                    </TableSortLabel>
-                                                ) : (
-                                                    headCell.label
-                                                )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {filteredAssets.map((asset) => {
-                                        const isSelected = selectedAssets.includes(asset.id);
-                                        return (
-                                            <TableRow
-                                                hover
-                                                onClick={() => handleSelect(asset.id)}
-                                                role="checkbox"
-                                                aria-checked={isSelected}
-                                                tabIndex={-1}
-                                                key={asset.id}
-                                                selected={isSelected}
-                                                sx={{ cursor: 'pointer' }}
-                                            >
-                                                <TableCell padding="checkbox">
-                                                    <Checkbox
-                                                        checked={isSelected}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>{asset.metadata.title}</TableCell>
-                                                <TableCell>{asset.type}</TableCell>
-                                                <TableCell>
-                                                    {asset.metadata.createdAt ? 
-                                                        new Date(asset.metadata.createdAt).toLocaleString(undefined, {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        }) : 
-                                                        'N/A'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {asset.metadata.updatedAt ? 
-                                                        new Date(asset.metadata.updatedAt).toLocaleString(undefined, {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        }) : 
-                                                        'N/A'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {asset.metadata.description || 'No description'}
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                    <Box sx={{ flex: 1, height: '60vh', p: 2 }}>
+                        <DataGrid
+                            rows={filteredAssets}
+                            columns={columns}
+                            checkboxSelection
+                            disableRowSelectionOnClick
+                            rowSelectionModel={rowSelectionModel}
+                            onRowSelectionModelChange={(newSelection) => {
+                                setRowSelectionModel(newSelection);
+                                setSelectedAssets(newSelection as string[]);
+                            }}
+                            pageSizeOptions={[10, 25, 50]}
+                            initialState={{
+                                pagination: {
+                                    paginationModel: { pageSize: 25, page: 0 }
+                                }
+                            }}
+                            sx={{
+                                '& .MuiDataGrid-cell:focus': {
+                                    outline: 'none'
+                                }
+                            }}
+                        />
                     </Box>
                 </Box>
             </DialogContent>
