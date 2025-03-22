@@ -182,7 +182,8 @@ class ClientMethodsImplementation implements ClientMethods {
 
     onLogUpdate(update: LogParam) {
         if (update.type === 'llm') {
-            // LLM logs are now handled by the LLMLogContext
+            const llmLogEntry = update.entry as LLMLogEntry;
+            this.contextMethods.addLogEntry(llmLogEntry);
             return;
         }
         if (update.type === 'system') {

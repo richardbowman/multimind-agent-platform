@@ -9,6 +9,7 @@ interface LLMLogContextType {
     error: Error | null;
     loadMoreLogs: () => Promise<void>;
     refreshLogs: () => Promise<void>;
+    addLogEntry: (entry: LLMLogEntry) => void;
 }
 
 const LLMLogContext = createContext<LLMLogContextType>({
@@ -68,6 +69,10 @@ export const LLMLogProvider: React.FC<{children: React.ReactNode}> = ({ children
         }
     }, [fetchLogs, pageSize]);
 
+    const addLogEntry = useCallback((entry: LLMLogEntry) => {
+        setLogs(prev => [entry, ...prev]);
+    }, []);
+
     return (
         <LLMLogContext.Provider value={{
             logs,
@@ -75,7 +80,8 @@ export const LLMLogProvider: React.FC<{children: React.ReactNode}> = ({ children
             isLoading,
             error,
             loadMoreLogs,
-            refreshLogs
+            refreshLogs,
+            addLogEntry
         }}>
             {children}
         </LLMLogContext.Provider>
