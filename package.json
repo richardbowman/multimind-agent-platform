@@ -188,7 +188,6 @@
     "nodemon": "^3.1.9",
     "onnxruntime-web": "1.18",
     "pdfjs-dist": "5.0.375",
-    "piper-tts-web": "^1.1.1",
     "raw-loader": "^4.0.2",
     "react": "19.0.0",
     "react-big-calendar": "^1.17.1",
