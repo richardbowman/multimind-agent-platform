@@ -121,11 +121,11 @@ export default {
             ]
         }],
 
-        artifactName: "${name}.Windows.${version}.${arch}.${ext}"
+        artifactName: "${name}.Windows.${version}.${ext}"
     },
     appx: {
         identityName: appxIdentityName,
-        artifactName: "${name}.Windows.${version}.${arch}.${ext}"
+        artifactName: "${name}.Windows.${version}.${ext}"
     },
     nsis: {
         oneClick: true,
