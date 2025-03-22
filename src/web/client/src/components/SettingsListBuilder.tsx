@@ -14,12 +14,10 @@ import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Settings } from '../../../../tools/settings';
 import ModelSelector from './ModelSelector';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
-import { ModelProviderConfig } from '../../../../tools/modelProviderConfig';
-import { PROVIDER_CONFIG_DEFAULTS, ProviderConfig } from '../../../../tools/providerConfig';
+import { PROVIDER_CONFIG_DEFAULTS } from '../../../../tools/providerConfig';
 import { LLMProvider } from '../../../../llm/types/LLMProvider';
 
 interface SettingsListConfigBuilderProps {
@@ -49,9 +47,6 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     });
     const [configForm, setConfigForm] = useState<any>({});
 
-    // Provider-specific default configurations
-    const providerDefaults = PROVIDER_CONFIG_DEFAULTS;
-
     const configMetadata = useMemo(() => {
         const instance = new configClass();
         const metadata = getClientSettingsMetadata(instance);
@@ -65,23 +60,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
         );
         
         return result;
-    }, [settings.providers, configType]);
-
-    // Handle provider type change to apply defaults if they exist
-    const handleProviderTypeChange = (value: LLMProvider) => {
-        setConfigForm(prev => ({
-            ...prev,
-            type: value
-        }));
-        
-        // Only apply defaults if they exist for this provider
-        if (providerDefaults[value]) {
-            setConfigForm(prev => ({
-                ...prev,
-                ...providerDefaults[value]
-            }));
-        }
-    };
+    }, [configType]);
 
     const configCategories = useMemo(() => {
         const categories: Record<string, any[]> = {};
@@ -96,19 +75,14 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
 
     const handleEditClick = (index: number) => {
         setEditingConfigId(index);
-        setConfigForm(settings.modelConfigs[index]);
+        setConfigForm(settings[configType][index]);
     };
 
     const handleFormChange = (field: string, value: any) => {
-        // Special handling for provider type to apply defaults
-        if (field === 'type' && configType === 'providers') {
-            handleProviderTypeChange(value);
-        } else {
-            setConfigForm(prev => ({
-                ...prev,
-                [field]: value
-            }));
-        }
+        setConfigForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
     };
 
     const handleSaveConfig = () => {
@@ -137,20 +111,9 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     };
 
     const handleDeleteConfig = (index: number) => {
-        let newConfigs;
-        
-        if (configType === 'providers') {
-            newConfigs = [...settings.providers || []];
-            newConfigs.splice(index, 1);
-            onSettingsChange({
-                ...settings,
-                providers: newConfigs
-            });
-        } else {
-            newConfigs = [...settings.modelConfigs || []];
-            newConfigs.splice(index, 1);
-            onSettingsChange(newConfigs);
-        }
+        let newConfigs = [...settings.modelConfigs || []];
+        newConfigs.splice(index, 1);
+        onSettingsChange(newConfigs);
     };
 
     const columns = useMemo(() => {
@@ -205,10 +168,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                     color="primary"
                     onClick={() => {
                         setEditingConfigId(-1);
-                        setConfigForm(configType === 'providers' ?
-                            new ProviderConfig() :
-                            new ModelProviderConfig()
-                        );
+                        setConfigForm(new configClass());
                     }}
                     sx={{
                         backgroundColor: 'primary.main',
@@ -245,7 +205,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                 fullWidth
             >
                 <DialogTitle>
-                    {editingConfigId === -1 ? 'Add New Model Configuration' : 'Edit Model Configuration'}
+                    {editingConfigId === -1 ? 'Add New Configuration' : 'Edit Configuration'}
                 </DialogTitle>
                 <DialogContent>
                     <SettingsFormBuilder
