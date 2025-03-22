@@ -184,7 +184,8 @@ export const TaskStatusPanel: React.FC = () => {
                 }}
             >
                 {Object.entries(groupedTasks).map(([status, tasks]) => (
-                    <Box 
+                    <Box
+                        key={status}
                         sx={{
                             display: 'flex',
                             overflow: 'hidden',
