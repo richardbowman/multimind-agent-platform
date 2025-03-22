@@ -181,18 +181,18 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     onLogUpdate(update: LogParam) {
-        if (update.type === 'llm') {
-            this.contextMethods.setLogs(prev => ({
-                ...prev,
-                llm: {
-                    ...prev.llm,
-                    [update.entry.service]: [
-                        ...(prev.llm[update.entry.service] || []),
-                        update.entry
-                    ]
-                }
-            }));
-        } else if (update.type === 'system') {
+        // if (update.type === 'llm') {
+        //     this.contextMethods.setLogs(prev => ({
+        //         ...prev,
+        //         llm: {
+        //             ...prev.llm,
+        //             [update.entry.service]: [
+        //                 ...(prev.llm[update.entry.service] || []),
+        //                 update.entry
+        //             ]
+        //         }
+        //     }));
+        if (update.type === 'system') {
             this.contextMethods.setLogs(prev => ({
                 ...prev,
                 system: {
@@ -208,6 +208,7 @@ class ClientMethodsImplementation implements ClientMethods {
 
     async onBackendStatus(status: BackendStatus) {
         this.contextMethods.setNeedsConfig(!status.configured);
+        this.contextMethods.setConfigError(status.message);
         this.contextMethods.setPaths({ appPath: status.appPath, modelsPath: status.modelPath} );
 
         if (status.configured) {
