@@ -33,6 +33,8 @@ interface SettingsListConfigBuilderProps {
 export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     settings,
     configType,
+    defaults,
+    configClass,
     onSettingsChange
 }) => {
     const [editingConfigId, setEditingConfigId] = useState<number | null>(null);
@@ -61,18 +63,6 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                 { ...meta, key }
             ])
         );
-        
-        // Add any additional metadata fields if needed
-        if (configClass === ProviderConfig) {
-            const apiMetadata = getClientSettingsMetadata(new APIConfig());
-            Object.entries(apiMetadata).forEach(([key, meta]) => {
-                result[`api.${key}`] = {
-                    ...meta,
-                    key: `api.${key}`,
-                    category: 'API Configuration'
-                };
-            });
-        }
         
         return result;
     }, [settings.providers, configType]);
@@ -122,16 +112,14 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     };
 
     const handleSaveConfig = () => {
-        let newConfigs;
-        
         const newConfigs = [...settings[configType] || []];
         
         // Apply defaults if needed
         if (defaults && configForm.type && defaults[configForm.type]) {
-            configForm = {
+            setConfigForm({
                 ...defaults[configForm.type],
                 ...configForm
-            };
+            });
         }
         
         if (editingConfigId !== null && editingConfigId >= 0) {
