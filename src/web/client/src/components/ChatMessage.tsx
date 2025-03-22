@@ -22,8 +22,10 @@ import { useIPCService } from '../contexts/IPCContext';
 import { useArtifacts } from '../contexts/ArtifactContext';
 import { ArtifactDrawer } from './ArtifactDrawer';
 import { Artifact, ArtifactItem } from '../../../../tools/artifact';
-import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext';
+import { ToolbarActionsProvider, useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { AttachmentCard } from './shared/AttachmentCard';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface ChatMessageProps {
     message: ChatPost;
@@ -125,6 +127,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     }, [message.props?.artifactIds]);
     const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
     const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
+    const [currentAttachmentIndex, setCurrentAttachmentIndex] = useState(0);
+    const { registerActions, unregisterActions } = useToolbarActions();
 
     const handleRemoveArtifact = async (artifactId: string) => {
         try {
@@ -147,6 +151,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 try {
                     const artifact = await ipcService.getRPC().getArtifact(selectedArtifact.id);
                     setLoadedArtifact(artifact);
+                    // Set current index based on selected artifact
+                    const index = uniqueArtifacts.indexOf(selectedArtifact.id);
+                    if (index >= 0) {
+                        setCurrentAttachmentIndex(index);
+                    }
                 } catch (err) {
                     console.error('Error loading artifact content:', err);
                     setLoadedArtifact(null);
@@ -155,7 +164,60 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         };
 
         loadArtifactContent();
-    }, [selectedArtifact, ipcService]);
+    }, [selectedArtifact, ipcService, uniqueArtifacts]);
+
+    // Register navigation actions when viewing an attachment
+    useEffect(() => {
+        if (!loadedArtifact) return;
+
+        const navigationActions = [
+            {
+                icon: <ChevronLeftIcon />,
+                label: 'Previous Attachment',
+                onClick: () => {
+                    const prevIndex = currentAttachmentIndex - 1;
+                    if (prevIndex >= 0) {
+                        const artifactId = uniqueArtifacts[prevIndex];
+                        const artifact = allArtifacts.find(a => a.id === artifactId);
+                        if (artifact) {
+                            setSelectedArtifact({
+                                id: artifact.id,
+                                type: artifact.type,
+                                metadata: artifact.metadata,
+                                tokenCount: artifact.tokenCount
+                            });
+                            setCurrentAttachmentIndex(prevIndex);
+                        }
+                    }
+                },
+                disabled: currentAttachmentIndex === 0
+            },
+            {
+                icon: <ChevronRightIcon />,
+                label: 'Next Attachment',
+                onClick: () => {
+                    const nextIndex = currentAttachmentIndex + 1;
+                    if (nextIndex < uniqueArtifacts.length) {
+                        const artifactId = uniqueArtifacts[nextIndex];
+                        const artifact = allArtifacts.find(a => a.id === artifactId);
+                        if (artifact) {
+                            setSelectedArtifact({
+                                id: artifact.id,
+                                type: artifact.type,
+                                metadata: artifact.metadata,
+                                tokenCount: artifact.tokenCount
+                            });
+                            setCurrentAttachmentIndex(nextIndex);
+                        }
+                    }
+                },
+                disabled: currentAttachmentIndex === uniqueArtifacts.length - 1
+            }
+        ];
+
+        registerActions('message-attachments', navigationActions);
+        return () => unregisterActions('message-attachments');
+    }, [currentAttachmentIndex, loadedArtifact, uniqueArtifacts, allArtifacts, registerActions, unregisterActions]);
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
 
@@ -483,6 +545,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 variant: 'outlined'
                             }
                         ]}
+                        title={`Attachment ${currentAttachmentIndex + 1} of ${uniqueArtifacts.length}`}
                     />
                 </ToolbarActionsProvider>
             )}
