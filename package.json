@@ -12,6 +12,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "generate-icon": "node scripts/generate-icon.js",
+    "generate-icon:dev": "node scripts/generate-icon.js --dev",
     "release": "electron-builder --publish always --config ./electron-builder.ts",
     "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
     "watch:schemas": "chokidar 'src/schemas/**/*.ts' -c 'yarn schemas'",
