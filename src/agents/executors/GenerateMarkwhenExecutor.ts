@@ -9,29 +9,26 @@ import { ModelConversation } from '../interfaces/StepExecutor';
 @StepExecutorDecorator(ExecutorType.GENERATE_MARKWHEN, 'Create/revise a Markwhen timeline roadmap.')
 export class GenerateMarkwhenExecutor extends GenerateArtifactExecutor {
     protected addContentFormattingRules(prompt: ModelConversation<ArtifactGenerationStepResponse>) {
-        prompt.addInstruction(`MARKWHEN SYNTAX RULES:
-- Use proper Markwhen syntax inside <artifact_markwhen> blocks
-- Define timelines with: timeline /timeline
-- Use date ranges like: 2025-03-22 to 2025-03-25
-- Add events with: [date]: Event description
-- Use tags with #tag
-- Add sections with: section /section
-- Use proper indentation for nested events
-- Include metadata with: @key: value`);
+        prompt.addInstruction(`GANTT CHART DATA FORMAT RULES:
+- Generate JSON data for a Gantt chart inside <artifact_gantt> blocks
+- Include tasks with: id, text, start date, end date, duration, progress, type (task/summary), and parent
+- Include links with: id, source task id, target task id, and type (e2e)
+- Use proper date formatting: new Date(year, monthIndex, day)
+- For summary tasks, include child tasks with matching parent IDs
+- Ensure all IDs are unique numbers`);
     }
 
     protected getContentRules(): string {
-        return `MARKWHEN FORMATTING RULES:
-- Use standard Markwhen syntax INSIDE of the <artifact_markwhen> blocks
-- Include proper timeline definitions
-- Use date ranges and events correctly
-- Add appropriate tags and metadata
-- Ensure proper indentation for nested structures
-- Include section breaks where needed`;
+        return `GANTT CHART DATA FORMATTING RULES:
+- Use valid JSON format INSIDE of the <artifact_gantt> blocks
+- Include all required task fields
+- Use proper date objects
+- Maintain task hierarchy with parent/child relationships
+- Include dependencies with links where needed`;
     }
 
     protected getSupportedFormat(): string {
-        return 'markwhen';
+        return 'gantt';
     }
 
     getArtifactType(): ArtifactType {
@@ -42,7 +39,7 @@ export class GenerateMarkwhenExecutor extends GenerateArtifactExecutor {
         return {
             ...await super.prepareArtifactMetadata(result),
             subtype: 'Roadmap',
-            format: 'markwhen'
+            format: 'gantt'
         };
     }
 }

@@ -1,55 +1,67 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { ArtifactItem } from '../../../../../tools/artifact';
-import { Timeline } from '@markwhen/timeline';
-import '@markwhen/timeline/dist/Timeline.css';
+import { Gantt, Willow } from 'wx-react-gantt';
+import 'wx-react-gantt/dist/gantt.css';
 
 interface MarkwhenRendererProps {
     content: string;
     artifact?: ArtifactItem;
 }
 
+interface GanttData {
+    tasks: Array<{
+        id: number;
+        text: string;
+        start: Date;
+        end: Date;
+        duration?: number;
+        progress?: number;
+        type?: 'task' | 'summary';
+        parent?: number;
+    }>;
+    links?: Array<{
+        id: number;
+        source: number;
+        target: number;
+        type: string;
+    }>;
+    scales?: Array<{
+        unit: string;
+        step: number;
+        format: string;
+    }>;
+}
+
 export const MarkwhenRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifact }) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [timeline, setTimeline] = useState<Timeline | null>(null);
+    let ganttData: GanttData = { tasks: [] };
     
-    useEffect(() => {
-        if (containerRef.current && !timeline) {
-            // Initialize Markwhen timeline
-            const newTimeline = new Timeline({
-                element: containerRef.current,
-                initialView: 'default',
-                zoom: true,
-                editable: false
-            });
-            setTimeline(newTimeline);
-        }
-    }, [timeline]);
-
-    useEffect(() => {
-        if (timeline && content) {
-            try {
-                timeline.parse(content);
-            } catch (error) {
-                console.error('Error parsing Markwhen content:', error);
-            }
-        }
-    }, [timeline, content]);
-
-    useEffect(() => {
-        return () => {
-            if (timeline) {
-                timeline.destroy();
-            }
-        };
-    }, [timeline]);
+    try {
+        ganttData = JSON.parse(content);
+    } catch (error) {
+        console.error('Error parsing Gantt data:', error);
+        return (
+            <Box sx={{ p: 2 }}>
+                <Typography color="error">Invalid Gantt data format</Typography>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ width: '100%', height: '100%', p: 2 }}>
             <Typography variant="h6" gutterBottom>
-                {artifact?.metadata?.title || 'Timeline'}
+                {artifact?.metadata?.title || 'Gantt Chart'}
             </Typography>
-            <div ref={containerRef} style={{ width: '100%', height: '600px' }} />
+            <Willow>
+                <Gantt 
+                    tasks={ganttData.tasks} 
+                    links={ganttData.links} 
+                    scales={ganttData.scales || [
+                        { unit: 'month', step: 1, format: 'MMMM yyy' },
+                        { unit: 'day', step: 1, format: 'd' }
+                    ]}
+                />
+            </Willow>
         </Box>
     );
 };
