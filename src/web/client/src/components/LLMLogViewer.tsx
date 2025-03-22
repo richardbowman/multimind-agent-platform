@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
-    ListItem,
     ListItemText,
     ListItemButton,
     Box,
@@ -24,10 +23,8 @@ import {
 } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
-import { LLMLogEntry } from '../../../../llm/LLMLogger';
-import { Model } from 'sequelize';
+import { LLMLogEntry } from '../../../../llm/LLMLogModel';
 
 interface FormattedDataViewProps {
     data: any;
