@@ -137,7 +137,6 @@ const AppContent: React.FC = () => {
                         value={currentTab}
                         onChange={(_, newValue) => setCurrentTab(newValue)}
                         textColor="inherit"
-                        indicatorColor="secondary"
                         sx={{ WebkitAppRegion: 'no-drag' }}
                     >
                         <Tab
@@ -151,6 +150,11 @@ const AppContent: React.FC = () => {
                             disabled={needsConfig}
                         />
                         <Tab
+                            label="Tasks"
+                            value="tasks"
+                            disabled={needsConfig}
+                        />
+                        <Tab
                             label="Logs"
                             value="logs"
                             disabled={false} // Always enabled, even in reduced functionality mode
@@ -158,11 +162,6 @@ const AppContent: React.FC = () => {
                         <Tab
                             label="Settings"
                             value="settings"
-                        />
-                        <Tab
-                            label="Tasks"
-                            value="tasks"
-                            disabled={needsConfig}
                         />
                     </Tabs>}
                     <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
