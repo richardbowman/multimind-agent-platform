@@ -291,12 +291,24 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                                                 <TableCell>{asset.type}</TableCell>
                                                 <TableCell>
                                                     {asset.metadata.createdAt ? 
-                                                        new Date(asset.metadata.createdAt).toLocaleDateString() : 
+                                                        new Date(asset.metadata.createdAt).toLocaleString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        }) : 
                                                         'N/A'}
                                                 </TableCell>
                                                 <TableCell>
                                                     {asset.metadata.updatedAt ? 
-                                                        new Date(asset.metadata.updatedAt).toLocaleDateString() : 
+                                                        new Date(asset.metadata.updatedAt).toLocaleString(undefined, {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        }) : 
                                                         'N/A'}
                                                 </TableCell>
                                                 <TableCell>
