@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import Logger from 'src/helpers/logger';
 import { SettingsManager } from 'src/tools/settingsManager';
@@ -17,6 +17,9 @@ export class MainWindow {
         settingsManager?: SettingsManager
     ) {
         this.settingsManager = settingsManager;
+        const isDev = !app.isPackaged;
+        const iconPath = path.join(__dirname, isDev ? '../../assets/icon-dev.png' : '../assets/icon.png');
+
         this.window = new BrowserWindow({
             ...options,
             width: Math.round(width * this.zoomLevel),
@@ -27,6 +30,7 @@ export class MainWindow {
                 nodeIntegration: false,
                 zoomFactor: initialZoom
             },
+            icon: iconPath,
             autoHideMenuBar: true,
             show: false
         });
