@@ -43,7 +43,7 @@ interface Asset {
         description?: string;
         previewUrl?: string;
         createdAt?: string;
-        modifiedAt?: string;
+        updatedAt?: string;
     };
 }
 
@@ -65,7 +65,7 @@ const headCells: readonly HeadCell[] = [
     { id: 'title', label: 'Title', sortable: true },
     { id: 'type', label: 'Type', sortable: true },
     { id: 'createdAt', label: 'Created', sortable: true },
-    { id: 'modifiedAt', label: 'Modified', sortable: true },
+    { id: 'updatedAt', label: 'Last Updated', sortable: true },
     { id: 'description', label: 'Description', sortable: false }
 ];
 
@@ -75,7 +75,7 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
     const [selectedTypes, setSelectedTypes] = useState<ArtifactType[]>([]);
     const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
     const [order, setOrder] = useState<Order>('desc');
-    const [orderBy, setOrderBy] = useState<keyof Asset['metadata']>('modifiedAt');
+    const [orderBy, setOrderBy] = useState<keyof Asset['metadata']>('updatedAt');
 
     // Get available subtypes based on selected types
     const availableSubtypes = useMemo(() => {
@@ -295,8 +295,8 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                                                         'N/A'}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {asset.metadata.modifiedAt ? 
-                                                        new Date(asset.metadata.modifiedAt).toLocaleDateString() : 
+                                                    {asset.metadata.updatedAt ? 
+                                                        new Date(asset.metadata.updatedAt).toLocaleDateString() : 
                                                         'N/A'}
                                                 </TableCell>
                                                 <TableCell>
