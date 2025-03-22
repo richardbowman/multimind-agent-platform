@@ -76,7 +76,28 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
 
     const handleEditClick = (index: number) => {
         setEditingConfigId(index);
-        setConfigForm(settings[configType][index]);
+        const config = settings[configType][index];
+        
+        // Apply defaults if available
+        if (defaults) {
+            const defaultKeys = Object.entries(configMetadata)
+                .filter(([_, meta]) => meta.matchDefaults)
+                .map(([field]) => field);
+            
+            const match = defaults.find(d => 
+                defaultKeys.every(k => d[k] === config[k])
+            );
+            
+            if (match) {
+                setConfigForm({
+                    ...match,
+                    ...config // User values override defaults
+                });
+                return;
+            }
+        }
+        
+        setConfigForm(config);
     };
 
     const handleFormChange = (field: string, value: any) => {
@@ -202,7 +223,32 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                     color="primary"
                     onClick={() => {
                         setEditingConfigId(-1);
-                        setConfigForm(new configClass());
+                        const newConfig = new configClass();
+                        
+                        // Apply defaults if available
+                        if (defaults) {
+                            const defaultKeys = Object.entries(configMetadata)
+                                .filter(([_, meta]) => meta.matchDefaults)
+                                .map(([field]) => field);
+                            
+                            // Find first default that matches any initial values
+                            const match = defaults.find(d => 
+                                defaultKeys.every(k => 
+                                    newConfig[k] === undefined || 
+                                    newConfig[k] === d[k]
+                                )
+                            );
+                            
+                            if (match) {
+                                setConfigForm({
+                                    ...match,
+                                    ...newConfig // Class defaults override
+                                });
+                                return;
+                            }
+                        }
+                        
+                        setConfigForm(newConfig);
                     }}
                     sx={{
                         backgroundColor: 'primary.main',
