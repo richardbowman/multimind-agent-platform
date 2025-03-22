@@ -2,7 +2,6 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { 
     Box, 
     Typography,
-    ListItem,
     Paper,
     keyframes,
     AppBar,
@@ -212,7 +211,7 @@ export const TaskStatusPanel: React.FC = () => {
                         
                         <ScrollView>
                             {tasks.map(task => (
-                                <ListItem 
+                                <Box 
                                     key={task.id} 
                                     sx={{ 
                                         p: 0,
@@ -232,7 +231,7 @@ export const TaskStatusPanel: React.FC = () => {
                                             setDialogOpen(true);
                                         }}
                                     />
-                                </ListItem>
+                                </Box>
                             ))}
                         </ScrollView>
                         </Paper>
