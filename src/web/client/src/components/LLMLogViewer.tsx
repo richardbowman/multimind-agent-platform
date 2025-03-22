@@ -178,59 +178,53 @@ const columns: GridColDef[] = [
         field: 'timestamp',
         headerName: 'Timestamp',
         width: 180,
-        valueGetter: (params: GridValueGetterParams) => 
-            new Date(params.row.timestamp).toLocaleString()
+        valueFormatter: (value) => value ? new Date(value).toLocaleString() : ''
     },
     {
         field: 'input',
         headerName: 'Input',
         width: 300,
-        valueGetter: (params: GridValueGetterParams) =>
-            getLastMessage(params.row.input?.messages || params.row.input?.prompt || params.row.input)
+        valueFormatter: (value) => 
+            getLastMessage(value?.messages || value?.prompt || value)
     },
     {
         field: 'output',
         headerName: 'Output',
         width: 300,
-        valueGetter: (params: GridValueGetterParams) =>
-            getOutputMessage(params.row.output)
+        valueFormatter: (value) => 
+            getOutputMessage(value)
     },
     {
-        field: 'status',
+        field: 'error',
         headerName: 'Status',
         width: 120,
-        valueGetter: (params: GridValueGetterParams) =>
-            params.row.error ? 'ERROR' : 'SUCCESS',
+        valueFormatter: (value) => value ? 'ERROR' : 'SUCCESS',
         cellClassName: (params) => 
             params.value === 'ERROR' ? 'error-cell' : 'success-cell'
     },
     {
-        field: 'agent',
+        field: 'context.agentName',
         headerName: 'Agent',
         width: 150,
-        valueGetter: (params: GridValueGetterParams) =>
-            params.row?.context?.agentName || 'N/A'
+        valueFormatter: (value) => value || 'N/A'
     },
     {
-        field: 'provider',
+        field: 'context.provider',
         headerName: 'Provider',
         width: 150,
-        valueGetter: (params: GridValueGetterParams) =>
-            params.row?.context?.provider || 'N/A'
+        valueFormatter: (value) => value || 'N/A'
     },
     {
-        field: 'stepType',
+        field: 'context.stepType',
         headerName: 'Step Type',
         width: 150,
-        valueGetter: (params: GridValueGetterParams) =>
-            params.row?.context?.stepType || 'N/A'
+        valueFormatter: (value) => value || 'N/A'
     },
     {
-        field: 'task',
+        field: 'context.taskId',
         headerName: 'Task',
         width: 200,
-        valueGetter: (params: GridValueGetterParams) =>
-            params.row?.context?.taskId ? `Task: ${params.row.context.taskId}` : 'N/A'
+        valueFormatter: (value) => value ? `Task: ${value}` : 'N/A'
     }
 ];
 
