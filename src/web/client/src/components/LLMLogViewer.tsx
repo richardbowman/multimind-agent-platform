@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
-    ListItemText,
-    ListItemButton,
     Box,
     Dialog,
     DialogTitle,
@@ -21,6 +19,7 @@ import {
     TableHead,
     TableRow
 } from '@mui/material';
+import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { LLMLogEntry } from '../../../../llm/LLMLogModel';
@@ -174,6 +173,67 @@ const getOutputMessage = (output: any): string => {
     return output.toString();
 };
 
+const columns: GridColDef[] = [
+    { 
+        field: 'timestamp',
+        headerName: 'Timestamp',
+        width: 180,
+        valueGetter: (params: GridValueGetterParams) => 
+            new Date(params.row.timestamp).toLocaleString()
+    },
+    {
+        field: 'input',
+        headerName: 'Input',
+        width: 300,
+        valueGetter: (params: GridValueGetterParams) =>
+            getLastMessage(params.row.input?.messages || params.row.input?.prompt || params.row.input)
+    },
+    {
+        field: 'output',
+        headerName: 'Output',
+        width: 300,
+        valueGetter: (params: GridValueGetterParams) =>
+            getOutputMessage(params.row.output)
+    },
+    {
+        field: 'status',
+        headerName: 'Status',
+        width: 120,
+        valueGetter: (params: GridValueGetterParams) =>
+            params.row.error ? 'ERROR' : 'SUCCESS',
+        cellClassName: (params) => 
+            params.value === 'ERROR' ? 'error-cell' : 'success-cell'
+    },
+    {
+        field: 'agent',
+        headerName: 'Agent',
+        width: 150,
+        valueGetter: (params: GridValueGetterParams) =>
+            params.row?.context?.agentName || 'N/A'
+    },
+    {
+        field: 'provider',
+        headerName: 'Provider',
+        width: 150,
+        valueGetter: (params: GridValueGetterParams) =>
+            params.row?.context?.provider || 'N/A'
+    },
+    {
+        field: 'stepType',
+        headerName: 'Step Type',
+        width: 150,
+        valueGetter: (params: GridValueGetterParams) =>
+            params.row?.context?.stepType || 'N/A'
+    },
+    {
+        field: 'task',
+        headerName: 'Task',
+        width: 200,
+        valueGetter: (params: GridValueGetterParams) =>
+            params.row?.context?.taskId ? `Task: ${params.row.context.taskId}` : 'N/A'
+    }
+];
+
 export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highlightText, filterLog }) => {
     const [selectedLog, setSelectedLog] = useState<any>(null);
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
@@ -227,89 +287,27 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
 
     return (
         <Box>
-            <Box sx={{
-                display: 'grid',
-                gridTemplateColumns: '120px 1fr 1fr 80px 120px 120px 120px 120px',
-                gap: 2,
-                px: 2,
-                py: 1,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                backgroundColor: 'background.default'
-            }}>
-                <Typography variant="subtitle2" color="textSecondary">Timestamp</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Input</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Output</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Status</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Agent</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Provider</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Step Type</Typography>
-                <Typography variant="subtitle2" color="textSecondary">Task</Typography>
+            <Box sx={{ height: 'calc(100vh - 200px)', width: '100%' }}>
+                <DataGrid
+                    rows={logs}
+                    columns={columns}
+                    pageSize={25}
+                    rowsPerPageOptions={[25, 50, 100]}
+                    pagination
+                    disableSelectionOnClick
+                    onRowClick={(params) => handleOpenDetails(params.row, params.row.id)}
+                    loading={isLoading}
+                    getRowId={(row) => row.timestamp + row.service}
+                    sx={{
+                        '& .MuiDataGrid-cell': {
+                            cursor: 'pointer',
+                        },
+                        '& .MuiDataGrid-row:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        },
+                    }}
+                />
             </Box>
-            {logs.filter(log =>
-                filterLog(JSON.stringify({
-                    method: log?.method,
-                    input: log?.input,
-                    output: log?.output,
-                    error: log?.error
-                }))
-            ).map((log, index) => (
-                <div key={`${log.service}-${index}`} className="log-entry info">
-                    <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
-                        <ListItemText
-                            primary={
-                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                    <Box sx={{ minWidth: 120 }}>
-                                        <Typography variant="body2" color="textSecondary">
-                                            {new Date(log.timestamp).toLocaleString()}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography variant="body2" noWrap>
-                                            {getLastMessage(log.input?.messages || log.input?.prompt || log.input)}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Typography variant="body2" noWrap color="textSecondary">
-                                            {getOutputMessage(log.output)}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ minWidth: 80 }}>
-                                        <Typography
-                                            variant="body2"
-                                            color={log.error ? 'error.main' : 'success.main'}
-                                            sx={{ fontWeight: 500 }}
-                                        >
-                                            {log.error ? 'ERROR' : 'SUCCESS'}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ minWidth: 120 }}>
-                                        <Typography variant="body2" noWrap>
-                                            {log?.context?.agentName || 'N/A'}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ minWidth: 120 }}>
-                                        <Typography variant="body2" color="textSecondary">
-                                            {log?.context?.provider}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ minWidth: 120 }}>
-                                        <Typography variant="body2" noWrap>
-                                            {log?.context?.stepType || 'N/A'}
-                                        </Typography>
-                                    </Box>
-                                    <Box sx={{ minWidth: 120 }}>
-                                        <Typography variant="body2" noWrap>
-                                            {log?.context?.taskId ? `Task: ${log.context.taskId}` : 'N/A'}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            }
-                            sx={{ my: 0 }}
-                        />
-                    </ListItemButton>
-                </div>
-            ))}
 
             {hasMore && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
