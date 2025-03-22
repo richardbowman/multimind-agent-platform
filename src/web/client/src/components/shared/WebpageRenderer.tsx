@@ -116,33 +116,39 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
         const injectConsoleLogger = () => {
             if (!iframeRef.current?.contentWindow) return;
             
-            const script = `
-                const originalConsole = {
-                    log: console.log,
-                    warn: console.warn,
-                    error: console.error,
-                    info: console.info,
-                    debug: console.debug
-                };
+            // Only inject if not already injected
+            if (!iframeRef.current.contentWindow?.__consoleLoggerInjected) {
+                const script = `
+                    if (!window.__consoleLoggerInjected) {
+                        const originalConsole = {
+                            log: console.log,
+                            warn: console.warn,
+                            error: console.error,
+                            info: console.info,
+                            debug: console.debug
+                        };
+                        
+                        ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
+                            console[method] = (...args) => {
+                                originalConsole[method](...args);
+                                window.parent.postMessage({
+                                    type: 'console',
+                                    level: method,
+                                    message: args.map(arg => 
+                                        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                                    ).join(' ')
+                                }, '*');
+                            };
+                        });
+                        window.__consoleLoggerInjected = true;
+                    }
+                `;
                 
-                ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
-                    console[method] = (...args) => {
-                        originalConsole[method](...args);
-                        window.parent.postMessage({
-                            type: 'console',
-                            level: method,
-                            message: args.map(arg => 
-                                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-                            ).join(' ')
-                        }, '*');
-                    };
-                });
-            `;
-            
-            const scriptEl = iframeRef.current.contentDocument?.createElement('script');
-            if (scriptEl) {
-                scriptEl.text = script;
-                iframeRef.current.contentDocument?.head.appendChild(scriptEl);
+                const scriptEl = iframeRef.current.contentDocument?.createElement('script');
+                if (scriptEl) {
+                    scriptEl.text = script;
+                    iframeRef.current.contentDocument?.head.appendChild(scriptEl);
+                }
             }
         };
 
