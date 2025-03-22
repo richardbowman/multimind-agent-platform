@@ -21,10 +21,20 @@ async function generateIcon() {
     ctx.arcTo(0, 0, cornerRadius, 0, cornerRadius);
     ctx.closePath();
 
-    // Add gradient background
+    // Add gradient background - different colors for dev vs production
+    const isDev = process.env.NODE_ENV === 'development';
     const gradient = ctx.createLinearGradient(0, 0, size, size);
-    gradient.addColorStop(0, '#00d2ff');
-    gradient.addColorStop(1, '#3a7bd5');
+    
+    if (isDev) {
+        // Orange gradient for development
+        gradient.addColorStop(0, '#ff8c00');
+        gradient.addColorStop(1, '#ff4500');
+    } else {
+        // Blue gradient for production
+        gradient.addColorStop(0, '#00d2ff');
+        gradient.addColorStop(1, '#3a7bd5');
+    }
+    
     ctx.fillStyle = gradient;
     ctx.fill();
 
