@@ -102,13 +102,13 @@ export default {
                 "arm64",
                 "x64"
             ]
-        }, {
+        } /*disable now to save $ , {
             target: "zip",
             arch: [
                 "arm64",
                 "x64"
             ]
-        }],
+        }*/],
 
         artifactName: "${name}.macOS.${version}.${arch}.${ext}"
     },
@@ -121,12 +121,12 @@ export default {
             ]
         }],
 
-        artifactName: "${name}.Windows.${version}.${ext}"
+        artifactName: "${name}.Windows.${version}.${arch}.${ext}"
     },
-    appx: {
-        identityName: appxIdentityName,
-        artifactName: "${name}.Windows.${version}.${ext}"
-    },
+    // appx: {
+    //     identityName: appxIdentityName,
+    //     artifactName: "${name}.Windows.${version}.${arch}.${ext}"
+    // },
     nsis: {
         oneClick: true,
         perMachine: false,
@@ -145,7 +145,7 @@ export default {
             arch: [
                 "x64"
             ]
-        }, {
+        }, /*{
             target: "deb",
             arch: [
                 "x64",
@@ -157,7 +157,7 @@ export default {
                 "x64",
                 "arm64"
             ]
-        }],
+        }*/],
         category: "Utility",
 
         artifactName: "${name}.Linux.${version}.${arch}.${ext}"
