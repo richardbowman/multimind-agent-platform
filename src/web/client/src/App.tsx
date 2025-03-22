@@ -72,7 +72,7 @@ const AppContent: React.FC = () => {
     } = useDataContext();
 
     const ipcService = useIPCService();
-    const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings' | 'none'>('none');
+    const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings' | 'tasks' | 'none'>('none');
     const [showWelcome, setShowWelcome] = useState(true);
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
@@ -159,6 +159,11 @@ const AppContent: React.FC = () => {
                             label="Settings"
                             value="settings"
                         />
+                        <Tab
+                            label="Tasks"
+                            value="tasks"
+                            disabled={needsConfig}
+                        />
                     </Tabs>}
                     <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
                     <Stack direction="row" spacing={1} sx={{ WebkitAppRegion: 'no-drag' }}>
@@ -172,14 +177,6 @@ const AppContent: React.FC = () => {
                                 <DeveloperModeIcon />
                             </IconButton>
                         )}
-                        <IconButton
-                            color="inherit"
-                            edge="end"
-                            onClick={(event) => setStatusAnchorEl(event.currentTarget)}
-                            sx={{ ml: 2 }}
-                        >
-                            <TaskIcon />
-                        </IconButton>
                         <IconButton
                             color="inherit"
                             edge="end"
@@ -310,35 +307,11 @@ const AppContent: React.FC = () => {
                         onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)} />
                 ) : currentTab === 'logs' ? (
                     <LogViewer logType={currentLogTab} />
+                ) : currentTab === 'tasks' ? (
+                    <TaskStatusPanel />
                 ) : null}
             </Box>
 
-            {/* Status Popover */}
-            <Popover
-                open={statusOpen}
-                anchorEl={statusAnchorEl}
-                onClose={() => setStatusAnchorEl(null)}
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-                sx={{ height: '80%'}}
-                slotProps={{
-                    paper: {
-                        sx: {
-                            display: 'flex',
-                            flex: 1,
-                            overflow: 'hidden'
-                        }
-                    }
-                }}
-            >
-                <TaskStatusPanel onClose={() => setStatusAnchorEl(null)} />
-            </Popover>
         </Box>
     );
 };

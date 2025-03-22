@@ -55,11 +55,7 @@ const fadeIn = keyframes`
   }
 `;
 
-interface TaskStatusPanelProps {
-    onClose?: () => void;
-}
-
-export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => {
+export const TaskStatusPanel: React.FC = () => {
     const { tasks } = useTasks();
     const ipcService = useIPCService();
     const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
@@ -179,16 +175,6 @@ export const TaskStatusPanel: React.FC<TaskStatusPanelProps> = ({ onClose }) => 
                             sx={{ mr: 1 }}
                         >
                             <CancelIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Close panel">
-                        <IconButton
-                            color="inherit"
-                            aria-label="close"
-                            onClick={onClose}
-                            size="small"
-                        >
-                            <CloseIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
                 </Toolbar>
