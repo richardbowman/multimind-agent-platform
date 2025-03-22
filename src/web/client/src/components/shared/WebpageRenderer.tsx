@@ -157,9 +157,9 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
         };
     }, [ipcService]);
 
-    useEffect(() => {
-        const clearLogs = useCallback(() => setLogs([]), []);
+    const clearLogs = useCallback(() => setLogs([]), []);
 
+    useEffect(() => {
         const webpageActions = [
             {
                 id: 'webpage-zoom-in',
@@ -195,7 +195,7 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
 
         registerActions('webpage', webpageActions);
         return () => unregisterActions('webpage');
-    }, [registerActions, unregisterActions, zoomIn, zoomOut, toggleFullscreen]);
+    }, [registerActions, unregisterActions, zoomIn, zoomOut, toggleFullscreen, logs.length, clearLogs]);
 
     return (
         <Box sx={{
