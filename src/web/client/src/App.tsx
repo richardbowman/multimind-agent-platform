@@ -75,7 +75,7 @@ const AppContent: React.FC = () => {
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings' | 'tasks' | 'none'>('none');
     const [showWelcome, setShowWelcome] = useState(true);
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
-    const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
+    const [rightDrawerOpen, setRightDrawerOpen] = useState(false);
     const [rightDrawerWidth, setRightDrawerWidth] = useState(300);
     const [statusAnchorEl, setStatusAnchorEl] = useState<null | HTMLElement>(null);
     const statusOpen = Boolean(statusAnchorEl);
