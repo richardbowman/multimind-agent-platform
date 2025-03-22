@@ -8,6 +8,7 @@ import { Box, Paper, Typography } from '@mui/material';
 import { CalendarRenderer } from './CalendarRenderer';
 import { PDFRenderer } from './PDFRenderer';
 import { SlideRenderer } from './SlideRenderer';
+import { MarkwhenRenderer } from './MarkwhenRenderer';
 import { MarkdownEditor } from './MarkdownEditor';
 import { ArtifactItem, ArtifactType } from '../../../../../tools/artifact';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
@@ -122,6 +123,11 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     // Handle webpage content
     if ((type === ArtifactType.Webpage || metadata?.mimeType === 'text/html') && metadata?.mimeType !== 'text/markdown') {
         return <WebpageRenderer content={content} metadata={metadata} />;
+    }
+
+    // Handle Markwhen timeline content
+    if (metadata?.format === 'markwhen' || type === 'markwhen') {
+        return <MarkwhenRenderer content={content} artifact={artifact} />;
     }
 
     // Handle markdown content
