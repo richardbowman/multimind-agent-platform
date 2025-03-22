@@ -233,7 +233,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
     const [tabValue, setTabValue] = useState(0);
     const [allLogs, setAllLogs] = useState<LLMLogEntry[]>([]);
-    const { logs, hasMore, loadMoreLogs, refreshLogs } = useLLMLogs();
+    const { logs, hasMore, loadMoreLogs, refreshLogs, isLoading } = useLLMLogs();
 
     // Load initial logs when component mounts
     React.useEffect(() => {
