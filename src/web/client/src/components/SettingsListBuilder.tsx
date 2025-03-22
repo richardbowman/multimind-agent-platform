@@ -8,7 +8,8 @@ import {
     DialogContent,
     DialogActions,
     Stack,
-    Button
+    Button,
+    Checkbox
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { DataGrid, GridColDef, GridActionsCellItem } from '@mui/x-data-grid';
@@ -133,11 +134,22 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                 field: key,
                 headerName: meta.label,
                 flex: 1,
-                renderCell: (params) => (
-                    <Typography variant="body2">
-                        {params.value}
-                    </Typography>
-                )
+                renderCell: (params) => {
+                    if (meta.type === 'boolean') {
+                        return (
+                            <Checkbox
+                                checked={Boolean(params.value)}
+                                disabled
+                                sx={{ p: 0 }}
+                            />
+                        );
+                    }
+                    return (
+                        <Typography variant="body2">
+                            {params.value}
+                        </Typography>
+                    );
+                }
             }));
 
         // Add actions column
