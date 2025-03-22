@@ -10,6 +10,7 @@ import { useDataContext, DataProvider } from './contexts/DataContext';
 import { IPCProvider, useIPCService } from './contexts/IPCContext';
 import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
+import { LLMLogProvider } from './contexts/LLMLogContext';
 import { ToolbarActionsProvider } from './contexts/ToolbarActionsContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -327,8 +328,10 @@ const App: React.FC = () => {
                             <ArtifactProvider>
                                 <TaskProvider>
                                     <LogProvider>
-                                        <AppContent />
-                                        <div id="portal-root"></div>
+                                        <LLMLogProvider>
+                                            <AppContent />
+                                            <div id="portal-root"></div>
+                                        </LLMLogProvider>
                                     </LogProvider>
                                 </TaskProvider>
                             </ArtifactProvider>
