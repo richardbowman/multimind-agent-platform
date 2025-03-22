@@ -1,6 +1,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box, Paper, Typography, IconButton, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText } from '@mui/material';
+import { Box, Paper, Typography, IconButton, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, Toolbar } from '@mui/material';
+import ClearIcon from '@mui/icons-material/Clear';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import TerminalIcon from '@mui/icons-material/Terminal';
@@ -185,12 +186,6 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
                 onClick: () => setShowLogs(true),
                 disabled: logs.length === 0
             },
-            {
-                id: 'webpage-clear-logs',
-                label: 'Clear Console Logs',
-                onClick: clearLogs,
-                disabled: logs.length === 0
-            }
         ];
 
         registerActions('webpage', webpageActions);
@@ -226,7 +221,20 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
             </Paper>
 
             <Dialog open={showLogs} onClose={() => setShowLogs(false)} maxWidth="md" fullWidth>
-                <DialogTitle>Iframe Console Logs</DialogTitle>
+                <DialogTitle>
+                    <Toolbar>
+                        Iframe Console Logs
+                        <Box sx={{ flexGrow: 1 }} />
+                        <IconButton 
+                            edge="end"
+                            onClick={clearLogs}
+                            disabled={logs.length === 0}
+                            title="Clear logs"
+                        >
+                            <ClearIcon />
+                        </IconButton>
+                    </Toolbar>
+                </DialogTitle>
                 <DialogContent>
                     <List dense>
                         {logs.map((log, index) => (
