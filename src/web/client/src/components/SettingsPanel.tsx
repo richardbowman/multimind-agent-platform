@@ -43,7 +43,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [settings, setSettings] = useState<Settings>({});
     const [validationMessage, setValidationMessage] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
-    const { getSettings, updateSettings } = useDataContext();
+    const { getSettings, updateSettings, configError } = useDataContext();
     const ipcService = useIPCService();
     const metadata = getClientSettingsMetadata(new Settings());
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -67,12 +67,17 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 if (currentSettings) {
                     setSettings(currentSettings);
                 }
+                // If there was a config error, show it
+                if (configError) {
+                    setValidationMessage(configError);
+                }
             } catch (error) {
                 console.error('Failed to load settings:', error);
+                setValidationMessage(`Failed to load settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         };
         loadSettings();
-    }, [getSettings]);
+    }, [getSettings, configError]);
 
 
 
