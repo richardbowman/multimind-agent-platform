@@ -465,24 +465,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Box>
             )}
             {loadedArtifact && (
-                <ArtifactDrawer
-                    open={!!loadedArtifact}
-                    onClose={() => {
-                        setSelectedArtifact(null);
-                        setLoadedArtifact(null);
-                    }}
-                    currentArtifact={loadedArtifact}
-                    actions={[
-                        {
-                            label: 'Close',
-                            onClick: () => { 
-                                setSelectedArtifact(null)
-                                setLoadedArtifact(null);
-                            },
-                            variant: 'outlined'
-                        }
-                    ]}
-                />
+                <ToolbarActionsProvider>
+                    <ArtifactDrawer
+                        open={!!loadedArtifact}
+                        onClose={() => {
+                            setSelectedArtifact(null);
+                            setLoadedArtifact(null);
+                        }}
+                        currentArtifact={loadedArtifact}
+                        actions={[
+                            {
+                                label: 'Close',
+                                onClick: () => { 
+                                    setSelectedArtifact(null)
+                                    setLoadedArtifact(null);
+                                },
+                                variant: 'outlined'
+                            }
+                        ]}
+                    />
+                </ToolbarActionsProvider>
             )}
         </Paper>
     );
