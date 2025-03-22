@@ -166,7 +166,7 @@ const AppContent: React.FC = () => {
                     </Tabs>}
                     <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
                     <Stack direction="row" spacing={1} sx={{ WebkitAppRegion: 'no-drag' }}>
-                        {process.env.NODE_ENV === 'development' && (
+                        {window.electron.isDev && (
                             <IconButton
                                 color="inherit"
                                 edge="end"

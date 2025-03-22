@@ -1,7 +1,8 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { BrowserElectron } from './browserExport';
 
-const ElectronExport : BrowserElectron = {
+const ElectronExport : BrowserElectron & { isDev: boolean } = {
+    isDev: process.env.NODE_ENV === 'development',
     // birpc specific methods
     send: (channel: string, data: any) => {
         const validChannels = ['birpc', 'statusupdate'];
