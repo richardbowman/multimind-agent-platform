@@ -141,44 +141,33 @@ export const TaskStatusPanel: React.FC = () => {
             overflow: 'hidden',
             minHeight: 0
         }}>
-            <AppBar 
-                position="static" 
-                elevation={0} 
-                sx={{ 
-                    mb: 2,
-                    borderRadius: 1,
-                    backgroundColor: 'background.paper',
-                    color: 'text.primary'
-                }}
-            >
-                <Toolbar variant="dense" sx={{ minHeight: 48 }}>
-                    <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-                        Task Board
-                    </Typography>
-                    <Tooltip title="Cancel all outstanding tasks">
-                        <IconButton
-                            color="inherit"
-                            aria-label="cancel-all"
-                            size="small"
-                            onClick={async () => {
-                                const outstandingTasks = tasks.filter(t => 
-                                    (t.status === TaskStatus.Pending || t.status === TaskStatus.InProgress)
-                                );
-                                for (const task of outstandingTasks) {
-                                    try {
-                                        await ipcService.getRPC().cancelTask(task.id);
-                                    } catch (error) {
-                                        console.error('Failed to cancel task:', error);
-                                    }
+            <Toolbar variant="dense" sx={{ minHeight: 48 }}>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    Task Board
+                </Typography>
+                <Tooltip title="Cancel all outstanding tasks">
+                    <IconButton
+                        color="inherit"
+                        aria-label="cancel-all"
+                        size="small"
+                        onClick={async () => {
+                            const outstandingTasks = tasks.filter(t => 
+                                (t.status === TaskStatus.Pending || t.status === TaskStatus.InProgress)
+                            );
+                            for (const task of outstandingTasks) {
+                                try {
+                                    await ipcService.getRPC().cancelTask(task.id);
+                                } catch (error) {
+                                    console.error('Failed to cancel task:', error);
                                 }
-                            }}
-                            sx={{ mr: 1 }}
-                        >
-                            <CancelIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                </Toolbar>
-            </AppBar>
+                            }
+                        }}
+                        sx={{ mr: 1 }}
+                    >
+                        <CancelIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            </Toolbar>
             
             <Box 
                 sx={{
@@ -205,6 +194,7 @@ export const TaskStatusPanel: React.FC = () => {
                                 overflow: 'hidden',
                                 p: 2,
                                 m: 1,
+                                flex: 1,
                                 bgcolor: statusColors[status as TaskStatus],
                                 borderRadius: 2
                             }}
