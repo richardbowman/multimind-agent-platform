@@ -132,7 +132,7 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
                             level: method,
                             message: args.map(arg => 
                                 typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-                                .join(' ')
+                            ).join(' ')
                         }, '*');
                     };
                 });
