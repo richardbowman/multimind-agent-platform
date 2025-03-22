@@ -251,6 +251,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 marginLeft: drawerOpen ? 0 : '-250px',
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 display: 'flex',
+                overflow: 'hidden',
                 flexDirection: 'column',
                 height: '100%'
             }}>
