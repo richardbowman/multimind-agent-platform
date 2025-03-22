@@ -236,7 +236,6 @@ export const TaskStatusPanel: React.FC = () => {
                     </Box>
                 ))}
             </Box>
-        </Box>
         <TaskDialog
             open={dialogOpen}
             onClose={() => {
@@ -247,5 +246,6 @@ export const TaskStatusPanel: React.FC = () => {
             setSelectedTask={setSelectedTask}
             tasks={tasks}
         />
+        </Box>
     );
 };
