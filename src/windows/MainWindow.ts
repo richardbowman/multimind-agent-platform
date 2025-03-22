@@ -18,7 +18,8 @@ export class MainWindow {
     ) {
         this.settingsManager = settingsManager;
         const isDev = !app.isPackaged;
-        const iconPath = path.join(__dirname, isDev ? '../../assets/icon-dev.png' : '../assets/icon.png');
+        const iconName = isDev ? 'icon-dev.png' : 'icon.png';
+        const iconPath = path.join(__dirname, `../../dist/${iconName}`);
 
         this.window = new BrowserWindow({
             ...options,
