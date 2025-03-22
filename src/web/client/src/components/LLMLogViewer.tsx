@@ -179,8 +179,12 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
     const [tabValue, setTabValue] = useState(0);
     const [allLogs, setAllLogs] = useState<LLMLogEntry[]>([]);
-    const [page, setPage] = useState(0);
-    const { logs, hasMore, loadMoreLogs } = useLLMLogs();
+    const { logs, hasMore, loadMoreLogs, refreshLogs } = useLLMLogs();
+
+    // Load initial logs when component mounts
+    React.useEffect(() => {
+        refreshLogs();
+    }, [refreshLogs]);
 
     const handleOpenDetails = React.useCallback((log: any, index: number) => {
         setSelectedLog(log);
