@@ -425,7 +425,9 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             try {
                                 const defaultSettings = new Settings();
                                 const { settings: updatedSettings } = await updateSettings(defaultSettings);
-                                setSettings(updatedSettings);
+                                // Force reload settings from server
+                                const currentSettings = await getSettings();
+                                setSettings(currentSettings);
                                 setSuccessMessage('Settings reset to factory defaults');
                             } catch (error) {
                                 setValidationMessage(`Failed to reset settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
