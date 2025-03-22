@@ -1,17 +1,20 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult, ReplanType, StepResponse } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult, StepResponse, ReplanType } from '../interfaces/StepResult';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { TaskManager, RecurrencePattern, Task } from '../../tools/taskManager';
-import { TaskStatus } from 'src/schemas/TaskStatus';
+import { TaskManager, Task, TaskType, AddTaskParams, RecurrencePattern } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { TaskCreationResponse, UpdateActions } from '../../schemas/taskCreation';
 import moment from 'moment';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { asUUID, UUID } from 'src/types/uuid';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import { ChatClient } from 'src/chat/chatClient';
+import { StringUtils } from 'src/utils/StringUtils';
 
 // Helper function to parse due dates from either ISO strings or duration strings
 function parseDueDate(dueDate: string): Date {
@@ -33,21 +36,16 @@ function parseDueDate(dueDate: string): Date {
 
     throw new Error(`Invalid due date format: ${dueDate}. Must be ISO date string or duration (e.g. "2 days")`);
 }
-import { TaskListResponse } from '../../schemas/taskList';
-import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { UUID } from 'src/types/uuid';
-import { ExecutorType } from '../interfaces/ExecutorType';
-import { ChatClient } from 'src/chat/chatClient';
-import { StringUtils } from 'src/utils/StringUtils';
 
 @StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create, update, complete, cancel, and delete a task')
-export class ScheduleTaskExecutor implements StepExecutor {
+export class ScheduleTaskExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private userId: UUID;
     private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.userId = params.userId;
         this.taskManager = params.taskManager!;
@@ -59,10 +57,10 @@ export class ScheduleTaskExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.TaskCreationResponse);
 
         // Create prompt using PromptBuilder
-        const promptBuilder = this.modelHelpers.createPrompt();
+        const prompt = this.startModel(params);
 
         // Add core instructions
-        promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
+        prompt.addInstruction(this.modelHelpers.getFinalInstructions());
 
         const messagingHandle = (await this.chatClient.getHandles())[this.userId];
 
@@ -70,23 +68,23 @@ export class ScheduleTaskExecutor implements StepExecutor {
 
         // Add existing tasks if we have a project                                                                                  
         if (channelProject) {
-            promptBuilder.addContext({
+            prompt.addContext({
                 contentType: ContentType.TASKS,
                 tasks: Object.values(channelProject.tasks)
             });
         }
 
-        params.previousResponses && promptBuilder.addContext({ contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses });
-        promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals });
-        params.overallGoal && promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal });
-        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
-        params.context?.artifacts && promptBuilder.addContext({
+        params.previousResponses && prompt.addContext({ contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses });
+        prompt.addContext({ contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals });
+        params.overallGoal && prompt.addContext({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal });
+        prompt.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
+        params.context?.artifacts && prompt.addContext({
             contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts:
                 params.context?.artifacts
         });
-        params.agents && promptBuilder.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: params.agents });
+        params.agents && prompt.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: params.agents });
 
-        promptBuilder.addInstruction(`Create, update, complete, or remove a task based on this goal.                                                   
+        prompt.addInstruction(`Create, update, complete, or remove a task based on this goal.                                                   
             If this is an update to an existing task, specify:
             1. The task ID to update                                                                                                
             2. Updated task description                                                                                             
@@ -98,22 +96,20 @@ export class ScheduleTaskExecutor implements StepExecutor {
             If this is a new task, specify:                                                                                         
             1. A clear task description
                 - e.g. if the user asked you to remind them and you are assigning the task to yourself, then your description might be "Remind the user to 
-            2. How often it should recur (Daily, Weekly, Monthly, One-time, or None)                                                
-            3. Who the task should be assigned to (@user, myself (${messagingHandle}), or other agent's chat handle)                    
-            4. A user-friendly confirmation message                                                                                 
-            5. Optional due date (in ISO duration or datetime. e.g. 10 minutes from now... PT10M)  
+            2. Who the task should be assigned to (@user, myself (${messagingHandle}), or other agent's chat handle)                    
+            3. A user-friendly confirmation message                                                                                 
+            4. For one-time tasks, Optional due date (in ISO duration or datetime. e.g. 10 minutes from now... PT10M)  
+            5. For recurring tasks, How often it should recur (Hourly, Daily, Weekly, Monthly, One-time, or None)                                                
 
             If this is a task removal, specify:
             1. The task ID to remove
             2. A user-friendly confirmation message`);
 
-        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
         try {
-            const response = await this.modelHelpers.generate({
-                message: goal,
-                instructions: promptBuilder,
-                threadPosts: params.context?.threadPosts || []
+            const response = await prompt.generate({
+                message: goal
             });
 
             const data = StringUtils.extractAndParseJsonBlock<TaskCreationResponse>(response.message, schema);
@@ -125,12 +121,12 @@ export class ScheduleTaskExecutor implements StepExecutor {
 
             const {
                 action,
-                taskId,
                 taskDescription,
                 recurrencePattern,
                 assignee,
-                dueDate // New field for due date
+                dueDate
             } = data;
+            const taskId = data.taskId && asUUID(data.taskId);
 
             // Handle assignment                                                                                                    
             let assigneeId: UUID | undefined;
@@ -176,13 +172,14 @@ export class ScheduleTaskExecutor implements StepExecutor {
                     ...existingTask,
                     description: taskDescription || existingTask.description,
                     assignee: assigneeId || existingTask.assignee,
-                    recurrencePattern: recurrencePattern || existingTask.recurrencePattern,
-                    lastRunDate: recurrencePattern !== "One-time" ? new Date() : existingTask.lastRunDate,
+                    ...(recurrencePattern !== 'One-time' ? {
+                        recurrencePattern
+                    } as Partial<AddTaskParams>: {}),
                     props: {
                         ...existingTask.props,
                         dueDate: parsedDueDate // Add due date to update
                     }
-                });
+                } as AddTaskParams);
 
                 if (assigneeId) await this.taskManager.assignTaskToAgent(task, assigneeId);
             } else if (action === UpdateActions.Create) {
@@ -190,10 +187,10 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
 
                 task = await this.taskManager.addTask(channelProject, {
+                    type: recurrencePattern === 'One-time' ? TaskType.Standard : TaskType.Recurring,
                     description: taskDescription,
                     creator: this.userId,
                     recurrencePattern: recurrencePattern,
-                    lastRunDate: recurrencePattern === 'One-time' ? new Date() : undefined,
                     complete: false,
                     props: {
                         dueDate: parsedDueDate, // Add due date to create,
@@ -207,12 +204,11 @@ export class ScheduleTaskExecutor implements StepExecutor {
             }
 
             return {
-                type: "schedule_task",
                 finished: params.executionMode === "task" ? true : true,
-                needsUserInput: false,
+                replan: ReplanType.Allow,
                 projectId: channelProject.id,
                 response: {
-                    message: responseMessage
+                    status: responseMessage
                 }
             };
         } catch (error) {
