@@ -2,16 +2,15 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Drawer, Box, styled } from '@mui/material';
 
 const ResizableHandle = styled(Box)(({ theme }) => ({
-    width: '5px',
+    width: '1px',
     cursor: 'ew-resize',
     padding: '4px 0 0',
-    borderTop: '1px solid #ddd',
     position: 'absolute',
     top: 0,
     left: -2,
     bottom: 0,
     zIndex: 100,
-    backgroundColor: '#f4f7f9',
+    backgroundColor: theme.palette.divider,
     '&:hover': {
         backgroundColor: theme.palette.primary.main,
     },
@@ -96,6 +95,7 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
             onClose={onClose}
             PaperProps={{
                 sx: {
+                    borderLeft: 0,
                     width: width,
                     overflow: 'visible',
                     position: 'absolute',

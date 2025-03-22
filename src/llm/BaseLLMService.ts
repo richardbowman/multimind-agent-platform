@@ -2,22 +2,39 @@ import { ChatPost, Message } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { ILLMService, LLMOptions, LLMRequestParams, LLMTool, StructuredOutputPrompt } from "./ILLMService";
 import { LLMCallLogger } from "./LLMLogger";
-import { ModelType } from "./types/ModelType";
+import { ModelType, ModelTypeFallbackStrategy } from "./types/ModelType";
 import { ModelInfo } from "./types";
 import { PromptBuilder } from "./promptBuilder";
+import { SettingsManager } from "src/tools/settingsManager";
+import { Settings } from "src/tools/settings";
 
 export abstract class BaseLLMService implements ILLMService {
     protected logger: LLMCallLogger;
-
+    
     abstract initializeChatModel(modelPath: string): Promise<void>;
     abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
     abstract getAvailableModels(): Promise<ModelInfo[]>;
     abstract shutdown(): Promise<void>;
     abstract providerType(): string;
-
-    constructor(name: string) {
+    
+    constructor(name: string, protected settings: Settings) {
         this.logger = new LLMCallLogger(name);
+    }
+
+
+    // return an available model type based on preferred
+    selectModel(preferredModelType?: ModelType): string {
+        const lookup = (modelType: ModelType) => this.settings?.modelConfigs.find(c => c.enabled && c.provider === this.providerType() &&  c.type === modelType)?.model;
+        let modelType : ModelType|null = preferredModelType||ModelType.REASONING;
+        let model;
+        while (!model && modelType && !(model = lookup(modelType)) && ModelTypeFallbackStrategy[modelType]) {
+            modelType = ModelTypeFallbackStrategy[modelType];
+        }
+        if (!model) {
+            throw new Error(`Cannot find model ${modelType} in configuration after trying to fallback to conversation type.`);
+        }
+        return model;
     }
 
     getLogger(): LLMCallLogger {

@@ -12,7 +12,7 @@ import axios from 'axios';
 import { DOMParser } from 'xmldom';
 import { withRetry } from "src/helpers/retry";
 import { AsyncQueue } from "src/helpers/asyncQueue";
-import { ArtifactType, DocumentSubtype, SpreadsheetSubType } from "src/tools/artifact";
+import { Artifact, ArtifactType, DocumentSubtype, SpreadsheetSubType } from "src/tools/artifact";
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
 import { ArrayUtils } from "src/utils/ArrayUtils";
 import { OutputType } from "src/llm/promptBuilder";
@@ -54,14 +54,14 @@ interface PubMedSearchResult {
             const title = section.getElementsByTagName('title')[0]?.textContent;
             
             if (title) {
-                markdown += `## ${title}\n\n`;
+                markdown += `## ${title.trim()}\n\n`;
             }
             
             // Process paragraphs
             const paragraphs = section.getElementsByTagName('p');
             for (let p = 0; p < paragraphs.length; p++) {
                 const para = paragraphs[p];
-                markdown += `${para.textContent}\n\n`;
+                markdown += `${para.textContent?.trim()}\n\n`;
             }
             
             // Process tables
@@ -72,7 +72,7 @@ interface PubMedSearchResult {
                 const tableContent = table.getElementsByTagName('table')[0];
                 
                 if (tableTitle) {
-                    markdown += `### ${tableTitle}\n\n`;
+                    markdown += `### ${tableTitle.trim()}\n\n`;
                 }
                 
                 if (tableContent) {
@@ -88,13 +88,13 @@ interface PubMedSearchResult {
                 const graphic = figure.getElementsByTagName('graphic')[0];
                 
                 if (figTitle) {
-                    markdown += `### ${figTitle}\n\n`;
+                    markdown += `### ${figTitle.trim()}\n\n`;
                 }
                 
                 if (graphic) {
                     const href = graphic.getAttribute('xlink:href');
                     if (href) {
-                        markdown += `![Figure](${href})\n\n`;
+                        markdown += `![Figure](${href.trim()})\n\n`;
                     }
                 }
             }
@@ -169,7 +169,7 @@ interface PubMedSearchResult {
 
          // Convert results to CSV using CSVUtils
         // Create document artifacts for full text
-        const documentArtifacts = resultsWithFullText
+        const documentArtifacts : Partial<Artifact>[] = resultsWithFullText
             .filter(result => result.fullText)
             .map(result => ({
                 type: ArtifactType.Document,
@@ -187,6 +187,11 @@ interface PubMedSearchResult {
                 }
             }));
 
+        const savedArtifacts : Artifact[]= [];
+        for(const doc of documentArtifacts) {
+            savedArtifacts.push(await this.params.artifactManager.saveArtifact(doc));
+        }
+
         const csvContents: CSVContents = {
             metadata: {
                 query: searchQuery,
@@ -203,7 +208,7 @@ interface PubMedSearchResult {
                  Abstract: result.abstract || '',
                 URL: result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`,
                 FullText: result.fullTextUrl || '',
-                DocumentLink: result.fullText ? `[${result.title}](/artifact/${documentArtifacts.find(a => a.metadata.pmid === result.pmid)?.id})` : ''
+                DocumentLink: result.fullText ? `[${result.title}](/artifact/${savedArtifacts.find(a => a.metadata.pmid === result.pmid)?.id})` : ''
              }))
          };
          
@@ -247,8 +252,7 @@ interface PubMedSearchResult {
                             resultCount: resultsWithFullText.length,
                             generatedAt: new Date().toISOString()
                         }
-                    },
-                    ...documentArtifacts
+                    }
                 ]
             }
         };

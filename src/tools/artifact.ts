@@ -65,5 +65,7 @@ export interface ArtifactItem {
 }
 
 export interface ArtifactMetadata extends Record<string, any> {
-
+  createdAt?: Date;
+  updatedAt?: Date;
+  title?: string;
 }

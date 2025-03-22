@@ -277,15 +277,16 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     )}
                 </Box>
                 <Box sx={{
+                    display: 'flex',
                     flex: 1,
-                    overflowY: 'auto',
-                    p: 3
+                    flexDirection: 'column',
+                    overflow: 'hidden'
                 }}>
                     <ScrollView sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        flex: 1,
-                        gap: 3
+                        p: 2,
+                        flex: 1
                     }}
                     >
                         <SettingsFormBuilder

@@ -17,7 +17,7 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         super(params);
     }
 
-    protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation> {
+    protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation<ArtifactGenerationStepResponse>> {
         const prompt = await super.createBasePrompt(params);
         
         // Add website-specific instructions
@@ -99,7 +99,7 @@ console.log(artifacts);`);
         return prompt;
     }
 
-    protected addContentFormattingRules(prompt: ModelConversation) {
+    protected addContentFormattingRules(prompt: ModelConversation<ArtifactGenerationStepResponse>) {
     }
 
     getSupportedFormat(): string {
@@ -109,7 +109,7 @@ console.log(artifacts);`);
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
-        const result = await super.execute(params, ModelType.ADVANCED_REASONING);
+        const result = await super.execute(params, ModelType.CODING);
         return result;
     }
 

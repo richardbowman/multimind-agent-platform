@@ -34,6 +34,7 @@ import { useFilteredTasks } from '../contexts/FilteredTaskContext.tsx';
 import { useTheme } from '@mui/material/styles';
 import { ScrollView } from './shared/ScrollView.tsx';
 import { InProgressTasks } from './InProgressTasks';
+import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext.tsx';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -431,21 +432,23 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         </Typography>
                     ) : (
                         visibleMessages.map((message, index) => (
-                            <ChatMessage
-                                key={`${message.id}-${messageVersions[message.id] || 0}`}
-                                message={message}
-                                handles={handles}
-                                expandedMessages={expandedMessages}
-                                messageVersions={messageVersions}
-                                currentThreadId={currentThreadId}
-                                messages={messages}
-                                onToggleExpansion={toggleMessageExpansion}
-                                onViewThread={setCurrentThreadId}
-                                onViewMetadata={(message) => {
-                                    setSelectedMessage(message);
-                                    setMetadataDialogOpen(true);
-                                }}
-                            />
+                            <ToolbarActionsProvider>
+                                <ChatMessage
+                                    key={`${message.id}-${messageVersions[message.id] || 0}`}
+                                    message={message}
+                                    handles={handles}
+                                    expandedMessages={expandedMessages}
+                                    messageVersions={messageVersions}
+                                    currentThreadId={currentThreadId}
+                                    messages={messages}
+                                    onToggleExpansion={toggleMessageExpansion}
+                                    onViewThread={setCurrentThreadId}
+                                    onViewMetadata={(message) => {
+                                        setSelectedMessage(message);
+                                        setMetadataDialogOpen(true);
+                                    }}
+                                />
+                            </ToolbarActionsProvider>
                         )))}
                     <InProgressTasks tasks={uniqueTasks} />
                     <div ref={messagesEndRef} />

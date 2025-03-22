@@ -35,15 +35,13 @@ export class OpenAIService extends BaseLLMService {
     }
 
 
-    constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings, private serviceName: LLMProvider = LLMProvider.OPENAI) {
-        super(serviceName);
+    constructor(private settings: Settings, apiKey: string, baseUrl?: string, private serviceName: LLMProvider = LLMProvider.OPENAI) {
+        super(serviceName, settings);
         const configuration: ClientOptions = ({
             apiKey: apiKey,
             baseURL: baseUrl
         });
         this.client = new OpenAI(configuration);
-        this.embeddingModel = embeddingModel;
-        this.settings = settings;
     }
 
     providerType() : LLMProvider {
@@ -51,7 +49,7 @@ export class OpenAIService extends BaseLLMService {
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
-        // this.embeddingModel = modelPath;
+        this.embeddingModel = modelPath;
     }
 
     async initializeChatModel(modelPath: string): Promise<void> {
@@ -135,8 +133,7 @@ export class OpenAIService extends BaseLLMService {
                 });
             }
 
-            const modelType = params.modelType || ModelType.REASONING;
-            const model = this.settings?.models[modelType][this.settings?.providers.chat];
+            const model = this.selectModel(params.modelType);
 
             const startTime = Date.now();
             const response = await this.client.chat.completions.create({
@@ -222,15 +219,8 @@ export class OpenAIService extends BaseLLMService {
                 } : this.settings?.tool_choice === 'none' ? undefined : 'auto'
             }
 
-            const modelType = params.modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
-            let model = this.settings?.modelConfigs.find(c => c.eanbled && c.provider === this.providerType() &&  c.type === modelType)?.model;
-            if (!model) {
-                model = this.settings?.modelConfigs.find(c => c.type === ModelType.CONVERSATION)?.model;
-                
-                if (!model) {
-                    throw new Error(`Cannot find model ${modelType} in configuration after trying to fallback to conversation type.`);
-                }
-            }
+            const model = this.selectModel(params.modelType);
+
 
             const startTime = Date.now();
             response = await this.client.chat.completions.create({

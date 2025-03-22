@@ -64,7 +64,7 @@ const columns: GridColDef[] = [
         width: 180,
         sortable: true,
         valueFormatter: (params) => 
-            params.value ? new Date(params.value).toLocaleString() : 'N/A'
+            params ? new Date(params).toLocaleString() : 'N/A'
     },
     { 
         field: 'updatedAt', 
@@ -72,14 +72,14 @@ const columns: GridColDef[] = [
         width: 180,
         sortable: true,
         valueFormatter: (params) => 
-            params.value ? new Date(params.value).toLocaleString() : 'N/A'
+            params ? new Date(params).toLocaleString() : 'N/A'
     },
     { 
         field: 'description', 
         headerName: 'Description', 
         width: 300,
         sortable: false,
-        valueFormatter: (params) => params.value || 'No description'
+        valueFormatter: (params) => params || 'No description'
     }
 ];
 
@@ -210,8 +210,8 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                 </Box>
 
                 {/* Main Content */}
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Box sx={{ flex: 1, height: '60vh', p: 2 }}>
+                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <Box sx={{ flex: 1, p: 2, overflow: 'hidden' }}>
                         <DataGrid
                             rows={filteredAssets}
                             columns={columns}
@@ -226,6 +226,12 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                             initialState={{
                                 pagination: {
                                     paginationModel: { pageSize: 25, page: 0 }
+                                },
+                                columns: {
+                                    columnVisibilityModel: {
+                                        createdAt: false,
+                                        type: false
+                                    }
                                 }
                             }}
                             sx={{

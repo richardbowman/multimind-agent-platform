@@ -172,7 +172,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                             {artifact?.metadata?.title || artifact?.id}
                         </Box>
                     </Box>
-                    <ActionToolbar actions={toolbarActions} />
 
             <Box 
                 sx={{ 

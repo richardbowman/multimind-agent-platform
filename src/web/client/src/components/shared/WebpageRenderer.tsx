@@ -200,10 +200,10 @@ export const WebpageRenderer: React.FC<WebpageRendererProps> = ({ content, metad
 
     return (
         <Box sx={{
-            width: '100%',
-            height: '70vh',
-            overflow: 'auto',
-            p: 2
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            overflow: 'auto'
         }}>
             <Paper elevation={3} sx={{ 
                 p: 1,

@@ -459,6 +459,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 overflow: 'hidden',
                 position: 'relative'
             }}>
+                <ActionToolbar actions={toolbarActions} />
                 <Box
                     component="main"
                     sx={{

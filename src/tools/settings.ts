@@ -205,7 +205,8 @@ export class SQLiteVecSettings{
         label: 'Embedding Dimensions',
         category: 'Vector DB',
         type: 'number',
-        description: 'Number of dimensions for embeddings (must match embedding model)'
+        description: 'Number of dimensions for embeddings (must match embedding model)',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
     })
     dimensions: number = 768;
 
@@ -213,7 +214,8 @@ export class SQLiteVecSettings{
         label: 'Auto Vacuum',
         category: 'Vector DB',
         type: 'boolean',
-        description: 'Enable automatic database vacuuming to optimize storage'
+        description: 'Enable automatic database vacuuming to optimize storage',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
     })
     autoVacuum: boolean = true;
 
@@ -222,7 +224,8 @@ export class SQLiteVecSettings{
         category: 'Vector DB',
         type: 'select',
         options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
-        description: 'SQLite journal mode (WAL recommended for better concurrency)'
+        description: 'SQLite journal mode (WAL recommended for better concurrency)',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
     })
     journalMode: string = 'WAL';
 };
@@ -265,7 +268,7 @@ export class Settings {
         type: 'select',
         options: ['duckduckgo', 'searxng', 'google', 'brave']
     })
-    searchProvider: string = 'duckduckgo';
+    searchProvider: 'duckduckgo'|'searxng'|'google'|'brave' = 'duckduckgo';
 
     @ClientSettings({
         label: 'Scraping Provider',
@@ -273,26 +276,29 @@ export class Settings {
         type: 'select',
         options: ['puppeteer', 'electron']
     })
-    scrapingProvider: string = 'electron';
+    scrapingProvider: 'puppeteer'|'electron' = 'electron';
 
     @ClientSettings({
         label: 'SearXNG URL',
         category: 'Search Settings',
-        type: 'string'
+        type: 'string',
+        visibleWhen: (settings) => settings.searchProvider === 'searxng'
     })
     searxngUrl: string = 'http://localhost:8080/';
 
     @ClientSettings({
         label: 'ChromaDB URL',
         category: 'Vector DB',
-        type: 'string'
+        type: 'string',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'chroma'
     })
     chromadbUrl: string = 'http://localhost:8001';
 
     @ClientSettings({
         label: 'Database Collection Name',
         category: 'Vector DB',
-        type: 'string'
+        type: 'string',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'chroma'
     })
     chromaCollection: string = 'core';
 
@@ -364,12 +370,7 @@ export class Settings {
     })
     windowHeight: number = 800;
 
-    @ClientSettings({
-        label: 'Server Host',
-        category: 'Server Settings',
-        type: 'string',
-        description: 'The host address for the server'
-    })
+    /** not exposed right now */
     host: string = 'localhost';
     port: number = 4001;
     protocol: string = 'ws';
@@ -391,15 +392,6 @@ export class Settings {
     })
     openDevToolsOnLoad: boolean = false;
 
-    @ClientSettings({
-        label: 'Tool Choice Behavior',
-        category: 'LLM Settings',
-        type: 'select',
-        options: ['auto', 'required', 'none'],
-        description: 'Controls how the LLM handles tool calls (auto=LLM decides, required=must use tools, none=no tools)'
-    })
-    tool_choice: string = 'auto';
-
     // Vector DB Settings
     @ClientSettings({
         label: 'Vector Database Type',
@@ -408,20 +400,22 @@ export class Settings {
         options: ['vectra', 'chroma', 'sqlite_vec'],
         description: 'Type of vector database to use for storing and querying embeddings'
     })
-    vectorDatabaseType: string = 'vectra';
+    vectorDatabaseType: 'vectra'|'chroma'|'sqlite_vec' = 'vectra';
 
     @ClientSettings({
         label: 'SQLiteVec Settings',
         category: 'Vector DB',
         type: 'section',
-        description: 'Configuration for SQLiteVec vector database'
+        description: 'Configuration for SQLiteVec vector database',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
     })
     sqliteVec: SQLiteVecSettings = new SQLiteVecSettings();
 
     @ClientSettings({
         label: 'DuckDuckGo Settings',
         category: 'Search Settings',
-        type: 'section'
+        type: 'section',
+        visibleWhen: (settings) => settings.searchProvider === 'duckduckgo'
     })
     duckduckgo: DuckDuckGoConfig = new DuckDuckGoConfig();
 
@@ -429,7 +423,8 @@ export class Settings {
     @ClientSettings({
         label: 'Brave Search Settings',
         category: 'Search Settings',
-        type: 'section'
+        type: 'section',
+        visibleWhen: (settings) => settings.searchProvider === 'brave'
     })
     brave: BraveConfig = new BraveConfig();
 

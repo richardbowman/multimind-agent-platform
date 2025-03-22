@@ -58,20 +58,17 @@ export class LLMServiceFactory {
                     throw new ConfigurationError("OpenAI API key is required");
                 }
                 return new OpenAIService(
-                    config.key,
-                    undefined,
-                    undefined,
-                    settings
+                    settings,
+                    config.key
                 );
             case LLMProvider.OPENROUTER:
                 if (!config.key) {
                     throw new ConfigurationError("OpenRouter API key is required");
                 }
                 return new OpenAIService(
-                    config.key,
-                    undefined,
-                    config.baseUrl||"https://openrouter.ai/api/v1",
                     settings,
+                    config.key,
+                    config.baseUrl||"https://openrouter.ai/api/v1",
                     config.type
                 );
             case LLMProvider.DEEPSEEK:
@@ -79,10 +76,9 @@ export class LLMServiceFactory {
                     throw new ConfigurationError("DeepSeek API key is required");
                 }
                 return new OpenAIService(
-                    config.key,
-                    undefined,
-                    config.baseUrl||"https://api.deepseek.com/v1",
                     settings,
+                    config.key,
+                    config.baseUrl||"https://api.deepseek.com/v1",
                     config.type
                 );
             case LLMProvider.GITHUB:
@@ -90,10 +86,9 @@ export class LLMServiceFactory {
                     throw new ConfigurationError("GitHub API key is required");
                 }
                 return new OpenAIService(
-                    config.key,
-                    undefined,
-                    "https://models.inference.ai.azure.com",
                     settings,
+                    config.key,
+                    "https://models.inference.ai.azure.com",
                     config.type
                 );
             default:

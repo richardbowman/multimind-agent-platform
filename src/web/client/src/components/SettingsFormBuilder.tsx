@@ -211,7 +211,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                     onSettingsChange={(updatedConfigs) => {
                                         onSettingChange(metadataList[0].key, updatedConfigs);
                                     }}
-                                    configType={metadataList[0].key}
+                                    metadata={metadataList[0]}
                                     configClass={
                                         category === 'Models' ? 
                                             ModelProviderConfig : 
@@ -232,6 +232,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                     <Box
                         key={category}
                         id={category}
+                        sx={{mt: 3}}
                     >
                         <Typography variant="h6" gutterBottom>
                             {category}

@@ -4,12 +4,21 @@ import { LLMProvider } from "src/llm/types/LLMProvider";
 
 export class ModelProviderConfig {
     @ClientSettings({
+        label: 'Enabled',
+        category: 'LLM Settings',
+        type: 'boolean',
+        showInList: true
+    })
+    enabled: boolean = true;
+
+    @ClientSettings({
         label: 'Model Type',
         category: 'LLM Settings',
         type: 'select',
         options: Object.values(ModelType),
         description: 'Type of model configuration',
-        matchDefaults: true
+        matchDefaults: true,
+        showInList: true
     })
     type: ModelType = ModelType.CONVERSATION;
 
@@ -18,7 +27,8 @@ export class ModelProviderConfig {
         category: 'LLM Settings',
         type: 'select',
         options: Object.values(LLMProvider),
-        matchDefaults: true
+        matchDefaults: true,
+        showInList: true
     })
     provider: LLMProvider = LLMProvider.LMSTUDIO;
 
@@ -30,7 +40,8 @@ export class ModelProviderConfig {
         selector: {
             component: 'ModelSelector',
             providerField: 'provider'
-        }
+        },
+        showInList: true
     })
     model: string = '';
 
@@ -40,36 +51,38 @@ export class ModelProviderConfig {
         type: 'number'
     })
     contextSize: number = 16384;
-
-    @ClientSettings({
-        label: 'Enabled',
-        category: 'LLM Settings',
-        type: 'boolean'
-    })
-    enabled: boolean = true;
-
 }
 
 export const MODEL_CONFIG_DEFAULTS = [
-    {                                                                                                                
+    {
         type: ModelType.CONVERSATION,
-        provider: LLMProvider.OPENROUTER,                                                                                                          
-        model: 'openai/gpt-3.5-turbo'                                                                                                          
-    },                                                                                                                                         
-    {                                                                                                                    
+        provider: LLMProvider.OPENROUTER,
+        model: 'google/gemini-2.0-flash-001'
+    },
+    {
+        type: ModelType.CODING,
+        provider: LLMProvider.OPENROUTER,
+        model: 'claude-3-7-sonnet-20250219'
+    },
+    {
         type: ModelType.CONVERSATION,
-        provider: LLMProvider.OPENAI,                                                                                                              
-        model: 'gpt-3.5-turbo'                                                                                                                 
-    },                                                                                                                                         
-    {                                                                                                                 
+        provider: LLMProvider.OPENAI,
+        model: 'gpt-3.5-turbo'
+    },
+    {
         type: ModelType.CONVERSATION,
         provider: LLMProvider.ANTHROPIC,
-        model: 'claude-3-haiku-20240307'                                                                                                       
-    },                                                                                                                                         
-    {                                                                                                                  
+        model: 'claude-3-5-haiku-20241022'
+    },
+    {
+        type: ModelType.REASONING,
+        provider: LLMProvider.ANTHROPIC,
+        model: 'claude-3-7-sonnet-20250219'
+    },
+    {
         type: ModelType.CONVERSATION,
-        provider: LLMProvider.DEEPSEEK,                                                                                                            
-        model: 'deepseek-chat'                                                                                                                 
+        provider: LLMProvider.DEEPSEEK,
+        model: 'deepseek-chat'
     },
     {
         type: ModelType.EMBEDDINGS,
@@ -118,6 +131,7 @@ export const MODEL_CONFIG_DEFAULTS = [
 // }
 
 export const MODEL_CONFIG_DEFAULT = [
-    MODEL_CONFIG_DEFAULTS.find(m => m.provider === LLMProvider.OPENAI && m.type === ModelType.CONVERSATION)!,
+    MODEL_CONFIG_DEFAULTS.find(m => m.provider === LLMProvider.OPENROUTER && m.type === ModelType.CONVERSATION)!,
+    MODEL_CONFIG_DEFAULTS.find(m => m.provider === LLMProvider.OPENROUTER && m.type === ModelType.CODING)!,
     MODEL_CONFIG_DEFAULTS.find(m => m.provider === LLMProvider.LLAMA_CPP && m.type === ModelType.EMBEDDINGS)!
 ]

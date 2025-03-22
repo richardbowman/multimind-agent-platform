@@ -527,7 +527,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Box>
             )}
             {loadedArtifact && (
-                <ToolbarActionsProvider>
                     <ArtifactDrawer
                         open={!!loadedArtifact}
                         onClose={() => {
@@ -547,7 +546,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         ]}
                         title={`Attachment ${currentAttachmentIndex + 1} of ${uniqueArtifacts.length}`}
                     />
-                </ToolbarActionsProvider>
             )}
         </Paper>
     );

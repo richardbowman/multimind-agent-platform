@@ -3,6 +3,7 @@ import { Artifact } from '../../../../tools/artifact';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Drawer, styled } from '@mui/material';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
+import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -33,9 +34,10 @@ interface ArtifactDrawerProps {
 export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({ 
     open, 
     onClose, 
-    currentArtifact, 
-    actions 
+    currentArtifact
 }) => {
+    const { actions } = useToolbarActions();
+
     return (
         <Drawer
             anchor="right"
@@ -51,16 +53,17 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
             }}
             sx={{
                 display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'hidden'
+                flexDirection: 'column',
+                overflow: 'hidden',
+                zIndex: 1
             }}
             
         >
             <DrawerHeader onClick={onClose}/>
             {currentArtifact && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden' }}>
                     <ActionToolbar actions={actions}/>
-                    <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden', p: 2 }}>
+                    <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', overflow: 'hidden', p: 2 }}>
                         <ArtifactDisplay
                             artifact={currentArtifact}
                             onDelete={onClose}

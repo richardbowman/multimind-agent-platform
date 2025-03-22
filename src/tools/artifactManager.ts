@@ -375,7 +375,11 @@ export class ArtifactManager {
         id: artifactId, 
         type: record.type as ArtifactType, 
         content, 
-        metadata: record.metadata 
+        metadata: {
+          ...record.metadata,
+          createdAt: record.createdAt,
+          updatedAt: record.updatedAt||record.createdAt,
+        }
       };
     } catch (error) {
       if (asError(error).code === 'ENOENT') {
@@ -404,7 +408,11 @@ export class ArtifactManager {
           id: record.id, 
           type: record.type as ArtifactType, 
           content, 
-          metadata: record.metadata 
+          metadata: {
+            ...record.metadata,
+            createdAt: record.createdAt,
+            updatedAt: record.updatedAt||record.createdAt,
+          }
         };
       } catch (error) {
         if (asError(error).code === 'ENOENT') {
@@ -425,7 +433,11 @@ export class ArtifactManager {
     const artifacts: ArtifactItem[] = records.map(record => ({
       id: record.id,
       type: record.type as ArtifactType,
-      metadata: record.metadata
+      metadata: {
+        ...record.metadata,
+        createdAt: record.createdAt,
+        updatedAt: record.updatedAt||record.createdAt
+      }
     }));
     return artifacts;
   }

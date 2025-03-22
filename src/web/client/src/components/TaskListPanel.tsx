@@ -34,7 +34,6 @@ export const TaskListPanel: React.FC<TaskListPanelProps> = ({
                         position: 'sticky', 
                         top: 0, 
                         bgcolor: 'background.default', 
-                        zIndex: 1,
                         color: 'text.primary'
                     }}
                 >

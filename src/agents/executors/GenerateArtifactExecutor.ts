@@ -47,7 +47,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
     protected modelHelpers: ModelHelpers;
     protected artifactManager: ArtifactManager;
     protected taskManager?: TaskManager;
-    protected addContentFormattingRules?(prompt: ModelConversation);
+    protected addContentFormattingRules?(prompt: ModelConversation<ArtifactGenerationStepResponse>);
     protected abstract getSupportedFormat(): string;
 
     protected getContentRules() : string {
@@ -138,10 +138,11 @@ new replacement text
         return withRetry<StepResult<ArtifactGenerationStepResponse>>(async () => {
             const conversation = await this.createBasePrompt(params);
             const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
+            const tag = `artifact_${this.getSupportedFormat()}`;
 
             // Add content formatting rules
             if (this.addContentFormattingRules) this.addContentFormattingRules(conversation);
-            conversation.addOutputInstructions({ outputType: OutputType.JSON_AND_XML, schema, specialInstructions: this.getContentRules(), type: this.getSupportedFormat() });
+            conversation.addOutputInstructions({ outputType: OutputType.JSON_AND_XML, schema, specialInstructions: this.getContentRules(), type: tag });
 
             // Add loaded artifact
             if (existingArtifact) {
@@ -155,8 +156,8 @@ new replacement text
                 });
 
                 const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
-                const documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, this.getSupportedFormat());
-                const message = StringUtils.extractNonCodeContent(unstructuredResult.message);
+                const documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, tag);
+                const message = StringUtils.extractNonCodeContent(unstructuredResult.message, ["thinking", tag]);
                 const result = {
                     ...json,
                     message
@@ -295,7 +296,7 @@ new replacement text
                     }
                 };
             }
-        }, () => true, { maxRetries: 1, timeoutMs: 60000 });
+        }, () => true, { maxRetries: 1, timeoutMs: 180000 });
     }
 
     requestFullContext() {

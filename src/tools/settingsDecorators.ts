@@ -12,6 +12,7 @@ export function ClientSettings(metadata: {
     step?: number;
     sensitive?: boolean;
     matchDefaults?: boolean;
+    showInList?: boolean;
     selector?: {
         component: string,
         providerField: string
@@ -24,8 +25,10 @@ export function ClientSettings(metadata: {
     };
 }
 
-export function getClientSettingsMetadata(target: any, prefix: string = '', parentLabel: string = ''): Record<string, any> {
-    const metadata: Record<string, any> = {};
+export type SettingMetadata = Record<string, any>;
+
+export function getClientSettingsMetadata(target: any, prefix: string = '', parentLabel: string = ''): SettingMetadata {
+    const metadata: SettingMetadata = {};
     
     // Handle null/undefined
     if (!target) {

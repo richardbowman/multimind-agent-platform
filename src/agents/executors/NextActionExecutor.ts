@@ -121,7 +121,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     const result = await prompt.generate({
                         message: params.message || params.stepGoal,
                         instructions: prompt,
-                        modelType: ModelType.ADVANCED_REASONING
+                        modelType: ModelType.REASONING
                     });
 
                     const response = {

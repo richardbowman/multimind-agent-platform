@@ -570,6 +570,9 @@
               "className": "DelegationExecutor"
             },
             {
+              "className": "RetrieveFullArtifactExecutor"
+            },
+            {
               className: "UnderstandGoalsExecutor"
             }
           ]

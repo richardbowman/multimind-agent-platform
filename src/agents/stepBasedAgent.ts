@@ -410,7 +410,7 @@ export abstract class StepBasedAgent extends Agent {
                         artifactIds: [...new Set([...parentTask.props?.result?.artifactIds || [], ...childArtifactIds])],
                         response: {
                             ...parentTask.props?.result?.response,
-                            message: combinedResult,
+                            status: combinedResult,
                             subProjectResults: completedResults
                         }
                     }

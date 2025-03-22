@@ -40,13 +40,6 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                     <IconButton 
                         color="primary"
                         onClick={() => handleOpenDialog()}
-                        sx={{ 
-                            backgroundColor: 'primary.main',
-                            color: 'white',
-                            '&:hover': {
-                                backgroundColor: 'primary.dark'
-                            }
-                        }}
                     >
                         <AddIcon />
                     </IconButton>

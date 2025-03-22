@@ -8,7 +8,8 @@ export class ProviderConfig {
         type: 'select',
         options: Object.values(LLMProvider),
         description: 'Type of LLM provider to use',
-        matchDefaults: true
+        matchDefaults: true,
+        showInList: true
     })
     type: LLMProvider = LLMProvider.OPENAI;
 
@@ -24,7 +25,8 @@ export class ProviderConfig {
         label: 'Base URL', 
         category: 'LLM Settings',
         type: 'string',
-        description: 'Custom API endpoint for the provider'
+        description: 'Custom API endpoint for the provider',
+        showInList: true
     })
     baseUrl: string = '';
 
@@ -60,6 +62,15 @@ export class ProviderConfig {
         description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)'
     })
     llama_cpp_execution_mode: 'Auto'|'CPU-only' = 'Auto';
+
+    @ClientSettings({
+        label: 'Tool Choice Behavior',
+        category: 'LLM Settings',
+        type: 'select',
+        options: ['auto', 'required', 'none'],
+        description: 'Controls how the LLM handles tool calls (auto=LLM decides, required=must use tools, none=no tools)'
+    })
+    tool_choice: string = 'auto';
 }
 
 export const PROVIDER_CONFIG_DEFAULTS = [

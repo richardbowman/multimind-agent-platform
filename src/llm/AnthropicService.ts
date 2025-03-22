@@ -47,15 +47,7 @@ export class AnthropicService extends BaseLLMService {
         }));
 
         try {
-            modelType = modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
-            let model = this.settings?.modelConfigs.find(c => c.provider === LLMProvider.ANTHROPIC && c.enabled && c.type === modelType)?.model;
-            if (!model) {
-                model = this.settings?.modelConfigs.find(c => c.provider === LLMProvider.ANTHROPIC && c.enabled && c.type === ModelType.CONVERSATION)?.model;
-                
-                if (!model) {
-                    throw new Error(`Cannot find model ${modelType} in configuration after trying to fallback to conversation type.`);
-                }
-            }
+            const model = this.selectModel(modelType);
 
             const response = await this.client.messages.create({
                 model,

@@ -4,7 +4,8 @@ import LanguageIcon from '@mui/icons-material/Language';
 import ImageIcon from '@mui/icons-material/Image';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import { Box, Typography } from '@mui/material';
+import { Box, IconButton, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface AttachmentCardProps {
     type: 'file' | 'artifact';
@@ -137,33 +138,21 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
                 </>
             )}
 
-            <Box
+            <IconButton
                 component="button"
                 onClick={(e) => {
                     e.stopPropagation();
                     onRemove();
                 }}
+                size='small'
                 sx={{
                     position: 'absolute',
                     top: '4px',
-                    right: '4px',
-                    background: (theme) => theme.palette.action.active,
-                    border: 'none',
-                    borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
-                    color: (theme) => theme.palette.common.white,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    '&:hover': {
-                        background: (theme) => theme.palette.action.hover
-                    }
+                    right: '4px'
                 }}
             >
-                ×
-            </Box>
+                <CloseIcon sx={{width: 12, height: 12}}/>
+            </IconButton>
         </Box>
     );
 };
