@@ -63,7 +63,7 @@ export const MODEL_CONFIG_DEFAULTS = [
     {
         type: ModelType.CODING,
         provider: LLMProvider.OPENROUTER,
-        model: 'claude-3-7-sonnet-20250219',
+        model: 'anthropic/claude-3.7-sonnet',
         enabled: true
     },
     {

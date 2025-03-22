@@ -25,36 +25,40 @@ const postMessageWithResponse = (type, data) => {
     });
 };
 
-// Expose artifact methods using postMessage
-window.loadArtifactContent = async (artifactId) => {
-    const response = await postMessageWithResponse('loadArtifactContent', { artifactId });
-    return response.content;
-};
+export const Artifacts = {
+    // Expose artifact methods using postMessage
+    loadArtifactContent: async (artifactId) => {
+        const response = await postMessageWithResponse('loadArtifactContent', { artifactId });
+        return response.content;
+    },
 
-window.getArtifactMetadata = async (artifactId) => {
-    const response = await postMessageWithResponse('getArtifactMetadata', { artifactId });
-    return response.metadata;
-};
+    getArtifactMetadata: async (artifactId) => {
+        const response = await postMessageWithResponse('getArtifactMetadata', { artifactId });
+        return response.metadata;
+    },
 
-window.listAvailableArtifacts = async () => {
-    const response = await postMessageWithResponse('listAvailableArtifacts', {});
-    return response.artifacts;
-};
+    listAvailableArtifacts: async () => {
+        const response = await postMessageWithResponse('listAvailableArtifacts', {});
+        return response.artifacts;
+    }
+}
 
 // Expose CSV utilities
-export const parseSync = (csvString, options) => parse(csvString, {
-    columns: true,
-    skip_empty_lines: true,
-    trim: true,
-    relax_quotes: true,
-    relax_column_count: true,
-    bom: true,
-    ...options
-});
-export const stringifySync = (data, options) => stringify(data, {
-    header: true,
-    ...options
-});
+export const CSV = {
+    parseSync: (csvString, options) => parse(csvString, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        relax_quotes: true,
+        relax_column_count: true,
+        bom: true,
+        ...options
+    }),
+    stringifySync: (data, options) => stringify(data, {
+        header: true,
+        ...options
+    })
+};
 
 export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom';

@@ -25,14 +25,15 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 `You are creating a website. Follow these guidelines:
 - Use modern, responsive design principles
 - You may use React 19 and Material-UI (MUI) components
-- CSV parsing utilities are available through WebsiteLibs.parseSync(content) : { data : [] } and WebsiteLibs.stringifySync({ data: [] }) : string
-- Use these exact script references in your HTML:;
+- Use these exact script references in your HTML.
 - Your JavaScript must be inside of a 'text/babel' script so the JSX can be processed.
 - To access needed libraries: 
   - Ensure all MUI component imports are properly destructured from MaterialUI variable;
   - Do not use any other CDN-hosted libraries;
 
-'''html
+  ## Code Template
+
+<artifact_html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,7 +43,7 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
   <script src='../website-libs/website-libs.min.js'></script>
   <script type="text/babel">
     // The generated code must properly initialize React and MUI components;
-    const { React, ReactDOM, ReactDOMClient, MaterialUI, MaterialIcons... } = WebsiteLibs;
+    const { React, ReactDOM, ReactDOMClient, MaterialUI, MaterialIcons, Artifacts, CSV } = WebsiteLibs;
     const { CssBaseline, Container, Container, Button... } = MaterialUI;
     const { Add } = MaterialIcons;
     // use MUI themes
@@ -67,7 +68,13 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 <body>
   <div id="root"></div>
 </div>
-'''
+</artifact_html>
+
+## CSV 
+
+- CSV parsing utilities are available through CSV.parseSync(content) : { data : [] } and CSV.stringifySync({ data: [] }) : string
+
+## Themes
 
 - Available MUI themes (use createTheme() to customize):
     - light: Default light theme
@@ -78,22 +85,24 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 
 - Include all necessary JavaScript code within the HTML file
 
+## Artifacts
+
 You can load additional artifacts using these methods:
-- window.loadArtifactContent(artifactId : string): string: Loads an artifact by ID
-- window.getArtifactMetadata(artifactId : string) : Record<string, any>: Gets metadata for an artifact
-- window.listAvailableArtifacts() : { title: string, id: string, type: string, subtype: string }: Lists all artifacts available to this project
+- Artifacts.loadArtifactContent(artifactId : string): string: Loads an artifact by ID
+- Artifacts.getArtifactMetadata(artifactId : string) : Record<string, any>: Gets metadata for an artifact
+- Artifacts.listAvailableArtifacts() : { title: string, id: string, type: string, subtype: string }: Lists all artifacts available to this project
 
 Example usage:
 // Load an artifact
-const artifact = await window.loadArtifactContent('12345');
+const artifact = await Artifacts.loadArtifactContent('12345');
 console.log(artifact.content);
 
 // Get artifact metadata
-const metadata = await window.getArtifactMetadata('12345');
+const metadata = await Artifacts.getArtifactMetadata('12345');
 console.log(metadata.title);
 
 // List available artifacts
-const artifacts = await window.listAvailableArtifacts();
+const artifacts = await Artifacts.listAvailableArtifacts();
 console.log(artifacts);`);
         
         return prompt;

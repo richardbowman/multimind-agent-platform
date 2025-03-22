@@ -91,7 +91,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
             if (match) {
                 setConfigForm({
                     ...match,
-                    ...config // User values override defaults
+                    ...config
                 });
                 return;
             }
@@ -241,8 +241,8 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                             
                             if (match) {
                                 setConfigForm({
-                                    ...match,
-                                    ...newConfig // Class defaults override
+                                    ...newConfig,
+                                    ...match
                                 });
                                 return;
                             }

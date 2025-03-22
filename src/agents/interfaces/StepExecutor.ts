@@ -42,7 +42,7 @@ export type ModelConversationResponse = WithTokens<WithMetadata<ModelMessageResp
 
 export interface ModelConversation<R extends StepResponse> extends InputPrompt {
     generate(input: Partial<GenerateInputParams>) : Promise<ModelConversationResponse>;
-    addProcedures(filter: FilterCriteria): Promise<Artifact>;
+    addProcedures(filter: FilterCriteria): Promise<Artifact[]>;
 }
 
 export abstract class BaseStepExecutor<R extends StepResponse> implements StepExecutor<R> {
@@ -123,7 +123,7 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
                     }
                 } as ModelConversationResponse;
             },
-            addProcedures: async (metadataFilter: FilterCriteria) : Promise<void> => {
+            addProcedures: async (metadataFilter: FilterCriteria) : Promise<Artifact[]> => {
                 // Get procedure guides already in use from previous responses
                 const pastGuideIds = params.previousResponses?.flatMap(response =>
                     response.data?.steps?.flatMap(step =>

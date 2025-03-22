@@ -80,6 +80,7 @@ export interface ConversationContext extends Record<string, any> {
     "project-ids"?: string[];
     "conversation-root"?: string;
     artifactIds?: string[];
+    partial?: boolean;
 }
 
 export interface Attachment {

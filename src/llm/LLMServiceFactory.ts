@@ -59,7 +59,8 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings,
-                    config.key
+                    config.key,
+                    config.baseUrl
                 );
             case LLMProvider.OPENROUTER:
                 if (!config.key) {

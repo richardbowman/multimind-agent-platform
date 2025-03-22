@@ -372,7 +372,7 @@ export abstract class Agent {
         const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);
         const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
 
-        if (!existingWelcome) {
+        if (!existingWelcome || existingWelcome.props.partial) {
             // Get channel data to find available agents
             const channelData = await this.chatClient.getChannelData(monitorChannelId);
 
@@ -383,7 +383,13 @@ export abstract class Agent {
                 const channelAgents = (channelData.members || [])
                     .map(memberId => this.agents.agents[memberId]);
 
-                const post = await this.send({ message: "Typing...", props: { partial: true, messageType: 'welcome' } }, monitorChannelId);
+                let post;
+                if (existingWelcome) {
+                    post = await this.chatClient.updatePost(existingWelcome.id, 'Typing...', { partial: true });
+                } else {
+                    post = await this.send({ message: "Typing...", props: { partial: true, messageType: 'welcome' } }, monitorChannelId);
+                }
+            
                 if (!post) {
                     Logger.error("Failed to create post for welcome message");
                 } else {

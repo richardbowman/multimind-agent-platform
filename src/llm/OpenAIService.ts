@@ -35,11 +35,11 @@ export class OpenAIService extends BaseLLMService {
     }
 
 
-    constructor(private settings: Settings, apiKey: string, baseUrl?: string, private serviceName: LLMProvider = LLMProvider.OPENAI) {
+    constructor(private settings: Settings, apiKey: string, baseURL?: string, private serviceName: LLMProvider = LLMProvider.OPENAI) {
         super(serviceName, settings);
         const configuration: ClientOptions = ({
-            apiKey: apiKey,
-            baseURL: baseUrl
+            apiKey,
+            baseURL
         });
         this.client = new OpenAI(configuration);
     }

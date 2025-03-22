@@ -139,8 +139,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 },
                 (result) => {
                     const hasValidResponse = !!result && !!result.nextAction && !!result.message;
-                    const hasValidAction = result.nextAction && validActions.has(result.nextAction);
-                    return hasValidResponse && hasValidAction;
+                    const hasValidAction = result.nextAction && validActions.has(result.nextAction) && result.nextAction !== completionAction;
+                    return hasValidResponse || hasValidAction;
                 },
                 {
                     maxRetries: 3,
