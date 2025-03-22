@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
     ListItemText,
@@ -23,8 +23,8 @@ import {
 } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import { useIPCService } from '../contexts/IPCContext';
 import { LLMLogEntry } from '../../../../llm/LLMLogModel';
+import { useLLMLogs } from '../contexts/LLMLogContext';
 
 interface FormattedDataViewProps {
     data: any;
@@ -151,36 +151,35 @@ interface LLMLogViewerProps {
 // Helper functions to extract meaningful messages
 const getLastMessage = (input: any): string => {
     if (!input) return '';
-    
+
     if (Array.isArray(input)) {
         const lastMessage = input[input.length - 1];
         return lastMessage?.content || JSON.stringify(lastMessage);
     }
-    
+
     if (typeof input === 'object') {
         return input?.content || input?.message || JSON.stringify(input);
     }
-    
+
     return input.toString();
 };
 
 const getOutputMessage = (output: any): string => {
     if (!output) return '';
-    
+
     if (typeof output === 'object') {
         return output?.message || output?.content || JSON.stringify(output);
     }
-    
+
     return output.toString();
 };
 
-export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText, filterLog }) => {
+export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highlightText, filterLog }) => {
     const [selectedLog, setSelectedLog] = useState<any>(null);
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
     const [tabValue, setTabValue] = useState(0);
     const [allLogs, setAllLogs] = useState<LLMLogEntry[]>([]);
     const [page, setPage] = useState(0);
-    const [hasMore, setHasMore] = useState(true);
     const { logs, hasMore, loadMoreLogs } = useLLMLogs();
 
     const handleOpenDetails = React.useCallback((log: any, index: number) => {
@@ -188,7 +187,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
         setSelectedLogIndex(prevIndex => {
             // Only create the sorted array if we don't have one yet
             if (allLogs.length === 0) {
-                const logsArray = Object.entries(logs?.llm || {})
+                const logsArray = logs
                     .flatMap(([service, entries]) =>
                         (Array.isArray(entries) ? [...entries] : [])
                             .filter(log =>
@@ -224,7 +223,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
 
     return (
         <Box>
-            <Box sx={{ 
+            <Box sx={{
                 display: 'grid',
                 gridTemplateColumns: '120px 1fr 1fr 80px 120px 120px 120px 120px',
                 gap: 2,
@@ -252,73 +251,73 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                 }))
             ).map((log, index) => (
                 <div key={`${log.service}-${index}`} className="log-entry info">
-                <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
-                    <ListItemText
-                        primary={
-                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                                <Box sx={{ minWidth: 120 }}>
-                                    <Typography variant="body2" color="textSecondary">
-                                        {new Date(log.timestamp).toLocaleString()}
-                                    </Typography>
+                    <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
+                        <ListItemText
+                            primary={
+                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                    <Box sx={{ minWidth: 120 }}>
+                                        <Typography variant="body2" color="textSecondary">
+                                            {new Date(log.timestamp).toLocaleString()}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography variant="body2" noWrap>
+                                            {getLastMessage(log.input?.messages || log.input?.prompt || log.input)}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography variant="body2" noWrap color="textSecondary">
+                                            {getOutputMessage(log.output)}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ minWidth: 80 }}>
+                                        <Typography
+                                            variant="body2"
+                                            color={log.error ? 'error.main' : 'success.main'}
+                                            sx={{ fontWeight: 500 }}
+                                        >
+                                            {log.error ? 'ERROR' : 'SUCCESS'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ minWidth: 120 }}>
+                                        <Typography variant="body2" noWrap>
+                                            {log?.context?.agentName || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ minWidth: 120 }}>
+                                        <Typography variant="body2" color="textSecondary">
+                                            {log?.context?.provider}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ minWidth: 120 }}>
+                                        <Typography variant="body2" noWrap>
+                                            {log?.context?.stepType || 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ minWidth: 120 }}>
+                                        <Typography variant="body2" noWrap>
+                                            {log?.context?.taskId ? `Task: ${log.context.taskId}` : 'N/A'}
+                                        </Typography>
+                                    </Box>
                                 </Box>
-                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography variant="body2" noWrap>
-                                        {getLastMessage(log.input?.messages || log.input?.prompt || log.input)}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ flex: 1, minWidth: 0 }}>
-                                    <Typography variant="body2" noWrap color="textSecondary">
-                                        {getOutputMessage(log.output)}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ minWidth: 80 }}>
-                                    <Typography 
-                                        variant="body2" 
-                                        color={log.error ? 'error.main' : 'success.main'}
-                                        sx={{ fontWeight: 500 }}
-                                    >
-                                        {log.error ? 'ERROR' : 'SUCCESS'}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ minWidth: 120 }}>
-                                    <Typography variant="body2" noWrap>
-                                        {log?.context?.agentName || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ minWidth: 120 }}>
-                                    <Typography variant="body2" color="textSecondary">
-                                        {log?.context?.provider}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ minWidth: 120 }}>
-                                    <Typography variant="body2" noWrap>
-                                        {log?.context?.stepType || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ minWidth: 120 }}>
-                                    <Typography variant="body2" noWrap>
-                                        {log?.context?.taskId ? `Task: ${log.context.taskId}` : 'N/A'}
-                                    </Typography>
-                                </Box>
-                            </Box>
-                        }
-                        sx={{ my: 0 }}
-                    />
-                </ListItemButton>
-            </div>
+                            }
+                            sx={{ my: 0 }}
+                        />
+                    </ListItemButton>
+                </div>
             ))}
 
-{hasMore && (
-                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                     <Button
-                         variant="outlined"
-                         onClick={loadMoreLogs}
-                         disabled={!hasMore}
-                     >
-                         Load More
-                     </Button>
-                 </Box>
-             )}
+            {hasMore && (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                    <Button
+                        variant="outlined"
+                        onClick={loadMoreLogs}
+                        disabled={!hasMore}
+                    >
+                        Load More
+                    </Button>
+                </Box>
+            )}
 
             <Dialog
                 open={!!selectedLog}
@@ -435,7 +434,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                         {key === 'message' ? (
                                             <ReactMarkdown>
                                                 {typeof value === 'object' ? JSON.stringify(value, null, 2) : (value as Object).toString()}
-                                        </ReactMarkdown>
+                                            </ReactMarkdown>
                                         ) : (
                                             <FormattedDataView data={value} />
                                         )}
