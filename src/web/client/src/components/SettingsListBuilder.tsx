@@ -122,7 +122,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     };
 
     const handleDeleteConfig = (index: number) => {
-        let newConfigs = [...settings.modelConfigs || []];
+        let newConfigs = [...settings[configType] || []];
         newConfigs.splice(index, 1);
         onSettingsChange(newConfigs);
     };
