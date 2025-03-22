@@ -9,12 +9,19 @@ import {
     Button,
     Checkbox,
     FormControlLabel,
-    Grid,
-    Paper,
     TextField,
     Typography,
-    Box
+    Box,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TableSortLabel,
+    Paper
 } from '@mui/material';
+import { visuallyHidden } from '@mui/utils';
 
 // Define possible subtypes for each artifact type
 const SUBTYPE_MAPPING: Record<ArtifactType, string[]> = {
@@ -28,25 +35,47 @@ const SUBTYPE_MAPPING: Record<ArtifactType, string[]> = {
     [ArtifactType.Unknown]: []
 };
 
+interface Asset {
+    id: string;
+    type: ArtifactType;
+    metadata: {
+        title: string;
+        description?: string;
+        previewUrl?: string;
+        createdAt?: string;
+        modifiedAt?: string;
+    };
+}
+
 interface ArtifactSelectionDialogProps {
-    assets: Array<{
-        id: string;
-        type: ArtifactType;
-        metadata: {
-            title: string;
-            description?: string;
-            previewUrl?: string;
-        };
-    }>;
+    assets: Asset[];
     onSelect: (assetIds: string[]) => void;
     onClose: () => void;
 }
+
+type Order = 'asc' | 'desc';
+
+interface HeadCell {
+    id: keyof Asset['metadata'];
+    label: string;
+    sortable: boolean;
+}
+
+const headCells: readonly HeadCell[] = [
+    { id: 'title', label: 'Title', sortable: true },
+    { id: 'type', label: 'Type', sortable: true },
+    { id: 'createdAt', label: 'Created', sortable: true },
+    { id: 'modifiedAt', label: 'Modified', sortable: true },
+    { id: 'description', label: 'Description', sortable: false }
+];
 
 export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = ({ assets, onSelect, onClose }) => {
     const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTypes, setSelectedTypes] = useState<ArtifactType[]>([]);
     const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
+    const [order, setOrder] = useState<Order>('desc');
+    const [orderBy, setOrderBy] = useState<keyof Asset['metadata']>('modifiedAt');
 
     // Get available subtypes based on selected types
     const availableSubtypes = useMemo(() => {
@@ -56,23 +85,43 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
         return [];
     }, [selectedTypes]);
 
-    const filteredAssets = assets.filter(asset => {
-        const matchesSearch = asset.metadata.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+    const filteredAssets = useMemo(() => {
+        return assets
+            .filter(asset => {
+                const matchesSearch = asset.metadata.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
-        const matchesType = selectedTypes.length === 0 ||
-            (asset.type && selectedTypes.some(type => 
-                type.toLowerCase() === asset.type?.toLowerCase()
-            ));
+                const matchesType = selectedTypes.length === 0 ||
+                    (asset.type && selectedTypes.some(type => 
+                        type.toLowerCase() === asset.type?.toLowerCase()
+                    ));
 
-        // Check subtype match if subtypes are selected
-        const matchesSubtype = selectedSubtypes.length === 0 ||
-            (asset.metadata.subtype && selectedSubtypes.some(subtype => 
-                subtype.toLowerCase() === asset.metadata.subtype?.toLowerCase()
-            ));
+                const matchesSubtype = selectedSubtypes.length === 0 ||
+                    (asset.metadata.subtype && selectedSubtypes.some(subtype => 
+                        subtype.toLowerCase() === asset.metadata.subtype?.toLowerCase()
+                    ));
 
-        return matchesSearch && matchesType && matchesSubtype;
-    });
+                return matchesSearch && matchesType && matchesSubtype;
+            })
+            .sort((a, b) => {
+                const aValue = a.metadata[orderBy] || '';
+                const bValue = b.metadata[orderBy] || '';
+                
+                if (order === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                }
+                return aValue < bValue ? 1 : -1;
+            });
+    }, [assets, searchTerm, selectedTypes, selectedSubtypes, order, orderBy]);
+
+    const handleRequestSort = (
+        event: React.MouseEvent<unknown>,
+        property: keyof Asset['metadata'],
+    ) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
 
     const handleSelect = (assetId: string) => {
         setSelectedAssets(prev =>
@@ -171,46 +220,94 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                 {/* Main Content */}
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                        <Grid container spacing={2}>
-                            {filteredAssets.map(asset => (
-                                <Grid item xs={12} sm={6} md={4} lg={3} key={asset.id}>
-                                    <Paper
-                                        elevation={selectedAssets.includes(asset.id) ? 3 : 1}
-                                        sx={{
-                                            p: 2,
-                                            cursor: 'pointer',
-                                            border: selectedAssets.includes(asset.id) ? '2px solid' : '1px solid',
-                                            borderColor: selectedAssets.includes(asset.id) ? 'primary.main' : 'divider',
-                                            transition: 'all 0.2s',
-                                            '&:hover': {
-                                                borderColor: 'primary.main'
-                                            }
-                                        }}
-                                        onClick={() => handleSelect(asset.id)}
-                                    >
-                                        {asset.metadata.previewUrl && (
-                                            <img
-                                                src={asset.metadata.previewUrl}
-                                                alt={asset.metadata.title}
-                                                style={{
-                                                    width: '100%',
-                                                    height: '100px',
-                                                    objectFit: 'cover',
-                                                    borderRadius: '4px',
-                                                    marginBottom: '8px'
+                        <TableContainer component={Paper} sx={{ maxHeight: '60vh' }}>
+                            <Table stickyHeader size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell padding="checkbox">
+                                            <Checkbox
+                                                indeterminate={
+                                                    selectedAssets.length > 0 &&
+                                                    selectedAssets.length < filteredAssets.length
+                                                }
+                                                checked={
+                                                    filteredAssets.length > 0 &&
+                                                    selectedAssets.length === filteredAssets.length
+                                                }
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedAssets(filteredAssets.map(a => a.id));
+                                                    } else {
+                                                        setSelectedAssets([]);
+                                                    }
                                                 }}
                                             />
-                                        )}
-                                        <Typography variant="body1">{asset.metadata.title}</Typography>
-                                        {asset.metadata.description && (
-                                            <Typography variant="body2" color="text.secondary">
-                                                {asset.metadata.description}
-                                            </Typography>
-                                        )}
-                                    </Paper>
-                                </Grid>
-                            ))}
-                        </Grid>
+                                        </TableCell>
+                                        {headCells.map((headCell) => (
+                                            <TableCell
+                                                key={headCell.id}
+                                                sortDirection={orderBy === headCell.id ? order : false}
+                                            >
+                                                {headCell.sortable ? (
+                                                    <TableSortLabel
+                                                        active={orderBy === headCell.id}
+                                                        direction={orderBy === headCell.id ? order : 'asc'}
+                                                        onClick={(e) => handleRequestSort(e, headCell.id)}
+                                                    >
+                                                        {headCell.label}
+                                                        {orderBy === headCell.id ? (
+                                                            <Box component="span" sx={visuallyHidden}>
+                                                                {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                                                            </Box>
+                                                        ) : null}
+                                                    </TableSortLabel>
+                                                ) : (
+                                                    headCell.label
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {filteredAssets.map((asset) => {
+                                        const isSelected = selectedAssets.includes(asset.id);
+                                        return (
+                                            <TableRow
+                                                hover
+                                                onClick={() => handleSelect(asset.id)}
+                                                role="checkbox"
+                                                aria-checked={isSelected}
+                                                tabIndex={-1}
+                                                key={asset.id}
+                                                selected={isSelected}
+                                                sx={{ cursor: 'pointer' }}
+                                            >
+                                                <TableCell padding="checkbox">
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>{asset.metadata.title}</TableCell>
+                                                <TableCell>{asset.type}</TableCell>
+                                                <TableCell>
+                                                    {asset.metadata.createdAt ? 
+                                                        new Date(asset.metadata.createdAt).toLocaleDateString() : 
+                                                        'N/A'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {asset.metadata.modifiedAt ? 
+                                                        new Date(asset.metadata.modifiedAt).toLocaleDateString() : 
+                                                        'N/A'}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {asset.metadata.description || 'No description'}
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     </Box>
                 </Box>
             </DialogContent>
