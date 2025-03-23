@@ -42,12 +42,21 @@ export namespace ArrayUtils {
     }
 
     interface FilterCriteria {
-        [key: string]: FilterValue | FilterCriteria;
+        // Regular properties
+        [key: string]: FilterValue | FilterOperatorMap | FilterCriteria;
+        
+        // Logical operators
         $and?: FilterCriteria[];
         $or?: FilterCriteria[];
         $nor?: FilterCriteria[];
         $not?: FilterCriteria;
     }
+
+    // Helper type to extract value types from FilterCriteria
+    type FilterValueType<T> = 
+        T extends FilterCriteria ? FilterValue | FilterOperatorMap | FilterCriteria :
+        T extends Array<infer U> ? FilterValueType<U> :
+        T;
 
     export function filter<T extends Record<string, any>>(
         array: T[], 
