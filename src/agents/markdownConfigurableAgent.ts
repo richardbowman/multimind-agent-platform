@@ -87,7 +87,7 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         }
 
         // Apply planner configuration
-        if (config.planner) {
+        if (config.plannerType) {
             if (config.plannerType === 'nextStep') {
                 this.planner = null;
             } else if (config.plannerType === 'advanced') {
