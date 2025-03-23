@@ -164,17 +164,17 @@ export const TaskStatusPanel: React.FC = () => {
                     size="small"
                     sx={{ flexGrow: 1 }}
                 >
-                    <ToggleButton value="research" aria-label="research">
-                        Research
+                    <ToggleButton value="Step" aria-label="step">
+                        Step
                     </ToggleButton>
-                    <ToggleButton value="coding" aria-label="coding">
-                        Coding
+                    <ToggleButton value="Goal" aria-label="goal">
+                        Goal
                     </ToggleButton>
-                    <ToggleButton value="documentation" aria-label="documentation">
-                        Documentation
+                    <ToggleButton value="Recurring" aria-label="recurring">
+                        Recurring
                     </ToggleButton>
-                    <ToggleButton value="other" aria-label="other">
-                        Other
+                    <ToggleButton value="Standard" aria-label="standard">
+                        Standard
                     </ToggleButton>
                 </ToggleButtonGroup>
 
