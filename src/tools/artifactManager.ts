@@ -5,7 +5,7 @@ import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { ILLMService } from '../llm/ILLMService';
-import { Artifact, ArtifactItem, ArtifactType } from './artifact';
+import { Artifact, ArtifactItem, ArtifactType, DocumentSubtype, SpreadsheetSubType } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
@@ -13,6 +13,7 @@ import { asError, isError } from 'src/types/types';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { ArtifactModel } from './artifactModel';
 import { DatabaseMigrator } from 'src/database/migrator';
+import VectraService from 'src/llm/vectraService';
 
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
@@ -67,7 +68,8 @@ const getFileInfo = (mimeType?: string): { extension: string, type: string } => 
 export class ArtifactManager {
   private storageDir: string;
   private sequelize: Sequelize;
-  private vectorDb: IVectorDatabase;
+  private procedureVectorDb: IVectorDatabase;
+  private docsVectorDb: IVectorDatabase;
   private llmService?: ILLMService;
   private fileQueue: AsyncQueue;
   private saveQueue: AsyncQueue;
@@ -76,9 +78,10 @@ export class ArtifactManager {
 
   private initialized: boolean = false;
 
-   constructor(vectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
+   constructor(vectorDb: IVectorDatabase, procedureVectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
        this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
-       this.vectorDb = vectorDb;
+       this.docsVectorDb = vectorDb;
+       this.procedureVectorDb = procedureVectorDb;
        this.fileQueue = new AsyncQueue();
        this.saveQueue = new AsyncQueue();
        this.llmService = llmService;
@@ -294,10 +297,21 @@ export class ArtifactManager {
     });
   }
 
+  protected whichVectorDb(artifact: ArtifactItem) {
+    const vectorDb = 
+      artifact.metadata?.subtype === DocumentSubtype.Procedure || 
+      artifact.metadata?.subtype === SpreadsheetSubType.Procedure ? 
+        this.procedureVectorDb :
+        this.docsVectorDb;
+    return vectorDb;
+  }
+
   protected async indexArtifact(artifact: Artifact): Promise<void> {
+    const vectorDb = this.whichVectorDb(artifact);
+
     // Remove any old version from vector db
     try {
-      await this.vectorDb.deleteDocuments({ artifactId: artifact.id });
+      await vectorDb.deleteDocuments({ artifactId: artifact.id });
     } catch (error) {
       Logger.error('Error deleting artifact from vector database:', error);
     }
@@ -315,7 +329,7 @@ export class ArtifactManager {
     let contentToIndex = artifact.content.toString();
 
     // Check token count before indexing
-    const tokenCount = await this.vectorDb.getTokenCount(contentToIndex);
+    const tokenCount = await this.docsVectorDb.getTokenCount(contentToIndex);
     if (tokenCount > 100000) { // Skip documents larger than 100k tokens
       Logger.warn(`Skipping indexing of large artifact: ${artifact.id} (${tokenCount} tokens)`);
       return;
@@ -341,7 +355,7 @@ export class ArtifactManager {
     }
 
     // Index text content into vector DB
-    await this.vectorDb.handleContentChunks(
+    await vectorDb.handleContentChunks(
       contentToIndex,
       artifact.metadata?.url,
       artifact.metadata?.task,
@@ -464,7 +478,7 @@ export class ArtifactManager {
 
         // Remove from vector database
         try {
-          await this.vectorDb.deleteDocuments({ artifactId });
+          await this.docsVectorDb.deleteDocuments({ artifactId });
         } catch (error) {
           Logger.error('Error deleting artifact from vector database:', error);
         }
@@ -550,7 +564,8 @@ export class ArtifactManager {
       // Convert filter to vector DB query format
       const where: Record<string, any> = {};
       if (filter) {
-        for (const [key, value] of Object.entries(filter)) {
+        const supportedFilters = Object.entries(filter).filter(([key]) => ['type', 'subtype'].includes(key));
+        for (const [key, value] of supportedFilters) {
           if (Array.isArray(value)) {
             // Handle array values with $in operator
             where[key] = { $in: value };
@@ -564,11 +579,13 @@ export class ArtifactManager {
         }
       }
 
+      const vectorDb = filter?.subtype === DocumentSubtype.Procedure ? this.procedureVectorDb : this.docsVectorDb;
+
       // Search the vector database
       let results;
       try {
-        const debugNonFilteredResults = await this.vectorDb.query([query], {}, limit);
-        results = (await this.vectorDb.query([query], where, limit * 3)).slice(0, limit);
+        const vectorResults = (await vectorDb.query([query], where, limit * 3)).slice(0, limit);
+        
       } catch (e) {
         const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
         Logger.error(message, e)
