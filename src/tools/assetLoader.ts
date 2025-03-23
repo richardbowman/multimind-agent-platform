@@ -32,7 +32,7 @@ async function loadAssets(
     // Get existing assets from artifact manager
     const existingAssets = await artifactManager.getArtifacts({ 
         type: options.artifactType, 
-        subtype: options.artifactSubtype 
+        'metadata.subtype': options.artifactSubtype 
     });
     const existingAssetMap = new Map(existingAssets.map(a => [a.metadata?.source, a]));
 
@@ -287,7 +287,7 @@ async function generateActionsArtifact(actionsGuide: Artifact, artifactManager: 
     // Check if we already have this artifact
     const existingArtifacts = await artifactManager.getArtifacts({ 
         type: ArtifactType.Document, 
-        subtype: DocumentSubtype.Procedure 
+        'metadata.subtype': DocumentSubtype.Procedure 
     });
     const existingArtifact = existingArtifacts.find(a => a.metadata?.source === 'generated://actions-reference');
 

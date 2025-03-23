@@ -35,7 +35,7 @@ export class AgentLoader {
             // Look for agent configs in both the main artifacts and the assets/agents directory
             const artifactItems = await params.artifactManager.getArtifacts({
                 type: ArtifactType.Document,
-                subtype: DocumentSubtype.AgentConfig
+                'metadata.subtype': DocumentSubtype.AgentConfig
             });
 
             for (const artifact of artifactItems) {

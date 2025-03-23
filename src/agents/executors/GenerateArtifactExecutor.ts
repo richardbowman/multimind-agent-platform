@@ -308,9 +308,9 @@ new replacement text
         try {
             // Look for the supported subtypes artifact
             const artifacts = await this.artifactManager.getArtifacts({
-                artifactType,
                 type: ArtifactType.Spreadsheet,
-                subtype: `Artifact Subtypes`
+                'metadata.artifactType': artifactType,
+                'metadata.subtype': `Artifact Subtypes`
             });
             if (artifacts.length > 0) {
                 const artifact = await this.artifactManager.loadArtifact(artifacts[0].id);

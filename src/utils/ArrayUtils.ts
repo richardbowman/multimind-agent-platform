@@ -1,3 +1,5 @@
+import { FilterCriteria, FilterOperator } from '../types/FilterCriteria';
+
 export namespace ArrayUtils {
     export function deduplicateById<T extends { id: any }>(array: T[]): T[] {
         const seenIds = new Set();
@@ -14,8 +16,6 @@ export namespace ArrayUtils {
         return item !== undefined && item !== null;
     }
 
-    import { FilterCriteria, FilterOperator } from '../types/FilterCriteria';
-
     type FilterOperatorMap = {
         [key in FilterOperator]?: FilterCriteria[keyof FilterCriteria]
     };
@@ -24,10 +24,11 @@ export namespace ArrayUtils {
         array: T[], 
         filter: FilterCriteria & { [key: string]: any },
         mapper?: (item: T) => U
-    ): U[] {
+    ): T[] {
         return array.filter(item => {
             return Object.entries(filter).every(([key, filterValue]) => {
-                const itemValue = key.split('.').reduce((obj, k) => obj?.[k], item);
+                const mappedItem = mapper ? mapper(item) : item;
+                const itemValue = key.split('.').reduce((obj, k) => obj?.[k], mappedItem);
                 
                 // Handle logical operators ($and, $or, $nor)
                 if (key === '$and') {
@@ -85,8 +86,6 @@ export namespace ArrayUtils {
                 return itemValue === filterValue;
             });
         });
-
-        return mapper ? filtered.map(mapper) : filtered as unknown as U[];
     }
 }
 

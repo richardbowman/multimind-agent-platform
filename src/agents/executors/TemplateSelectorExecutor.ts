@@ -45,7 +45,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
             const schema = await getGeneratedSchema(SchemaType.TemplateSelectionResponse);
 
             // Get available templates
-            const templates = await this.artifactManager.getArtifacts({type: ArtifactType.Document, subtype: DocumentSubtype.Template});
+            const templates = await this.artifactManager.getArtifacts({type: ArtifactType.Document, 'metadata.subtype': DocumentSubtype.Template});
 
             const instructions = this.startModel(params);
             instructions.addContext({contentType: ContentType.ABOUT});

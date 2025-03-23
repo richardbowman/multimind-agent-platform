@@ -438,6 +438,7 @@ export class ArtifactManager {
         // Remove from vector database
         try {
           await this.docsVectorDb.deleteDocuments({ artifactId });
+          await this.procedureVectorDb.deleteDocuments({ artifactId });
         } catch (error) {
           Logger.error('Error deleting artifact from vector database:', error);
         }
@@ -521,33 +522,52 @@ export class ArtifactManager {
   ): Promise<Array<{ artifact: Artifact, score: number }>> {
     try {
       // Convert filter to vector DB query format
-      const where: FilterCriteria = {};
+      const vectorWhere: FilterCriteria = {};
       if (filter) {
         const supportedFilters = Object.entries(filter).filter(([key]) => ['type', 'subtype'].includes(key));
         for (const [key, value] of supportedFilters) {
           if (Array.isArray(value)) {
             // Handle array values with $in operator
-            where[key] = { $in: value };
+            vectorWhere[key] = { $in: value };
           } else if (typeof value === 'object' && value !== null) {
             // Handle nested objects
-            where[key] = value;
+            vectorWhere[key] = value;
           } else {
             // Handle simple equality with $eq operator
-            where[key] = { $eq: value };
+            vectorWhere[key] = { $eq: value };
           }
         }
       }
+
+      // Convert filter to vector DB query format
+      const postVectorWhere: FilterCriteria = {};
+      if (filter) {
+        const supportedFilters = Object.entries(filter).filter(([key]) => key !== 'type' && key !== 'subtype');
+        for (const [key, value] of supportedFilters) {
+          if (Array.isArray(value)) {
+            // Handle array values with $in operator
+            postVectorWhere[key] = { $in: value };
+          } else if (typeof value === 'object' && value !== null) {
+            // Handle nested objects
+            postVectorWhere[key] = value;
+          } else {
+            // Handle simple equality with $eq operator
+            postVectorWhere[key] = { $eq: value };
+          }
+        }
+      }
+      
 
       const vectorDb = filter?.subtype === DocumentSubtype.Procedure ? this.procedureVectorDb : this.docsVectorDb;
 
       // Search the vector database
       let results : SearchResult[];
       try {
-        results = (await vectorDb.query([query], where, limit))
+        results = [...new Set((await vectorDb.query([query], vectorWhere, limit))
           .filter(r => r.score > minScore)
-          .sort((a, b) => b.score - a.score);
+          .sort((a, b) => b.score - a.score))];
       } catch (e) {
-        const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
+        const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(vectorWhere, null, 2)}" with limit ${limit}`;
         Logger.error(message, e)
         throw new Error(message);
       }
@@ -556,8 +576,10 @@ export class ArtifactManager {
         artifact: await this.loadArtifact(metadata.artifactId as UUID),
         score
       })))).filter(r => !!r.artifact);
+      
+      const resultsFiltered = ArrayUtils.filter(artifactResults, postVectorWhere, a => a.artifact);
 
-      return artifactResults;
+      return resultsFiltered;
     } catch (error) {
       Logger.error('Error searching artifacts:', error);
       throw new Error(`Failed to search artifacts: ${asError(error).message}`);

@@ -36,7 +36,7 @@ export class ListTemplatesExecutor extends BaseStepExecutor<StepResponse> {
 
     async execute(params: ExecuteParams): Promise<StepResult<TemplateListStepResponse>> {
         // Get available templates
-        const templates = await this.artifactManager.getArtifacts({type: ArtifactType.Document, subtype: DocumentSubtype.Template});
+        const templates = await this.artifactManager.getArtifacts({type: ArtifactType.Document, 'metadata.subtype': DocumentSubtype.Template});
 
         // Format template information
         const templateList = templates.map(t => `
