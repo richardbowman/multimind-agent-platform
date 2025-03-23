@@ -37,7 +37,7 @@ interface ChatMessageProps {
     onToggleExpansion: (messageId: string) => void;
     onViewThread: (messageId: string) => void;
     onViewMetadata: (message: any) => void;
-    unreadMessages: Set<string>;
+    unreadChildren: Set<string>;
     onMessageRead: (messageId: string) => void;
 }
 
@@ -114,11 +114,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     onToggleExpansion,
     onViewThread,
     onViewMetadata,
-    unreadMessages,
+    unreadChildren,
     onMessageRead
 }) => {
     const isExpanded = expandedMessages.has(message.id);
-    const hasUnreadReplies = unreadMessages.has(message.id);
+    const hasUnreadReplies = unreadChildren.has(message.id);
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const { artifacts: allArtifacts } = useArtifacts();
