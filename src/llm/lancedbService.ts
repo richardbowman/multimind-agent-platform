@@ -30,14 +30,17 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
             if (tables.includes(name)) {
                 this.table = await this.db.openTable(name);
             } else {
-                // Create new table with simplified schema
+                // Create new table with essential metadata fields
                 const schema = new arrow.Schema([
                     new arrow.Field('id', new arrow.Utf8()),
                     new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Field('v', new arrow.Float32()))),
                     new arrow.Field('text', new arrow.Utf8()),
                     new arrow.Field('type', new arrow.Utf8()),
                     new arrow.Field('subtype', new arrow.Utf8()),
-                    // new arrow.Field('metadata_json', new arrow.Utf8())
+                    new arrow.Field('docId', new arrow.Utf8()),
+                    new arrow.Field('artifactId', new arrow.Utf8()),
+                    new arrow.Field('chunkId', new arrow.Int32()),
+                    new arrow.Field('chunkTotal', new arrow.Int32())
                 ]);
 
                 // Create empty table with schema
@@ -62,7 +65,10 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 text: doc,
                 type: collection.metadatas[i].type || '',
                 subtype: collection.metadatas[i].subtype || '',
-                // metadata_json: JSON.stringify(collection.metadatas[i])
+                docId: collection.metadatas[i].docId || '',
+                artifactId: collection.metadatas[i].artifactId || '',
+                chunkId: collection.metadatas[i].chunkId || 0,
+                chunkTotal: collection.metadatas[i].chunkTotal || 0
             }));
 
             await this.table.add(data);
@@ -84,7 +90,14 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
             return results.map((result: any) => ({
                 id: result.id,
                 text: result.text,
-                metadata: JSON.parse(result.metadata_json),
+                metadata: {
+                    type: result.type,
+                    subtype: result.subtype,
+                    docId: result.docId,
+                    artifactId: result.artifactId,
+                    chunkId: result.chunkId,
+                    chunkTotal: result.chunkTotal
+                },
                 score: result._distance
             }));
         });
