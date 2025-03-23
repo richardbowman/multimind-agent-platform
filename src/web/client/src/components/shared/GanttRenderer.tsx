@@ -3,6 +3,9 @@ import { Box, Typography } from '@mui/material';
 import { ArtifactItem } from '../../../../../tools/artifact';
 import Gantt from 'frappe-gantt';
 import { GanttData } from '../../../../../schemas/GanttData';
+import '../../../../../../node_modules/frappe-gantt/dist/frappe-gantt.css';
+import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
+import { Save, Today } from '@mui/icons-material';
 
 interface MarkwhenRendererProps {
     content: string;
@@ -11,11 +14,39 @@ interface MarkwhenRendererProps {
 
 export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifact }) => {
     let ganttData: GanttData = { tasks: [] };
+    let ganttObjRef = useRef(null);
     
     try {
         if (!content) {
             throw new Error('No content provided');
         }
+
+        const { actions, registerActions, unregisterActions } = useToolbarActions();
+
+        useEffect(() => {
+            const navigationActions = [
+                {
+                    id: 'save-roadmap',
+                    icon: <Save />,
+                    label: 'Save Roadmap',
+                    onClick: () => {
+                        
+                    }
+                },
+                {
+                    id: 'artifact-panel-pin',
+                    icon: <Today/>,
+                    label: 'Go to today',
+                    onClick: () => {
+                        ganttObjRef.current?.scroll_current();
+                    }
+                }
+            ];
+    
+            registerActions('roadmap-viewer', navigationActions);
+            return () => unregisterActions('roadmap-viewer');
+        }, []);
+
         
         const parsed = JSON.parse(content);
         
@@ -82,19 +113,31 @@ export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifa
                 };
             });
 
-            new Gantt(ganttRef.current, tasks, {
-                header_height: 50,
-                column_width: 30,
-                step: 24,
-                view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
-                bar_height: 20,
-                bar_corner_radius: 3,
-                arrow_curve: 5,
-                padding: 18,
-                view_mode: 'Month',
-                date_format: 'YYYY-MM-DD',
-                custom_popup_html: null
-            });
+            if (!ganttObjRef.current) {
+                ganttObjRef.current = new Gantt(ganttRef.current, tasks, {
+                    container_height: 600,
+                    view_mode: 'Month',
+                    view_mode_select: true,
+                    today_button: false,
+                    on_date_change: (task) => {
+                        console.log(task);
+                    }
+                });
+            }
+
+            // settings = {
+            //     header_height: 50,
+            //     column_width: 30,
+            //     step: 24,
+            //     view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
+            //     bar_height: 20,
+            //     bar_corner_radius: 3,
+            //     arrow_curve: 5,
+            //     padding: 18,
+            //     view_mode: 'Month',
+            //     date_format: 'YYYY-MM-DD',
+            //     custom_popup_html: null
+            // }
         }
     }, [ganttData]);
 
@@ -103,7 +146,7 @@ export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifa
             <Typography variant="h6" gutterBottom>
                 {artifact?.metadata?.title || 'Gantt Chart'}
             </Typography>
-            <div ref={ganttRef} style={{ width: '100%', height: '600px' }} />
+            <div ref={ganttRef} style={{ background: '#fff', width: '100%', height: '600px' }} />
         </Box>
     );
 };
