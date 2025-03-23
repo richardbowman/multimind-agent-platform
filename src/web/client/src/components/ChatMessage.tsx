@@ -37,6 +37,7 @@ interface ChatMessageProps {
     onToggleExpansion: (messageId: string) => void;
     onViewThread: (messageId: string) => void;
     onViewMetadata: (message: any) => void;
+    hasUnreadReplies?: boolean;
 }
 
 const ArtifactLoader: React.FC<{ artifactId: string }> = ({ artifactId }) => {
@@ -281,9 +282,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 position: 'relative',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                '@keyframes pulse': {
+                                    '0%': {
+                                        transform: 'scale(1) rotate(-90deg)',
+                                        opacity: 1
+                                    },
+                                    '50%': {
+                                        transform: 'scale(1.1) rotate(-90deg)',
+                                        opacity: 0.7
+                                    },
+                                    '100%': {
+                                        transform: 'scale(1) rotate(-90deg)',
+                                        opacity: 1
+                                    }
+                                },
+                                animation: hasThread && hasUnreadReplies ? 'pulse 1.5s infinite' : 'none'
                             }}>
-                                <ReplyIcon sx={{ transform: 'rotate(-90deg)' }} />
+                                <ReplyIcon sx={{ 
+                                    transform: 'rotate(-90deg)',
+                                }} />
                                 {message.replyCount > 0 && (
                                     <Box sx={{
                                         position: 'absolute',
