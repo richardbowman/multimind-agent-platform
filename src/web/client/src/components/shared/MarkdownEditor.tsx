@@ -76,7 +76,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             imagePlugin(),
             tablePlugin(),
             codeBlockPlugin({ defaultCodeBlockLanguage: 'js' }),
-            codeMirrorPlugin({ codeBlockLanguages: { '': "Unknown", js: 'JavaScript', css: 'CSS', mermaid: 'Mermaid', markdown: 'Markdown' } }),
+            codeMirrorPlugin({ codeBlockLanguages: { '': "Unknown", js: 'JavaScript',json: 'JSON', css: 'CSS', mermaid: 'Mermaid', markdown: 'Markdown' } }),
             toolbarPlugin({
               toolbarContents: () => (
                 <DiffSourceToggleWrapper>

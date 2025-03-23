@@ -107,7 +107,7 @@ export class MainWindow {
         if (this.settingsManager?.getSettings().openDevToolsOnLoad) {
             this.window.webContents.openDevTools();
         }
-        this.window.webContents.openDevTools();
+        // this.window.webContents.openDevTools();
     }
 
     setMessage(message: string) {

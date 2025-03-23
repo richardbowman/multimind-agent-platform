@@ -19,12 +19,14 @@ import { createChannelHandle } from "./shared/channelTypes";
 import { app } from "electron";
 import { Message } from "./chat/chatClient";
 import _crypto from 'node:crypto';
-import { loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
+import { loadAgentConfigs, loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
 import { Sequelize } from "sequelize";
 import { Settings } from "./tools/settings";
 import { ILLMService, LLMProviders, LLMServices } from "./llm/ILLMService";
 import { LLMProvider } from "./llm/types/LLMProvider";
 import { asError } from "./types/types";
+import "./utils/ArrayUtils";    // need to import because we change array prototype
+
 if (!global.crypto) {
     global.crypto = _crypto;
 }
@@ -199,8 +201,11 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         // Load procedure guides
         const guidesDir = path.join('dist', 'assets', "procedure-guides");
         const templatesDir = path.join('dist', 'assets', "templates");
+        const agentsDir = path.join('dist', 'assets', "agents");
+
         await loadProcedureGuides(app.getAppPath(), guidesDir, artifactManager);
         await loadTemplates(app.getAppPath(), templatesDir, artifactManager);
+        await loadAgentConfigs(app.getAppPath(), agentsDir, artifactManager);
 
         const agents: Agents = { agents: {} };
 

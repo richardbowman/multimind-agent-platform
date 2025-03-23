@@ -7,7 +7,7 @@ import { ChartRenderer } from './ChartRenderer';
 import { WebpageRenderer } from './WebpageRenderer';
 import { Box, Paper, Typography } from '@mui/material';
 import { CalendarRenderer } from './CalendarRenderer';
-import { GanttRenderer as GanttRenderer } from './MarkwhenRenderer';
+import { GanttRenderer } from './GanttRenderer';
 import { PDFRenderer } from './PDFRenderer';
 import { SlideRenderer } from './SlideRenderer';
 import { MarkdownEditor } from './MarkdownEditor';

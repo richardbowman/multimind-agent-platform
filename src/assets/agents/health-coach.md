@@ -12,9 +12,11 @@ Help users improve their health and wellness through personalized coaching and r
 ## Configuration
 ```json
 {
-  "agentName": "Health Coach",
+  "agent": {
+    "name": "Health Coach",
+    "supportsDelegation": true
+  },
   "description": "Your personal AI health and wellness coach",
-  "supportsDelegation": true,
   "plannerType": "nextStep",
   "executors": [
     {

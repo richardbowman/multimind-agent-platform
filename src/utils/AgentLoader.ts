@@ -39,25 +39,19 @@ export class AgentLoader {
         try {
             // Find all artifacts with AgentConfig subtype
             // Look for agent configs in both the main artifacts and the assets/agents directory
-            const artifacts = await params.artifactManager.getArtifacts({
+            const artifactItems = await params.artifactManager.getArtifacts({
                 type: ArtifactType.Document,
                 subtype: DocumentSubtype.AgentConfig
             });
 
-            // Load agent configs from assets directory using the asset loader
-            const assetsDir = path.join(__dirname, '../../assets/agents');
-            const loadedConfigs = await loadAgentConfigs(__dirname, '../../assets/agents', params.artifactManager);
-            artifacts.push(...loadedConfigs);
-
-            for (const artifact of artifacts) {
+            for (const artifact of artifactItems) {
                 try {
                     const configParams: AgentConstructorParams = {
                         ...params,
-                        llmService: params.llmServices.conversation,
                         config: {
                             configArtifactId: artifact.id
                         },
-                        chatClient: new LocalTestClient(params.settingsManager.getSettings().defaultUserId, "", params.chatStorage),
+                        chatClient: new LocalTestClient(artifact.id, "", params.chatStorage),
                         settings: params.settingsManager.getSettings()
                     };
 

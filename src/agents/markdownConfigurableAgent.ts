@@ -83,14 +83,14 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         // Apply basic agent configuration
         if (config.agent) {
             this.agentName = config.agent.name || this.agentName;
-            this.supportsDelegation = config.agent.supports_delegation || false;
+            this.supportsDelegation = config.agent.supportsDelegation || false;
         }
 
         // Apply planner configuration
         if (config.planner) {
-            if (config.planner.type === 'nextStep') {
+            if (config.plannerType === 'nextStep') {
                 this.planner = null;
-            } else if (config.planner.type === 'advanced') {
+            } else if (config.plannerType === 'advanced') {
                 const planner = new MultiStepPlanner(
                     this.llmService,
                     this.taskManager,
