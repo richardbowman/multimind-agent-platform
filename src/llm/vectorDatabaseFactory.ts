@@ -7,7 +7,7 @@ import { IEmbeddingService, ILLMService } from './ILLMService';
 
 export enum VectorDatabaseType {
     CHROMA = 'chroma',
-    VECTRA = 'vectra',
+    VECTRA = 'vectra', 
     SQLITE_VEC = 'sqlite_vec',
     LANCEDB = 'lancedb'
 }

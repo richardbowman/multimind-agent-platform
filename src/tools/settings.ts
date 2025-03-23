@@ -202,6 +202,36 @@ export class TTSSettings {
     enabled: boolean = true;
 }
 
+export class LanceDBSettings {
+    @ClientSettings({
+        label: 'Embedding Dimensions',
+        category: 'Vector DB',
+        type: 'number',
+        description: 'Number of dimensions for embeddings (must match embedding model)',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
+    })
+    dimensions: number = 768;
+
+    @ClientSettings({
+        label: 'Auto Vacuum',
+        category: 'Vector DB',
+        type: 'boolean',
+        description: 'Enable automatic database vacuuming to optimize storage',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
+    })
+    autoVacuum: boolean = true;
+
+    @ClientSettings({
+        label: 'Journal Mode',
+        category: 'Vector DB',
+        type: 'select',
+        options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
+        description: 'SQLite journal mode (WAL recommended for better concurrency)',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
+    })
+    journalMode: string = 'WAL';
+};
+
 export class SQLiteVecSettings{
     @ClientSettings({
         label: 'Embedding Dimensions',
@@ -399,10 +429,10 @@ export class Settings {
         label: 'Vector Database Type',
         category: 'Vector DB',
         type: 'select',
-        options: ['vectra', 'chroma', 'sqlite_vec'],
+        options: ['vectra', 'chroma', 'sqlite_vec', 'lancedb'],
         description: 'Type of vector database to use for storing and querying embeddings'
     })
-    vectorDatabaseType: 'vectra'|'chroma'|'sqlite_vec' = 'vectra';
+    vectorDatabaseType: 'vectra'|'chroma'|'sqlite_vec'|'lancedb' = 'vectra';
 
     @ClientSettings({
         label: 'SQLiteVec Settings',
@@ -412,6 +442,15 @@ export class Settings {
         visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
     })
     sqliteVec: SQLiteVecSettings = new SQLiteVecSettings();
+
+    @ClientSettings({
+        label: 'LanceDB Settings',
+        category: 'Vector DB',
+        type: 'section',
+        description: 'Configuration for LanceDB vector database',
+        visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
+    })
+    lancedb: LanceDBSettings = new LanceDBSettings();
 
     @ClientSettings({
         label: 'DuckDuckGo Settings',
