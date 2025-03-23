@@ -9,6 +9,7 @@ import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { createChatHandle, isChatHandle } from 'src/types/chatHandle';
+import path from 'path';
 
 export interface MarkdownAgentConstructorParams extends AgentConstructorParams {
     configArtifact: ArtifactItem;
@@ -192,11 +193,12 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
             if (executorClass) {
                 const metadata = getExecutorMetadata(executorClass);
                 if (metadata && metadata.key === executorKey) {
-                    return modulePath;
+                    // Extract just the filename without extension
+                    const fileName = path.basename(modulePath, '.ts');
+                    return fileName;
                 }
             }
         }
-
 
         throw new Error(`Could not find executor class with key ${executorKey}`);
     }
