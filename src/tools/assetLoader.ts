@@ -6,154 +6,146 @@ import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
 
-export async function loadTemplates(basePath: string, templatePath: string, artifactManager: ArtifactManager): Promise<(Artifact|ArtifactItem)[]> {
-    const templatesDir = path.join(basePath, templatePath);
-    if (!fs.existsSync(templatesDir)) {
-        Logger.warn(`Templates directory not found at ${templatesDir}`);
+interface AssetLoaderOptions {
+    artifactType: ArtifactType;
+    artifactSubtype: DocumentSubtype | SpreadsheetSubType;
+    fileFilter?: (filename: string) => boolean;
+    metadataBuilder?: (filePath: string, content: string) => Record<string, any>;
+    contentProcessor?: (content: string) => string;
+}
+
+async function loadAssets(
+    basePath: string,
+    assetPath: string,
+    artifactManager: ArtifactManager,
+    options: AssetLoaderOptions
+): Promise<Artifact[]> {
+    const assetsDir = path.join(basePath, assetPath);
+    if (!fs.existsSync(assetsDir)) {
+        Logger.warn(`Assets directory not found at ${assetsDir}`);
         return [];
     }
 
-    const files = fs.readdirSync(templatesDir).filter(f => f.endsWith('.md'));
-    const loadedTemplates: Artifact[] = [];
+    const files = fs.readdirSync(assetsDir).filter(options.fileFilter || (f => true));
+    const loadedAssets: Artifact[] = [];
 
-    // Get existing templates from artifact manager
-    const existingTemplates = await artifactManager.getArtifacts({ type: ArtifactType.Document, subtype: DocumentSubtype.Template });
-    const existingTemplateMap = new Map(existingTemplates.map(t => [t.metadata?.source, t]));
+    // Get existing assets from artifact manager
+    const existingAssets = await artifactManager.getArtifacts({ 
+        type: options.artifactType, 
+        subtype: options.artifactSubtype 
+    });
+    const existingAssetMap = new Map(existingAssets.map(a => [a.metadata?.source, a]));
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        Logger.progress(`Loading templates (${i + 1} of ${files.length})`, (i + 1) / files.length, "templates");
+        Logger.progress(`Loading assets (${i + 1} of ${files.length})`, (i + 1) / files.length, options.artifactSubtype);
         
-        const filePath = path.join(templatesDir, file);
+        const filePath = path.join(assetsDir, file);
         let content = fs.readFileSync(filePath, 'utf-8');
         
-        // Extract YAML front matter
-        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-        const match = content.match(frontmatterRegex);
+        // Build base metadata
         let metadata: Record<string, any> = {
-            type: ArtifactType.Document,
-            subtype: DocumentSubtype.Template,
-            title: path.basename(file, '.md'),
+            type: options.artifactType,
+            subtype: options.artifactSubtype,
+            title: path.basename(file, path.extname(file)),
             source: path.relative(basePath, filePath),
             contentHash: require('crypto').createHash('sha256').update(content).digest('hex')
         };
 
-        if (match) {
-            try {
-                const parsedMetadata = yaml.load(match[1]) || {};
-                metadata = { ...metadata, ...parsedMetadata };
-                // Remove the frontmatter from the content
-                content = content.slice(match[0].length);
-            } catch (error) {
-                Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
-            }
+        // Apply custom metadata builder if provided
+        if (options.metadataBuilder) {
+            metadata = { ...metadata, ...options.metadataBuilder(filePath, content) };
         }
 
-        // Check if template exists and has same content
+        // Process content if needed
+        if (options.contentProcessor) {
+            content = options.contentProcessor(content);
+        }
+
+        // Check if asset exists and has same content
         const relativePath = path.relative(basePath, filePath);
-        const existingTemplate = existingTemplateMap.get(relativePath);
-        if (existingTemplate) {
-            const existingHash = existingTemplate.metadata?.contentHash;
+        const existingAsset = existingAssetMap.get(relativePath);
+        if (existingAsset) {
+            const existingHash = existingAsset.metadata?.contentHash;
             if (existingHash === metadata.contentHash) {
-                Logger.info(`Template unchanged: ${file}`);
-                loadedTemplates.push(existingTemplate);
+                Logger.info(`${options.artifactSubtype} unchanged: ${file}`);
+                loadedAssets.push(existingAsset);
                 continue;
             }
-            Logger.info(`Updating template: ${file}`);
+            Logger.info(`Updating ${options.artifactSubtype}: ${file}`);
         }
 
         try {
             const artifact = await artifactManager.saveArtifact({
-                ...existingTemplate?.id?{id: existingTemplate?.id}:{},
-                type: ArtifactType.Document,
+                ...existingAsset?.id ? { id: existingAsset.id } : {},
+                type: options.artifactType,
                 content: content,
                 metadata: metadata
             });
-            loadedTemplates.push(artifact);
-            Logger.info(`Loaded template: ${file}`);
+            loadedAssets.push(artifact);
+            Logger.info(`Loaded ${options.artifactSubtype}: ${file}`);
         } catch (e) {
-            Logger.error(`Failed to save template ${file}`, e);
+            Logger.error(`Failed to save ${options.artifactSubtype} ${file}`, e);
         }
     }
 
-    return loadedTemplates;
+    return loadedAssets;
+}
+
+export async function loadTemplates(basePath: string, templatePath: string, artifactManager: ArtifactManager): Promise<(Artifact|ArtifactItem)[]> {
+    return loadAssets(basePath, templatePath, artifactManager, {
+        artifactType: ArtifactType.Document,
+        artifactSubtype: DocumentSubtype.Template,
+        fileFilter: f => f.endsWith('.md'),
+        metadataBuilder: (filePath, content) => {
+            const metadata: Record<string, any> = {};
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            
+            if (match) {
+                try {
+                    const parsedMetadata = yaml.load(match[1]) || {};
+                    Object.assign(metadata, parsedMetadata);
+                } catch (error) {
+                    Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
+                }
+            }
+            return metadata;
+        },
+        contentProcessor: (content) => {
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            return match ? content.slice(match[0].length) : content;
+        }
+    });
 }
 
 export async function loadAgentConfigs(basePath: string, configPath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
-    const configsDir = path.join(basePath, configPath);
-    if (!fs.existsSync(configsDir)) {
-        Logger.warn(`Agent configs directory not found at ${configsDir}`);
-        return [];
-    }
-
-    const files = fs.readdirSync(configsDir).filter(f => f.endsWith('.md'));
-    const loadedConfigs: Artifact[] = [];
-
-    // Get existing configs from artifact manager
-    const existingConfigs = await artifactManager.getArtifacts({ 
-        type: ArtifactType.Document, 
-        subtype: DocumentSubtype.AgentConfig 
+    return loadAssets(basePath, configPath, artifactManager, {
+        artifactType: ArtifactType.Document,
+        artifactSubtype: DocumentSubtype.AgentConfig,
+        fileFilter: f => f.endsWith('.md'),
+        metadataBuilder: (filePath, content) => {
+            const metadata: Record<string, any> = {};
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            
+            if (match) {
+                try {
+                    const parsedMetadata = yaml.load(match[1]) || {};
+                    Object.assign(metadata, parsedMetadata);
+                } catch (error) {
+                    Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
+                }
+            }
+            return metadata;
+        },
+        contentProcessor: (content) => {
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            return match ? content.slice(match[0].length) : content;
+        }
     });
-    const existingConfigMap = new Map(existingConfigs.map(c => [c.metadata?.source, c]));
-
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        Logger.progress(`Loading agent configs (${i + 1} of ${files.length})`, (i + 1) / files.length, "agent-configs");
-        
-        const filePath = path.join(configsDir, file);
-        let content = fs.readFileSync(filePath, 'utf-8');
-        
-        // Extract YAML front matter if present
-        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-        const match = content.match(frontmatterRegex);
-        let metadata: Record<string, any> = {
-            type: ArtifactType.Document,
-            subtype: DocumentSubtype.AgentConfig,
-            title: path.basename(file, '.md'),
-            source: path.relative(basePath, filePath),
-            contentHash: require('crypto').createHash('sha256').update(content).digest('hex')
-        };
-
-        if (match) {
-            try {
-                const parsedMetadata = yaml.load(match[1]) || {};
-                metadata = { ...metadata, ...parsedMetadata };
-                // Remove the frontmatter from the content
-                content = content.slice(match[0].length);
-            } catch (error) {
-                Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
-            }
-        }
-
-        // Check if config exists and has same content
-        const relativePath = path.relative(basePath, filePath);
-        const existingConfig = existingConfigMap.get(relativePath);
-        if (existingConfig) {
-            const existingHash = existingConfig.metadata?.contentHash;
-            if (existingHash === metadata.contentHash) {
-                Logger.info(`Agent config unchanged: ${file}`);
-                loadedConfigs.push(existingConfig);
-                continue;
-            }
-            Logger.info(`Updating agent config: ${file}`);
-        }
-
-        try {
-            const artifact = await artifactManager.saveArtifact({
-                ...existingConfig?.id ? { id: existingConfig.id } : {},
-                type: ArtifactType.Document,
-                subtype: DocumentSubtype.AgentConfig,
-                content: content,
-                metadata: metadata
-            });
-            loadedConfigs.push(artifact);
-            Logger.info(`Loaded agent config: ${file}`);
-        } catch (e) {
-            Logger.error(`Failed to save agent config ${file}`, e);
-        }
-    }
-
-    return loadedConfigs;
 }
 
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
