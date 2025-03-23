@@ -1,4 +1,5 @@
 import React from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
@@ -23,6 +24,35 @@ interface ContentRendererProps {
 }
 
 export const ContentRenderer: React.FC<ContentRendererProps> = ({
+    artifact,
+    content,
+    type,
+    metadata
+}) => {
+    const ErrorFallback = ({ error }: { error: Error }) => (
+        <Box sx={{ p: 2 }}>
+            <Typography color="error" variant="body1">
+                Error rendering content: {error.message}
+            </Typography>
+            <Typography variant="caption">
+                Content type: {type || 'unknown'}
+            </Typography>
+        </Box>
+    );
+
+    return (
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <ContentRendererInner 
+                artifact={artifact}
+                content={content}
+                type={type}
+                metadata={metadata}
+            />
+        </ErrorBoundary>
+    );
+};
+
+const ContentRendererInner: React.FC<ContentRendererProps> = ({
     artifact,
     content,
     type,
