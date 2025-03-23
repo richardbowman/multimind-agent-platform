@@ -19,7 +19,7 @@ import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useDataContext } from '../contexts/DataContext';
 import { useTasks } from '../contexts/TaskContext';
-import { useIPCService, useClientMethods } from '../contexts/IPCContext';
+import { useIPCService } from '../contexts/IPCContext';
 import remarkGfm from 'remark-gfm';
 import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
@@ -62,8 +62,7 @@ interface ChatPanelProps {
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, rightDrawerWidth, showWelcome, onSwitchToWelcome }) => {
     const theme = useTheme();
-    const { threadMessages: messages } = useThreadMessages();
-    const clientMethods = useClientMethods();
+    const { threadMessages: messages, unreadMessages, markMessageRead } = useMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
     const { filteredTasks: tasks } = useFilteredTasks();
@@ -448,10 +447,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         setSelectedMessage(message);
                                         setMetadataDialogOpen(true);
                                     }}
-                                    hasUnreadReplies={clientMethods.unreadMessages.has(message.id)}
-                                    onMessageRead={(messageId) => {
-                                        clientMethods.unreadMessages.delete(messageId);
-                                    }}
+                                    hasUnreadReplies={unreadMessages.has(message.id)}
+                                    onMessageRead={markMessageRead}
                                 />
                             </ToolbarActionsProvider>
                         )))}
