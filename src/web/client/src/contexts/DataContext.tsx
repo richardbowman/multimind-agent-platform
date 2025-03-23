@@ -1,15 +1,11 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { ClientMessage } from '../../../../shared/types';
-import { ChannelData, CreateChannelParams } from '../../../../shared/channelTypes';
-import { useSnackbar } from './SnackbarContext';
+import { CreateChannelParams } from '../../../../shared/channelTypes';
 import { useIPCService } from './IPCContext';
-import { useClientMethods } from '../services/ClientMethods';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from '../../../../tools/settings';
 import { ClientError } from '@mattermost/client';
-import { UUID } from '../../../../types/uuid';
-import { Task } from '../../../../tools/taskManager';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 export interface Paths {
@@ -20,13 +16,12 @@ export interface Paths {
 export interface DataContextMethods {
   pendingFiles: Artifact[];
   logs: {
-    llm: Record<string, LLMLogEntry[]>;
     system: any[];
-    api: any[];
   };
   handles: Array<{ id: string, handle: string }>;
   isLoading: boolean;
   needsConfig: boolean | null;
+  configError: string | null;
   settings: Settings | null;
   paths: Paths | null;
   setPaths: React.Dispatch<React.SetStateAction<Paths>>;
@@ -35,62 +30,45 @@ export interface DataContextMethods {
   fetchHandles: () => Promise<void>;
   setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
   setLogs: React.Dispatch<React.SetStateAction<{
-    llm: Record<string, LLMLogEntry[]>;
     system: any[];
-    api: any[];
   }>>;
   setNeedsConfig: React.Dispatch<React.SetStateAction<boolean>>;
-  setCurrentChannelId: React.Dispatch<React.SetStateAction<string | null>>;
-  setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
+  setConfigError: React.Dispatch<React.SetStateAction<string|null>>;
   getSettings: () => Promise<any>;
-  updateSettings: (settings: any) => Promise<Settings|ClientError>;
-  createChannel: (params: CreateChannelParams) => Promise<string>;
-  deleteChannel: (channelId: string) => Promise<void>;
+  updateSettings: (settings: any) => Promise<Settings | ClientError>;
   addPendingFiles: (artifacts: Artifact[]) => Promise<void>;
   resetPendingFiles: () => void;
   showFileDialog: () => Promise<void>;
 }
 
-export const DataProvider: React.FC<{ 
+export const DataProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
 
   const ipcService = useIPCService();
-  const { showSnackbar } = useSnackbar();
 
-  const [paths, setPaths] = useState<Paths|null>();
-  const [settings, setSettings] = useState<Settings|null>();
+  const [paths, setPaths] = useState<Paths | null>();
+  const [settings, setSettings] = useState<Settings | null>();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
 
-  
-  
-  const [currentThreadArtifacts, setCurrentThreadArtifacts] = useState<any[]>([]);
+
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);
   const [logs, setLogs] = useState<{
-    llm: Record<string, LLMLogEntry[]>;
     system: {
-      logs: any[];
-      total: number;
-    };
-    api: {
       logs: any[];
       total: number;
     };
   }>({
-    llm: {},
     system: {
-      logs: [],
-      total: 0
-    },
-    api: {
       logs: [],
       total: 0
     }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [needsConfig, setNeedsConfig] = useState(null);
+  const [configError, setConfigError] = useState(null);
 
   const getSettings = () => ipcService.getRPC().getSettings();
 
@@ -100,13 +78,13 @@ export const DataProvider: React.FC<{
 
   useEffect(() => {
     if (needsConfig === false) {
-        // Trigger initial data fetch when backend is ready
-        try {
-            fetchHandles();
-            fetchSettings();
-        } catch (error) {
-            console.error(error);
-        };
+      // Trigger initial data fetch when backend is ready
+      try {
+        fetchHandles();
+        fetchSettings();
+      } catch (error) {
+        console.error(error);
+      };
     }
   }, [needsConfig]);
 
@@ -114,8 +92,6 @@ export const DataProvider: React.FC<{
   useEffect(() => {
     setIsLoading(false);
   }, [messages]);
-
-  const isElectron = !!(window as any).electron;
 
   const sendMessage = useCallback(async (message: Partial<ClientMessage>) => {
     const result = await ipcService.getRPC().sendMessage(message);
@@ -135,7 +111,7 @@ export const DataProvider: React.FC<{
   }, []);
 
 
-  const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api', params?: {
+  const fetchLogs = useCallback(async (logType: 'system', params?: {
     limit?: number;
     offset?: number;
     filter?: {
@@ -143,24 +119,17 @@ export const DataProvider: React.FC<{
     };
   }) => {
     const newLogs = await ipcService.getRPC().getLogs(logType, params);
-    
-    if (logType === 'llm') {
-      setLogs(prev => ({
-        ...prev,
-        llm: newLogs
-      }));
-    } else {
-      setLogs(prev => ({
-        ...prev,
-        [logType]: {
-          logs: params?.offset 
-            ? [...(prev[logType]?.logs || []), ...newLogs.logs]
-            : newLogs.logs,
-          total: newLogs.total
-        }
-      }));
-    }
-    
+
+    setLogs(prev => ({
+      ...prev,
+      [logType]: {
+        logs: params?.offset
+          ? [...(prev[logType]?.logs || []), ...newLogs.logs]
+          : newLogs.logs,
+        total: newLogs.total
+      }
+    }));
+
     return newLogs;
   }, []);
 
@@ -172,13 +141,15 @@ export const DataProvider: React.FC<{
     handles,
     isLoading,
     needsConfig,
+    configError,
     settings,
-    paths: paths,
+    paths,
     setPaths,
     sendMessage,
     fetchLogs,
     fetchHandles,
     setMessages,
+    setConfigError,
     setLogs,
     setNeedsConfig,
     getSettings,
@@ -221,17 +192,19 @@ export const DataProvider: React.FC<{
     settings,
     isLoading,
     needsConfig,
+    configError,
     pendingFiles,
     sendMessage,
     fetchLogs,
     fetchHandles,
     setSettings,
+    setConfigError
   ]);
 
   return (
     <DataContext.Provider value={contextMethods}>
-      {typeof children === 'function' 
-        ? children({ contextMethods }) 
+      {typeof children === 'function'
+        ? children({ contextMethods })
         : children}
     </DataContext.Provider>
   );

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useCallback } from 'react';
 import { useIPCService } from './IPCContext';
 import { LLMLogEntry } from '../../../../llm/LLMLogModel';
 
-interface LLMLogContextType {
+export interface LLMLogContextType {
     logs: LLMLogEntry[];
     hasMore: boolean;
     isLoading: boolean;
@@ -17,6 +17,7 @@ const LLMLogContext = createContext<LLMLogContextType>({
     hasMore: false,
     isLoading: false,
     error: null,
+    addLogEntry: (entry: LLMLogEntry) => {},
     loadMoreLogs: async () => {},
     refreshLogs: async () => {}
 });
@@ -65,7 +66,7 @@ export const LLMLogProvider: React.FC<{children: React.ReactNode}> = ({ children
             setPage(1);
             setHasMore(newLogs.length === pageSize);
         } catch (error) {
-            console.error('Error refreshing logs:', error);
+            console.error('Error refreshing LLM logs:', error);
         }
     }, [fetchLogs, pageSize]);
 

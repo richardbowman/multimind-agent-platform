@@ -56,5 +56,6 @@ export enum SchemaType {
     DelegationResponse = "DelegationResponse",
     CSVProcessingResponse = "CSVProcessingResponse",
     ExtractColumnsResponse = "ExtractColumnsResponse",
-    SuggestedResponses = "SuggestedResponses"
+    SuggestedResponses = "SuggestedResponses",
+    GanttData = "GanttData"
 }

@@ -24,6 +24,7 @@ import { Sequelize } from "sequelize";
 import { Settings } from "./tools/settings";
 import { ILLMService, LLMProviders, LLMServices } from "./llm/ILLMService";
 import { LLMProvider } from "./llm/types/LLMProvider";
+import { asError } from "./types/types";
 if (!global.crypto) {
     global.crypto = _crypto;
 }
@@ -52,14 +53,22 @@ async function createLLMServices(providers: LLMProviders, settings: Settings): P
 
     for (const config of enabledConfigs) {
         try {
-            if (!Object.values(ModelType).includes(config.type)) {
+            if (config.type && !Object.values(ModelType).includes(config.type)) {
                 Logger.info(`Invalid model type ${config.type} service for provider ${config.provider}, skipping...`);
+                continue;
+            }
+            if (config.provider && !Object.values(LLMProvider).includes(config.provider)) {
+                Logger.info(`Invalid provider ${config.provider}, skipping...`);
+                continue;
             }
 
-            let service = providers[config.provider];
-            
+            let service = providers[config.provider!];
+            if (!service) {
+                throw new Error(`Provider ${config.provider} could not be found.`);
+            }
+
             // Initialize the specific model
-            await service.initializeChatModel(config.model);
+            await service.initializeChatModel(config.model!);
             
             // Store the service using a combination of type and provider as the key
             const serviceKey = config.type;
@@ -67,8 +76,9 @@ async function createLLMServices(providers: LLMProviders, settings: Settings): P
             
             Logger.info(`Initialized ${config.type} service for provider ${config.provider}`);
         } catch (error) {
-            Logger.error(`Failed to initialize ${config.type} service for provider ${config.provider}:`, error);
-            throw error;
+            const msg = `Failed to initialize ${config.type} service for provider ${config.provider}: ${asError(error).message}`;
+            Logger.error(msg, error);
+            throw new ConfigurationError(msg);
         }
     }
     
@@ -258,7 +268,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             await userClient.createChannel(mappedParams);
         }
 
-        tasks.on("taskMissedDueDate", async ({ project, task, dueDate }) => {
+        tasks.on("taskMissedDueDate", async ({ projectId, task, dueDate }) => {
             const assignedAgent = agents.agents[task.assignee];
             if (assignedAgent) {
                 assignedAgent.processTaskQueue();

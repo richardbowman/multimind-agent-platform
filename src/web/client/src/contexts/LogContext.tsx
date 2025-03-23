@@ -8,6 +8,7 @@ import { useClientMethods } from '../services/ClientMethods';
 import { useSnackbar } from './SnackbarContext';
 import { useChannels } from './ChannelContext';
 import { useTasks } from './TaskContext';
+import { useLLMLogs } from './LLMLogContext';
 
 interface LogContextType {
     logger: ClientLogger;
@@ -19,7 +20,7 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const ipcService = useIPCService();
 
     //TODO SHOULD REALLY BE IN ITS OWN CONTEXT
-    const clientMethods = useClientMethods(ipcService, useSnackbar(), useDataContext(), useMessages(), useArtifacts(), useChannels(), useTasks());  
+    const clientMethods = useClientMethods(ipcService, useSnackbar(), useDataContext(), useLLMLogs(), useMessages(), useArtifacts(), useChannels(), useTasks());  
 
     useEffect(() => {
       if (ipcService && clientMethods) {

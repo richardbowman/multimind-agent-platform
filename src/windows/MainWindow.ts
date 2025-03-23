@@ -19,7 +19,7 @@ export class MainWindow {
         this.settingsManager = settingsManager;
         const isDev = !app.isPackaged;
         const iconName = isDev ? 'icon-dev.png' : 'icon.png';
-        const iconPath = path.join(__dirname, `../../dist/${iconName}`);
+        const iconPath = path.join(app.getAppPath(), `./dist/${iconName}`);
 
         this.window = new BrowserWindow({
             ...options,
@@ -107,6 +107,7 @@ export class MainWindow {
         if (this.settingsManager?.getSettings().openDevToolsOnLoad) {
             this.window.webContents.openDevTools();
         }
+        this.window.webContents.openDevTools();
     }
 
     setMessage(message: string) {

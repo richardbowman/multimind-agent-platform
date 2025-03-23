@@ -203,7 +203,7 @@ const columns: GridColDef[] = [
             params.value === 'ERROR' ? 'error-cell' : 'success-cell'
     },
     {
-        field: 'context.agentName',
+        field: 'context.agent',
         headerName: 'Agent',
         width: 150,
         valueFormatter: (value) => value || 'N/A'
@@ -240,9 +240,9 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
         refreshLogs();
     }, [refreshLogs]);
 
-    const handleOpenDetails = React.useCallback((log: any) => {
+    const handleOpenDetails = React.useCallback((log: LLMLogEntry) => {
         setSelectedLog(log);
-        setSelectedLogIndex(logs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
+        setSelectedLogIndex(logs.findIndex(l => l.timestamp === log.timestamp));
     }, [logs]);
 
     const handleNavigate = (direction: 'prev' | 'next') => {
@@ -263,10 +263,6 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
                 <DataGrid
                     rows={logs}
                     columns={columns}
-                    pageSize={25}
-                    rowsPerPageOptions={[25, 50, 100]}
-                    pagination
-                    disableSelectionOnClick
                     onRowClick={(params) => handleOpenDetails(params.row, params.row.id)}
                     loading={isLoading}
                     getRowId={(row) => row.timestamp + row.service}

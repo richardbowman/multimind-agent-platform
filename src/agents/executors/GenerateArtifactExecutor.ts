@@ -50,7 +50,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
     protected addContentFormattingRules?(prompt: ModelConversation<ArtifactGenerationStepResponse>);
     protected abstract getSupportedFormat(): string;
 
-    protected getContentRules() : string {
+    protected getContentRules() : Promise<string>|string {
         return "the document contents"
     }
 
@@ -142,7 +142,8 @@ new replacement text
 
             // Add content formatting rules
             if (this.addContentFormattingRules) this.addContentFormattingRules(conversation);
-            conversation.addOutputInstructions({ outputType: OutputType.JSON_AND_XML, schema, specialInstructions: this.getContentRules(), type: tag });
+            const rules = await this.getContentRules();
+            conversation.addOutputInstructions({ outputType: OutputType.JSON_AND_XML, schema, specialInstructions: rules, type: tag });
 
             // Add loaded artifact
             if (existingArtifact) {

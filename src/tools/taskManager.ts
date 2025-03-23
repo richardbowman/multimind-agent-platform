@@ -2,9 +2,10 @@ import { EventEmitter } from 'events';
 
 // Define a RecurrencePattern enum
 export enum RecurrencePattern {
-    Daily,
-    Weekly,
-    Monthly,
+    Hourly = 'Hourly',
+    Daily = 'Daily',
+    Weekly = 'Weekly', 
+    Monthly = 'Monthly',
 }
 
 export enum TaskType {
@@ -17,18 +18,23 @@ export enum TaskType {
 import { UUID } from 'src/types/uuid';
 import { TaskStatus } from '../schemas/TaskStatus';
 
-export interface AddTaskParams {
-    id?: UUID;
+export type AddTaskParams = AddOtherTaskParams | AddRecurringTaskParams;
+
+export interface AddOtherTaskParams extends AddBaseTaskParams {
+    type?: TaskType.Goal|TaskType.Standard|TaskType.Step;
+}
+
+export interface AddRecurringTaskParams extends AddBaseTaskParams {
+    type: TaskType.Recurring;
+    recurrencePattern: RecurrencePattern;
+}
+
+export interface AddBaseTaskParams {
     description: string;
-    type?: TaskType;    // will default to Standard
     category?: string;
     creator: UUID|'system';
     assignee?: UUID;
     status?: TaskStatus;
-    /** @deprecated Use status field instead */
-    complete?: boolean;
-    /** @deprecated Use status field instead */
-    inProgress?: boolean;
     order?: number;
     dependsOn?: UUID;
     props?: TaskMetadata;

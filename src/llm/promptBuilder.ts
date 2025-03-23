@@ -586,7 +586,7 @@ I'm going to create a spreadsheet to...
   nextAction: "generate-spreadsheet",
   ...
 }
-\'\'\'
+\`\`\`
 
 Example of responding to user:
 <thinking>
@@ -600,7 +600,7 @@ I've successfully created a spreadsheet to...
   nextAction: "REPLY",
   ...
 }
-\'\'\'
+\`\`\`
 
 `);
         } else if (outputType === OutputType.MULTIPLE_JSON_WITH_MESSAGE && schema) {

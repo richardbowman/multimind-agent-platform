@@ -179,6 +179,7 @@
     "electron-builder": "^25.1.8",
     "electron-builder-squirrel-windows": "^25.1.8",
     "events": "^3.3.0",
+    "frappe-gantt": "^1.0.3",
     "fs-extra": "^11.3.0",
     "html-webpack-plugin": "^5.6.3",
     "jest": "^29.7.0",

@@ -91,11 +91,15 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             where: { projectId: project.id }
         })) || 0;
 
+
         const task = await TaskModel.create({
             category: "",
             status: TaskStatus.Pending,
             type: TaskType.Standard,
             ...addTask,
+            ...(addTask.type === TaskType.Recurring ? {
+                lastRunDate: new Date()
+            } : {}),
             id: createUUID(),
             projectId: project.id,
             order: maxOrder + 1,
@@ -541,7 +545,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
 
         await task.update({
-            lastRunDate: nextRunDate || new Date()
+            props: {
+                dueDate: nextRunDate || new Date()
+            }
         });
     }
 
@@ -563,6 +569,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
                 // Calculate when the next run should have been
                 switch (task.recurrencePattern) {
+                    case RecurrencePattern.Hourly:
+                        nextRun = new Date(task.lastRunDate).setHours(1, 0, 0, 0);
+                        break;
                     case RecurrencePattern.Daily:
                         nextRun = new Date(task.lastRunDate).setHours(24, 0, 0, 0);
                         break;
@@ -594,7 +603,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     // Emit event for missed due date
                     await this.asyncEmit('taskMissedDueDate', {
                         task,
-                        project: task.project,
+                        projectId: task.projectId,
                         dueDate: new Date(dueDate)
                     });
                 }

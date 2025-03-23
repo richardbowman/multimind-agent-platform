@@ -3,18 +3,19 @@ import { DataContextMethods } from '../contexts/DataContext';
 import { MessageContextType } from '../contexts/MessageContext';
 import { ArtifactContextType } from '../contexts/ArtifactContext';
 import { ChannelContextType } from '../contexts/ChannelContext';
+import { LLMLogContextType } from '../contexts/LLMLogContext';
 import { ClientMessage } from '../../../../shared/types';
 import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
-import { BackendStatus, ClientMethods } from '../../../../shared/RPCInterface';
+import { BackendStatus, ClientMethods, LogParam } from '../../../../shared/RPCInterface';
 import { Artifact } from '../../../../tools/artifact';
 import { Task } from '../../../../tools/taskManager';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
-import { LogParam } from '../../../../llm/LLMLogger';
 import { ChannelData } from '../../../../shared/channelTypes';
 import { TaskEventType } from "../../../../shared/TaskEventType";
 import { TaskContextType } from '../contexts/TaskContext';
 import { UUID } from '../../../../types/uuid';
+import { LLMLogEntry } from '../../../../llm/LLMLogModel';
 
 
 // Initialize TTS system
@@ -26,6 +27,7 @@ class ClientMethodsImplementation implements ClientMethods {
     constructor(private ipcService: BaseRPCService, 
         private snackbarContext: SnackbarContextType, 
         private contextMethods: DataContextMethods,
+        private llmLogContext: LLMLogContextType,
         private messageContext: MessageContextType,
         private artifactProvider: ArtifactContextType,
         private channelContext: ChannelContextType,
@@ -183,7 +185,7 @@ class ClientMethodsImplementation implements ClientMethods {
     onLogUpdate(update: LogParam) {
         if (update.type === 'llm') {
             const llmLogEntry = update.entry as LLMLogEntry;
-            this.contextMethods.addLogEntry(llmLogEntry);
+            this.llmLogContext.addLogEntry(llmLogEntry);
             return;
         }
         if (update.type === 'system') {
@@ -245,6 +247,7 @@ class ClientMethodsImplementation implements ClientMethods {
 export const useClientMethods = (ipcService: BaseRPCService, 
         snackbarContext: SnackbarContextType, 
         contextMethods: DataContextMethods,
+        llmLogContext: LLMLogContextType,
         messageContext: MessageContextType,
         artifactProvider: ArtifactContextType,
         channelContext: ChannelContextType,
@@ -254,6 +257,7 @@ export const useClientMethods = (ipcService: BaseRPCService,
         ipcService, 
         snackbarContext, 
         contextMethods, 
+        llmLogContext,
         messageContext, 
         artifactProvider, 
         channelContext, 

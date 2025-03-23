@@ -146,7 +146,7 @@ export async function setupIpcHandlers(autoUpdater: AppUpdater, hasConfigError: 
             const status = {
                 configured: configComplete,
                 ready: configComplete,
-                message: hasConfigError ? "Initial configuration required" : undefined,
+                message: hasConfigError && (backendServices as BackendServicesConfigNeeded).error?.message,
                 appPath: app.getAppPath(),
                 modelPath: path.join(getDataPath(), "models")
             };

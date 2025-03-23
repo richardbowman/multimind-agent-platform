@@ -5,7 +5,7 @@ export enum UpdateActions {
     Complete = 'complete'
 }
 
-export type TaskCreationResponseRecurrence = 'One-time' | 'Daily' | 'Weekly' | 'Monthly';
+export type TaskCreationResponseRecurrence = 'One-time' | 'Hourly' | 'Daily' | 'Weekly' | 'Monthly';
 
 export interface TaskCreationResponse {
     action: UpdateActions,
@@ -17,7 +17,4 @@ export interface TaskCreationResponse {
     assignee: string;
     /** Either a ISO-formatted Date/Time or a ISO Duration field */
     dueDate: string;
-
-    /** deprecated */
-    // responseMessage: string;
 }

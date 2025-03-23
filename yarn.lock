@@ -12704,6 +12704,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"frappe-gantt@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "frappe-gantt@npm:1.0.3"
+  checksum: 10c0/8a156bb8b3eebd573986fe7bca399646ecf7219dd1940edf873ffcee58c38a5112a00872f04a45d6e70b743e126270b2c2f86d51d9f1be1175f0ee0585548284
+  languageName: node
+  linkType: hard
+
 "fresh@npm:0.5.2":
   version: 0.5.2
   resolution: "fresh@npm:0.5.2"
@@ -17027,6 +17034,7 @@ __metadata:
     electron-updater: "npm:^6.6.2"
     events: "npm:^3.3.0"
     express: "npm:^4.21.2"
+    frappe-gantt: "npm:^1.0.3"
     fs-extra: "npm:^11.3.0"
     html-webpack-plugin: "npm:^5.6.3"
     ical: "npm:^0.8.0"

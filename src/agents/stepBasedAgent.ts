@@ -451,7 +451,7 @@ export abstract class StepBasedAgent extends Agent {
 
                 context.channelId = asUUID(task.props.announceChannelId);
                 post = await this.chatClient.postInChannel(context.channelId,
-                    `@user This is a scheduled task reminder for the task ${task.id} created by ${creatorHandle} ${task.description} ${assigneeHandle ? `assigned to ${assigneeHandle}` : ''}}`);
+                    `@user We have been requested to execute task ${task.id} created by ${creatorHandle} ${task.description} ${assigneeHandle ? `assigned to ${assigneeHandle}` : ''}}`);
                 context.threadId = post.id;
             }
 

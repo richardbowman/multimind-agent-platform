@@ -6,9 +6,9 @@ import { ChartRenderer } from './ChartRenderer';
 import { WebpageRenderer } from './WebpageRenderer';
 import { Box, Paper, Typography } from '@mui/material';
 import { CalendarRenderer } from './CalendarRenderer';
+import { GanttRenderer as GanttRenderer } from './MarkwhenRenderer';
 import { PDFRenderer } from './PDFRenderer';
 import { SlideRenderer } from './SlideRenderer';
-import { MarkwhenRenderer } from './MarkwhenRenderer';
 import { MarkdownEditor } from './MarkdownEditor';
 import { ArtifactItem, ArtifactType } from '../../../../../tools/artifact';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
@@ -126,8 +126,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     // Handle Markwhen timeline content
-    if (metadata?.format === 'markwhen' || type === 'markwhen') {
-        return <MarkwhenRenderer content={content} artifact={artifact} />;
+    if (metadata?.format === 'gantt') {
+        return <GanttRenderer content={content} artifact={artifact} />;
     }
 
     // Handle markdown content

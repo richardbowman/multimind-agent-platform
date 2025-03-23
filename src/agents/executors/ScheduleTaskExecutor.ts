@@ -186,17 +186,33 @@ export class ScheduleTaskExecutor extends BaseStepExecutor<StepResponse> {
                 // Parse due date if provided - handles both ISO strings and duration strings
                 const parsedDueDate = dueDate ? parseDueDate(dueDate) : undefined;
 
-                task = await this.taskManager.addTask(channelProject, {
-                    type: recurrencePattern === 'One-time' ? TaskType.Standard : TaskType.Recurring,
-                    description: taskDescription,
+                const addTask : Partial<AddTaskParams> = {
                     creator: this.userId,
-                    recurrencePattern: recurrencePattern,
-                    complete: false,
-                    props: {
-                        dueDate: parsedDueDate, // Add due date to create,
-                        announceChannelId: params.context?.channelId
-                    }
-                });
+                    description: taskDescription,
+                }
+
+                if (recurrencePattern === 'One-time') {
+                    task = await this.taskManager.addTask(channelProject, {
+                        type: TaskType.Standard,
+                        ...addTask,
+                        props: {
+                            dueDate: parsedDueDate, // Add due date to create,
+                            announceChannelId: params.context?.channelId
+                        }
+                    } as AddTaskParams);
+                } else {
+                    task = await this.taskManager.addTask(channelProject, {
+                        type: TaskType.Recurring,
+                        recurrencePattern: RecurrencePattern[recurrencePattern],
+                        ...addTask,
+                        props: {
+                            dueDate: parsedDueDate, // Add due date to create,
+                            announceChannelId: params.context?.channelId
+                        }
+                    } as AddTaskParams);
+                }
+
+                
 
                 if (assigneeId) await this.taskManager.assignTaskToAgent(task.id, assigneeId);
             } else {

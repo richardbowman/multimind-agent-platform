@@ -9,7 +9,7 @@ interface MarkwhenRendererProps {
     artifact?: ArtifactItem;
 }
 
-export const MarkwhenRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifact }) => {
+export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifact }) => {
     let ganttData: GanttData = { tasks: [] };
     
     try {

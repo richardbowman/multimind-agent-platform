@@ -30,6 +30,7 @@ import { FilteredArtifactProvider } from './contexts/FilteredArtifactContext';
 import { TaskProvider } from './contexts/TaskContext';
 import { FilteredTaskProvider } from './contexts/FilteredTaskContext';
 import { ResizableDrawer } from './components/ResizableDrawer';
+import zIndex from '@mui/material/styles/zIndex';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
@@ -230,6 +231,11 @@ const AppContent: React.FC = () => {
                                 '& .MuiDrawer-paper': {
                                     width: 250
                                 },
+                            }}
+                            PaperProps={{
+                                sx: {
+                                    zIndex: 1
+                                }
                             }}
                         >
                             <Toolbar /> {/* For spacing under app bar */}
