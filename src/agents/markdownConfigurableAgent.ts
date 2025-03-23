@@ -12,8 +12,9 @@ import Logger from 'src/helpers/logger';
 export class MarkdownConfigurableAgent extends ConfigurableAgent {
     private configArtifactId?: UUID;
     private taskManager: TaskManager;
+    config: any;
 
-    constructor(params: AgentConstructorParams) {
+    constructor(params: AgentConstructorParams & { config: { configArtifactId: UUID}}) {
         super(params);
         this.configArtifactId = params.config?.configArtifactId;
         this.taskManager = params.taskManager;
@@ -138,7 +139,7 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
 
     private async loadExecutorClass(executorKey: string): Promise<any> {
         // Create require context for executors directory
-        const executorContext = require.context('../executors', true, /\.ts$/);
+        const executorContext = (require as any).context('../executors', true, /\.ts$/);
         
         // Search through all executors for a match
         for (const modulePath of executorContext.keys()) {
