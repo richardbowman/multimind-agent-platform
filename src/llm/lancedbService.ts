@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import * as lancedb from "@lancedb/lancedb";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
-import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
+import { BaseVectorDatabase, IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
 import { IEmbeddingService, ILLMService } from "./ILLMService";
 import { getDataPath } from "src/helpers/paths";
