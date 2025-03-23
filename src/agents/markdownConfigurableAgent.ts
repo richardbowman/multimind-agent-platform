@@ -63,7 +63,14 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                 continue;
             }
 
-            if (token.type === 'list' && currentSection) {
+            if (token.type === 'paragraph' && currentSection) {
+                // Handle plain text sections
+                if (!config[currentSection]) {
+                    config[currentSection] = '';
+                }
+                config[currentSection] += token.text.trim() + '\n';
+            }
+            else if (token.type === 'list' && currentSection) {
                 // Initialize section as array if it's a list
                 if (!config[currentSection]) {
                     config[currentSection] = [];
