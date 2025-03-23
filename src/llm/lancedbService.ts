@@ -30,22 +30,20 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
             if (tables.includes(name)) {
                 this.table = await this.db.openTable(name);
             } else {
-                // Create new table with proper schema definition
-                const schema = new lancedb.Schema([
-                    new lancedb.Field('id', new lancedb.String()),
-                    new lancedb.Field('vector', new lancedb.FixedSizeList(768)), // 768 is default embedding size
-                    new lancedb.Field('text', new lancedb.String()),
-                    new lancedb.Field('metadata', new lancedb.Map(
-                        new lancedb.String(),
-                        new lancedb.String()
+                // Create new table with Apache Arrow schema
+                const schema = new arrow.Schema([
+                    new arrow.Field('id', new arrow.Utf8()),
+                    new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Float32())),
+                    new arrow.Field('text', new arrow.Utf8()),
+                    new arrow.Field('metadata', new arrow.Map_(
+                        new arrow.Field('key', new arrow.Utf8()),
+                        new arrow.Field('value', new arrow.Utf8())
                     ))
                 ]);
 
-                this.table = await this.db.createTable(name, [
-                    { id: "1", vector: Array(768).fill(0), text: "", metadata: {} }
-                ], {
-                    mode: 'overwrite',
-                    schema: schema
+                // Create empty table with schema
+                this.table = await this.db.createEmptyTable(name, schema, {
+                    mode: 'overwrite'
                 });
             }
             Logger.info(`LanceDB collection initialized: ${name}`);
