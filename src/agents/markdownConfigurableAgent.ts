@@ -10,6 +10,7 @@ import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { createChatHandle, isChatHandle } from 'src/types/chatHandle';
 import path from 'path';
+import { ExecutorConfig } from 'src/tools/settings';
 
 export interface MarkdownAgentConstructorParams extends AgentConstructorParams {
     configArtifact: ArtifactItem;
@@ -179,7 +180,7 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         };
     }
 
-    private async loadExecutorClass(executorKey: string): Promise<string> {
+    private async loadExecutorClass(executorKey: string): Promise<ExecutorConfig> {
         // Create require context for executors directory
         const executorContext = (require as any).context('./executors', true, /\.ts$/);
         
@@ -195,7 +196,10 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                 if (metadata && metadata.key === executorKey) {
                     // Extract just the filename without extension
                     const fileName = path.basename(modulePath, '.ts');
-                    return fileName;
+                    return {
+                        className: fileName,
+                        config: {}
+                    };
                 }
             }
         }
