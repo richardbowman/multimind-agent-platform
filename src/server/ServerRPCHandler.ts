@@ -615,7 +615,21 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }
+        
+        // Get channel data to find associated project
+        const channelData = await this.services.chatClient.getChannelData(channelId);
+        
+        // Delete the channel
         await this.services.chatClient.deleteChannel(channelId);
+        
+        // If channel has an associated project, delete it too
+        if (channelData.projectId) {
+            try {
+                await this.services.taskManager.deleteProject(channelData.projectId);
+            } catch (error) {
+                Logger.error(`Failed to delete project ${channelData.projectId} for channel ${channelId}:`, error);
+            }
+        }
     }
 
     async minimizeWindow(): Promise<void> {
