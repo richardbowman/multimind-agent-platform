@@ -37,8 +37,8 @@ interface ChatMessageProps {
     onToggleExpansion: (messageId: string) => void;
     onViewThread: (messageId: string) => void;
     onViewMetadata: (message: any) => void;
-    hasUnreadReplies?: boolean;
-    onMessageRead?: (messageId: string) => void;
+    hasUnreadReplies: boolean;
+    onMessageRead: (messageId: string) => void;
 }
 
 const ArtifactLoader: React.FC<{ artifactId: string }> = ({ artifactId }) => {
