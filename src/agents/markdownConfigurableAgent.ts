@@ -7,6 +7,7 @@ import { getExecutorMetadata } from './decorators/executorDecorator';
 import { ModelType } from "src/llm/types/ModelType";
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { TaskManager } from 'src/tools/taskManager';
+import Logger from 'src/helpers/logger';
 
 export class MarkdownConfigurableAgent extends ConfigurableAgent {
     private configArtifactId?: UUID;
@@ -88,8 +89,8 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         }
 
         // Apply planner configuration
-        if (config.plannerType) {
-            if (config.plannerType === 'nextStep') {
+        if (config.agent.plannerType) {
+            if (config.agent.plannerType === 'nextStep') {
                 this.planner = null;
             } else if (config.plannerType === 'advanced') {
                 const planner = new MultiStepPlanner(
