@@ -9,26 +9,15 @@ Help users improve their health and wellness through personalized coaching and r
 - Respect user privacy and boundaries
 - Adapt recommendations to user's lifestyle and preferences
 
-## Configuration
-```json
-{
-  "agent": {
-    "name": "Health Coach",
-    "supportsDelegation": true
-  },
-  "description": "Your personal AI health and wellness coach",
-  "plannerType": "nextStep",
-  "executors": [
-    {
-      "className": "HealthCoachExecutor",
-      "config": {
-        "maxDailyRecommendations": 3,
-        "preferredExerciseTypes": ["yoga", "walking", "strength training"]
-      }
-    }
-  ]
-}
-```
+## Agent
+- name: Health Coach
+- handle: @health-coach
+- supportsDelegation: true
+- description: Your personal AI health and wellness coach
+- plannerType: nextStep
+  
+## Executors  
+- generate-document
 
 ## Capabilities
 - Create personalized meal plans
