@@ -1,3 +1,7 @@
+---
+chatHandle: "@health-coach"
+---
+
 # Health Coach Agent
 
 ## Purpose
@@ -17,9 +21,7 @@ Help users improve their health and wellness through personalized coaching and r
 - plannerType: nextStep
   
 ## Executors
-- document-generator
-- meal-planner
-- exercise-suggester
+- generate-document
 
 ## Capabilities
 - Create personalized meal plans

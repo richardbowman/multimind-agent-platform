@@ -1,6 +1,6 @@
 import { ConfigurableAgent } from './configurableAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
-import { ArtifactType } from "src/tools/artifact";
+import { ArtifactItem, ArtifactType } from "src/tools/artifact";
 import { UUID } from "src/types/uuid";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { getExecutorMetadata } from './decorators/executorDecorator';
@@ -8,25 +8,34 @@ import { ModelType } from "src/llm/types/ModelType";
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
+import { createChatHandle, isChatHandle } from 'src/types/chatHandle';
+
+export interface MarkdownAgentConstructorParams extends AgentConstructorParams {
+    configArtifact: ArtifactItem;
+}
 
 export class MarkdownConfigurableAgent extends ConfigurableAgent {
-    private configArtifactId?: UUID;
+    private configArtifact?: ArtifactItem;
     private taskManager: TaskManager;
-    config: any;
 
-    constructor(params: AgentConstructorParams & { config: { configArtifactId: UUID}}) {
+    constructor(params: MarkdownAgentConstructorParams) { 
+        if (isChatHandle(params.configArtifact.metadata?.chatHandle)) {
+            params.messagingHandle = createChatHandle(params.configArtifact.metadata?.chatHandle);
+        } else {
+            throw new Error("Invalid chat handle metadata, can't begin configuring agent");
+        }
         super(params);
-        this.configArtifactId = params.config?.configArtifactId;
+        this.configArtifact = params.configArtifact;
         this.taskManager = params.taskManager;
     }
 
     async initialize() {
-        if (!this.configArtifactId) {
-            throw new ConfigurationError('No config artifact ID provided');
+        if (!this.configArtifact) {
+            throw new ConfigurationError('No config artifact provided');
         }
 
         // Load and parse the markdown config
-        const artifact = await this.artifactManager.loadArtifact(this.configArtifactId);
+        const artifact = await this.artifactManager.loadArtifact(this.configArtifact.id);
         if (!artifact || artifact.type !== ArtifactType.Document) {
             throw new ConfigurationError('Config artifact must be a document type');
         }
@@ -96,32 +105,16 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
     private async applyMarkdownConfig(config: Record<string, any>) {
         // Apply basic agent configuration
         if (config.agent) {
-            this.agentName = config.agent.name || this.agentName;
-            this.supportsDelegation = config.agent.supportsDelegation || false;
+            this.agentName = config.agent.name;
         }
 
-        // Apply planner configuration
-        if (config.agent.plannerType) {
-            if (config.agent.plannerType === 'nextStep') {
-                this.planner = null;
-            } else if (config.plannerType === 'advanced') {
-                const planner = new MultiStepPlanner(
-                    this.llmService,
-                    this.taskManager,
-                    this.userId,
-                    this.modelHelpers,
-                    this.stepExecutors,
-                    this.agents
-                );
-                planner.modelType = ModelType.ADVANCED_REASONING;
-                this.planner = planner;
-            }
+        if (!config.purpose) {
+            Logger.warn(`Agent ${this.agentName} missing purpose`);
         }
 
-        // Register executors from config
+        // Map executors action types back to class names for ConfigurableAgent to load
         if (config.executors) {
             let executors: string[] = [];
-            
             // Handle both list and object formats
             if (Array.isArray(config.executors)) {
                 executors = config.executors;
@@ -129,28 +122,27 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                 executors = Object.keys(config.executors);
             }
 
-            for (const executorKey of executors) {
+            config.executors = await Promise.all(executors.map(async executorKey => {
                 try {
-                    const ExecutorClass = await this.loadExecutorClass(executorKey);
-                    const executor = new ExecutorClass(this.getExecutorParams());
-                    this.registerStepExecutor(executor);
-                    Logger.info(`Registered executor: ${executorKey}`);
+                    return await this.loadExecutorClass(executorKey);
                 } catch (error) {
                     Logger.error(`Failed to register executor ${executorKey}:`, error);
                 }
-            }
+            }));
         }
 
         // Apply any additional configuration from the markdown
-        this.config = {
-            ...this.config,
+        this.agentConfig = {
+            ...this.agentConfig,
+            plannerType: config.agent.plannerType,
+            supportsDelegation: config.agent.supportsDelegation,
             ...config
         };
     }
 
-    private async loadExecutorClass(executorKey: string): Promise<any> {
+    private async loadExecutorClass(executorKey: string): Promise<string> {
         // Create require context for executors directory
-        const executorContext = (require as any).context('../executors', true, /\.ts$/);
+        const executorContext = (require as any).context('./executors', true, /\.ts$/);
         
         // Search through all executors for a match
         for (const modulePath of executorContext.keys()) {
@@ -162,31 +154,11 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
             if (executorClass) {
                 const metadata = getExecutorMetadata(executorClass);
                 if (metadata && metadata.key === executorKey) {
-                    return executorClass;
+                    return modulePath;
                 }
             }
         }
 
-        // Try custom paths if specified in config
-        if (this.config.executorPaths) {
-            for (const customPath of this.config.executorPaths) {
-                try {
-                    const module = await import(customPath);
-                    const executorClass = module.default || Object.values(module).find(
-                        (exp: any) => typeof exp === 'function'
-                    );
-                    
-                    if (executorClass) {
-                        const metadata = getExecutorMetadata(executorClass);
-                        if (metadata && metadata.key === executorKey) {
-                            return executorClass;
-                        }
-                    }
-                } catch (error) {
-                    Logger.verbose(`Executor ${executorKey} not found at ${customPath}`);
-                }
-            }
-        }
 
         throw new Error(`Could not find executor class with key ${executorKey}`);
     }
