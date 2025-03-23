@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import { ArtifactItem } from '../../../../../tools/artifact';
-import { Gantt } from 'frappe-gantt';
+import Gantt from 'frappe-gantt';
 import { GanttData } from '../../../../../schemas/GanttData';
 
 interface MarkwhenRendererProps {
