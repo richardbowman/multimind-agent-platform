@@ -8,6 +8,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService, LLMServices } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
 import path from "path";
+import fs from "fs";
 import { UUID } from 'src/types/uuid';
 import { parseAsync } from '@babel/core';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
@@ -37,10 +38,36 @@ export class AgentLoader {
         
         try {
             // Find all artifacts with AgentConfig subtype
+            // Look for agent configs in both the main artifacts and the assets/agents directory
             const artifacts = await params.artifactManager.getArtifacts({
                 type: ArtifactType.Document,
                 subtype: DocumentSubtype.AgentConfig
             });
+
+            // Also load from assets directory
+            const assetsDir = path.join(__dirname, '../../assets/agents');
+            try {
+                const files = await fs.promises.readdir(assetsDir);
+                for (const file of files) {
+                    if (file.endsWith('.md')) {
+                        const filePath = path.join(assetsDir, file);
+                        const content = await fs.promises.readFile(filePath, 'utf-8');
+                        const artifact = {
+                            id: `asset-${path.basename(file, '.md')}`,
+                            type: ArtifactType.Document,
+                            subtype: DocumentSubtype.AgentConfig,
+                            content,
+                            metadata: {
+                                agentName: path.basename(file, '.md'),
+                                source: 'assets'
+                            }
+                        };
+                        artifacts.push(artifact);
+                    }
+                }
+            } catch (error) {
+                Logger.error('Error loading agent configs from assets directory:', error);
+            }
 
             for (const artifact of artifacts) {
                 try {
