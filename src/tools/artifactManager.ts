@@ -117,52 +117,9 @@ export class ArtifactManager {
        this.initialized = true;
    }
 
-  async getArtifacts(filter: { type?: string, subtype?: string, [key: string]: any } = {}): Promise<ArtifactItem[]> {
+  async getArtifacts(filter: Record<string, any> = {}): Promise<ArtifactItem[]> {
     const artifacts = await this.listArtifacts();
-
-    return artifacts.filter(artifact => {
-      // Match type if specified
-      const typeMatch = !filter.type || artifact.type === filter.type;
-      
-      // Match subtype if specified
-      const subtypeMatch = !filter.subtype || artifact.metadata?.subtype === filter.subtype;
-      
-      // Match other metadata keys
-      const metadataMatch = Object.keys(filter)
-        .filter(key => key !== 'type' && key !== 'subtype')
-        .every(key => {
-          const filterValue = filter[key];
-          const metadataValue = artifact.metadata?.[key];
-          
-          // Handle array values with $in operator
-          if (Array.isArray(filterValue)) {
-            return filterValue.includes(metadataValue);
-          }
-          
-          // Handle object operators like $eq, $gt, etc.
-          if (typeof filterValue === 'object' && filterValue !== null) {
-            return Object.entries(filterValue).every(([operator, value]) => {
-              switch (operator) {
-                case '$eq': return metadataValue === value;
-                case '$ne': return metadataValue !== value;
-                case '$gt': return metadataValue > value;
-                case '$gte': return metadataValue >= value;
-                case '$lt': return metadataValue < value;
-                case '$lte': return metadataValue <= value;
-                case '$in': return Array.isArray(value) && value.includes(metadataValue);
-                case '$nin': return Array.isArray(value) && !value.includes(metadataValue);
-                case '$exists': return value ? metadataValue !== undefined : metadataValue === undefined;
-                default: return false;
-              }
-            });
-          }
-          
-          // Simple equality match
-          return metadataValue === filterValue;
-        });
-
-      return typeMatch && subtypeMatch && metadataMatch;
-    });
+    return ArrayUtils.filter(artifacts, filter);
   }
 
   private async getArtifactRecord(id: UUID): Promise<ArtifactModel | null> {

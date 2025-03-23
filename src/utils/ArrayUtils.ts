@@ -14,40 +14,66 @@ export namespace ArrayUtils {
         return item !== undefined && item !== null;
     }
 
-    export function filter(array: arr) {
-        // Match other metadata keys
-      const metadataMatch = Object.keys(filter)
-      .filter(key => key !== 'type' && key !== 'subtype')
-      .every(key => {
-        const filterValue = filter[key];
-        const metadataValue = artifact.metadata?.[key];
-        
-        // Handle array values with $in operator
-        if (Array.isArray(filterValue)) {
-          return filterValue.includes(metadataValue);
-        }
-        
-        // Handle object operators like $eq, $gt, etc.
-        if (typeof filterValue === 'object' && filterValue !== null) {
-          return Object.entries(filterValue).every(([operator, value]) => {
-            switch (operator) {
-              case '$eq': return metadataValue === value;
-              case '$ne': return metadataValue !== value;
-              case '$gt': return metadataValue > value;
-              case '$gte': return metadataValue >= value;
-              case '$lt': return metadataValue < value;
-              case '$lte': return metadataValue <= value;
-              case '$in': return Array.isArray(value) && value.includes(metadataValue);
-              case '$nin': return Array.isArray(value) && !value.includes(metadataValue);
-              case '$exists': return value ? metadataValue !== undefined : metadataValue === undefined;
-              default: return false;
-            }
-          });
-        }
-        
-        // Simple equality match
-        return metadataValue === filterValue;
-      });
+    export function filter<T extends Record<string, any>>(
+        array: T[], 
+        filter: Record<string, any>
+    ): T[] {
+        return array.filter(item => {
+            return Object.entries(filter).every(([key, filterValue]) => {
+                const itemValue = key.split('.').reduce((obj, k) => obj?.[k], item);
+                
+                // Handle logical operators ($and, $or, $nor)
+                if (key === '$and') {
+                    return Array.isArray(filterValue) && 
+                        filterValue.every((f: any) => this.filter([item], f).length > 0);
+                }
+                if (key === '$or') {
+                    return Array.isArray(filterValue) && 
+                        filterValue.some((f: any) => this.filter([item], f).length > 0);
+                }
+                if (key === '$nor') {
+                    return Array.isArray(filterValue) && 
+                        filterValue.every((f: any) => this.filter([item], f).length === 0);
+                }
+                if (key === '$not') {
+                    return this.filter([item], filterValue).length === 0;
+                }
+
+                // Handle comparison operators
+                if (typeof filterValue === 'object' && filterValue !== null) {
+                    return Object.entries(filterValue).every(([operator, value]) => {
+                        switch (operator) {
+                            case '$eq': return itemValue === value;
+                            case '$ne': return itemValue !== value;
+                            case '$gt': return itemValue > value;
+                            case '$gte': return itemValue >= value;
+                            case '$lt': return itemValue < value;
+                            case '$lte': return itemValue <= value;
+                            case '$in': return Array.isArray(value) && value.includes(itemValue);
+                            case '$nin': return Array.isArray(value) && !value.includes(itemValue);
+                            case '$exists': return value ? itemValue !== undefined : itemValue === undefined;
+                            case '$regex': 
+                                return typeof itemValue === 'string' && 
+                                    new RegExp(value).test(itemValue);
+                            case '$all': 
+                                return Array.isArray(itemValue) && 
+                                    Array.isArray(value) &&
+                                    value.every(v => itemValue.includes(v));
+                            case '$elemMatch':
+                                return Array.isArray(itemValue) && 
+                                    itemValue.some(v => this.filter([v], value).length > 0);
+                            default: return false;
+                        }
+                    });
+                }
+
+                // Handle simple equality
+                if (Array.isArray(filterValue)) {
+                    return filterValue.includes(itemValue);
+                }
+                return itemValue === filterValue;
+            });
+        });
     }
 }
 
