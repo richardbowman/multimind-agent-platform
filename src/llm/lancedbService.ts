@@ -30,15 +30,14 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
             if (tables.includes(name)) {
                 this.table = await this.db.openTable(name);
             } else {
-                // Create new table with Apache Arrow schema
+                // Create new table with simplified schema
                 const schema = new arrow.Schema([
                     new arrow.Field('id', new arrow.Utf8()),
                     new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Float32())),
                     new arrow.Field('text', new arrow.Utf8()),
-                    new arrow.Field('metadata', new arrow.Map_(
-                        new arrow.Field('key', new arrow.Utf8()),
-                        new arrow.Field('value', new arrow.Utf8())
-                    ))
+                    new arrow.Field('type', new arrow.Utf8()),
+                    new arrow.Field('subtype', new arrow.Utf8()),
+                    new arrow.Field('metadata_json', new arrow.Utf8())
                 ]);
 
                 // Create empty table with schema
@@ -61,7 +60,9 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 id: collection.ids[i],
                 vector: embeddings[i],
                 text: doc,
-                metadata: collection.metadatas[i]
+                type: collection.metadatas[i].type || '',
+                subtype: collection.metadatas[i].subtype || '',
+                metadata_json: JSON.stringify(collection.metadatas[i])
             }));
 
             await this.table.add(data);
@@ -83,7 +84,7 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
             return results.map((result: any) => ({
                 id: result.id,
                 text: result.text,
-                metadata: result.metadata,
+                metadata: JSON.parse(result.metadata_json),
                 score: result._distance
             }));
         });
@@ -92,10 +93,16 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
     private buildWhereClause(where: any): string {
         const conditions = Object.entries(where)
             .map(([key, value]) => {
-                if (typeof value === 'string') {
-                    return `metadata['${key}'] = '${value}'`;
+                if (key === 'type' || key === 'subtype') {
+                    if (typeof value === 'string') {
+                        return `${key} = '${value}'`;
+                    }
+                    return `${key} = ${value}`;
                 }
-                return `metadata['${key}'] = ${value}`;
+                if (typeof value === 'string') {
+                    return `json_extract(metadata_json, '$.${key}') = '${value}'`;
+                }
+                return `json_extract(metadata_json, '$.${key}') = ${value}`;
             })
             .join(' AND ');
         return conditions;
