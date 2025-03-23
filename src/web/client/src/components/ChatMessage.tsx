@@ -315,8 +315,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         position: 'absolute',
                                         top: -6,
                                         right: -6,
-                                        bgcolor: 'primary.main',
-                                        color: 'primary.contrastText',
+                                        bgcolor: 'error.main',
+                                        color: 'error.contrastText',
                                         borderRadius: '50%',
                                         width: 16,
                                         height: 16,
@@ -325,7 +325,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         justifyContent: 'center',
                                         fontSize: '0.6rem',
                                         border: '1px solid',
-                                        borderColor: 'background.paper'
+                                        borderColor: 'background.paper',
+                                        boxShadow: '0 0 4px rgba(255, 0, 0, 0.5)',
+                                        '@keyframes pulseScale': {
+                                            '0%': {
+                                                transform: 'scale(1)'
+                                            },
+                                            '50%': {
+                                                transform: 'scale(1.1)'
+                                            },
+                                            '100%': {
+                                                transform: 'scale(1)'
+                                            }
+                                        },
+                                        animation: hasThread && hasUnreadReplies ? 'pulseScale 1s infinite' : 'none'
                                     }}>
                                         {message.replyCount}
                                     </Box>
