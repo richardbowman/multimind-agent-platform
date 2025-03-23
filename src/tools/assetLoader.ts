@@ -79,6 +79,83 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
     return loadedTemplates;
 }
 
+export async function loadAgentConfigs(basePath: string, configPath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
+    const configsDir = path.join(basePath, configPath);
+    if (!fs.existsSync(configsDir)) {
+        Logger.warn(`Agent configs directory not found at ${configsDir}`);
+        return [];
+    }
+
+    const files = fs.readdirSync(configsDir).filter(f => f.endsWith('.md'));
+    const loadedConfigs: Artifact[] = [];
+
+    // Get existing configs from artifact manager
+    const existingConfigs = await artifactManager.getArtifacts({ 
+        type: ArtifactType.Document, 
+        subtype: DocumentSubtype.AgentConfig 
+    });
+    const existingConfigMap = new Map(existingConfigs.map(c => [c.metadata?.source, c]));
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        Logger.progress(`Loading agent configs (${i + 1} of ${files.length})`, (i + 1) / files.length, "agent-configs");
+        
+        const filePath = path.join(configsDir, file);
+        let content = fs.readFileSync(filePath, 'utf-8');
+        
+        // Extract YAML front matter if present
+        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+        const match = content.match(frontmatterRegex);
+        let metadata: Record<string, any> = {
+            type: ArtifactType.Document,
+            subtype: DocumentSubtype.AgentConfig,
+            title: path.basename(file, '.md'),
+            source: path.relative(basePath, filePath),
+            contentHash: require('crypto').createHash('sha256').update(content).digest('hex')
+        };
+
+        if (match) {
+            try {
+                const parsedMetadata = yaml.load(match[1]) || {};
+                metadata = { ...metadata, ...parsedMetadata };
+                // Remove the frontmatter from the content
+                content = content.slice(match[0].length);
+            } catch (error) {
+                Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
+            }
+        }
+
+        // Check if config exists and has same content
+        const relativePath = path.relative(basePath, filePath);
+        const existingConfig = existingConfigMap.get(relativePath);
+        if (existingConfig) {
+            const existingHash = existingConfig.metadata?.contentHash;
+            if (existingHash === metadata.contentHash) {
+                Logger.info(`Agent config unchanged: ${file}`);
+                loadedConfigs.push(existingConfig);
+                continue;
+            }
+            Logger.info(`Updating agent config: ${file}`);
+        }
+
+        try {
+            const artifact = await artifactManager.saveArtifact({
+                ...existingConfig?.id ? { id: existingConfig.id } : {},
+                type: ArtifactType.Document,
+                subtype: DocumentSubtype.AgentConfig,
+                content: content,
+                metadata: metadata
+            });
+            loadedConfigs.push(artifact);
+            Logger.info(`Loaded agent config: ${file}`);
+        } catch (e) {
+            Logger.error(`Failed to save agent config ${file}`, e);
+        }
+    }
+
+    return loadedConfigs;
+}
+
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
     const loadedArtifacts: Artifact[] = [];
     const guidesDir = path.join(basePath, guidePath);

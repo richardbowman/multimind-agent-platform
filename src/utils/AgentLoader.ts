@@ -44,30 +44,10 @@ export class AgentLoader {
                 subtype: DocumentSubtype.AgentConfig
             });
 
-            // Also load from assets directory
+            // Load agent configs from assets directory using the asset loader
             const assetsDir = path.join(__dirname, '../../assets/agents');
-            try {
-                const files = await fs.promises.readdir(assetsDir);
-                for (const file of files) {
-                    if (file.endsWith('.md')) {
-                        const filePath = path.join(assetsDir, file);
-                        const content = await fs.promises.readFile(filePath, 'utf-8');
-                        const artifact = {
-                            id: `asset-${path.basename(file, '.md')}`,
-                            type: ArtifactType.Document,
-                            subtype: DocumentSubtype.AgentConfig,
-                            content,
-                            metadata: {
-                                agentName: path.basename(file, '.md'),
-                                source: 'assets'
-                            }
-                        };
-                        artifacts.push(artifact);
-                    }
-                }
-            } catch (error) {
-                Logger.error('Error loading agent configs from assets directory:', error);
-            }
+            const loadedConfigs = await loadAgentConfigs(__dirname, '../../assets/agents', params.artifactManager);
+            artifacts.push(...loadedConfigs);
 
             for (const artifact of artifacts) {
                 try {
