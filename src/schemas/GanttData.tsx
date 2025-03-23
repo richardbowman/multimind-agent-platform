@@ -54,16 +54,14 @@ export interface GanttData {
         target: number;
         /**
          * Dependency type between tasks
-         * @enum {string} - Possible values: 'e2e', 's2s', 'f2f', 's2f'
          */
-        type: string;
+        type: 'e2e' | 's2s' | 'f2f' | 's2f';
     }>;
     scales?: Array<{
         /**
          * Time unit for the scale
-         * @enum {string} - Possible values: 'year', 'month', 'week', 'day', 'hour'
          */
-        unit: string;
+        unit: 'year' | 'month' | 'week' | 'day' | 'hour';
         /**
          * Step size for the time unit
          */
