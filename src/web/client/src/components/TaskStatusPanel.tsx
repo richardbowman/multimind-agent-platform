@@ -113,9 +113,11 @@ export const TaskStatusPanel: React.FC = () => {
         tasks.forEach(task => {
             if (task?.status && groups[task.status]) {
                 // Filter by task type if any types are selected
-                if (taskTypes.length === 0 || taskTypes.includes(task.type)) {
+                const taskType = task.props?.type || TaskType.Standard;
+                if (taskTypes.length === 0 || taskTypes.includes(taskType)) {
                     groups[task.status].push(task);
                 }
+                console.log('Task:', task.id, 'Type:', taskType, 'Selected Types:', taskTypes);
             }
         });
 
