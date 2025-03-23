@@ -3,6 +3,7 @@ import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { ArtifactType } from "src/tools/artifact";
 import { UUID } from "src/types/uuid";
 import { ConfigurationError } from "src/errors/ConfigurationError";
+import { getExecutorMetadata } from './decorators/executorDecorator';
 import { ModelType } from "src/llm/types/ModelType";
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { TaskManager } from 'src/tools/taskManager';
@@ -125,28 +126,46 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         };
     }
 
-    private async loadExecutorClass(executorName: string): Promise<any> {
-        // Try to load from built-in executors first
-        try {
-            const builtInPath = `../executors/${executorName}`;
-            const module = await import(builtInPath);
-            return module.default || module[executorName];
-        } catch (error) {
-            Logger.verbose(`Executor ${executorName} not found in built-in executors, trying custom path`);
-        }
-
-        // Try to load from custom path if specified in config
-        if (this.config.executorPaths) {
-            for (const path of this.config.executorPaths) {
-                try {
-                    const module = await import(path);
-                    return module.default || module[executorName];
-                } catch (error) {
-                    Logger.verbose(`Executor ${executorName} not found at ${path}`);
+    private async loadExecutorClass(executorKey: string): Promise<any> {
+        // Create require context for executors directory
+        const executorContext = require.context('../executors', true, /\.ts$/);
+        
+        // Search through all executors for a match
+        for (const modulePath of executorContext.keys()) {
+            const module = executorContext(modulePath);
+            const executorClass = module.default || Object.values(module).find(
+                (exp: any) => typeof exp === 'function'
+            );
+            
+            if (executorClass) {
+                const metadata = getExecutorMetadata(executorClass);
+                if (metadata && metadata.key === executorKey) {
+                    return executorClass;
                 }
             }
         }
 
-        throw new Error(`Could not find executor class for ${executorName}`);
+        // Try custom paths if specified in config
+        if (this.config.executorPaths) {
+            for (const customPath of this.config.executorPaths) {
+                try {
+                    const module = await import(customPath);
+                    const executorClass = module.default || Object.values(module).find(
+                        (exp: any) => typeof exp === 'function'
+                    );
+                    
+                    if (executorClass) {
+                        const metadata = getExecutorMetadata(executorClass);
+                        if (metadata && metadata.key === executorKey) {
+                            return executorClass;
+                        }
+                    }
+                } catch (error) {
+                    Logger.verbose(`Executor ${executorKey} not found at ${customPath}`);
+                }
+            }
+        }
+
+        throw new Error(`Could not find executor class with key ${executorKey}`);
     }
 }
