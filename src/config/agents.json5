@@ -15,59 +15,21 @@
         ]
       },
       "PersonalAssistant": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
+        "className": "MarkdownConfigurableAgent",
+        "sourcePath": "markdownConfigurableAgent.ts",
         "userId": "0051ce41-3fe7-4efa-9734-e6801ea4544b",
         "handle": "@assistant",
         "description": "A helpful general purpose agent.",
         "enabled": true,
-        "config": {
-          "purpose": "My name is Atlas. My job is to help make your life easier./",
-          "finalInstructions": "",
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "GenerateDocumentExecutor"
-            },
-            {
-              "className": "GenerateDiagramExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "GenerateSlidesExecutor"
-            },
-            {
-              "className": "DelegationExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "SearchArtifactExecutor"
-            },
-            {
-              "className": "CSVProcessingExecutor"
-            },
-            {
-              "className": "ScheduleTaskExecutor"
-            },
-            {
-              "className": "ViewTasksExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "GoalProgressExecutor"
-            },
-            {
-              "className": "ListAgentCapabilitiesExecutor"
-            }
-          ]
+        "configArtifact": {
+          "id": "personal-assistant-config",
+          "type": "document",
+          "metadata": {
+            "chatHandle": "@assistant",
+            "source": "assets/agents/personal-assistant.md"
+          }
         }
-      },  
+      },
       "CoderManager": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
