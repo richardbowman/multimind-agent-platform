@@ -292,24 +292,23 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                '@keyframes pulse': {
-                                    '0%': {
-                                        transform: 'scale(1) rotate(-90deg)',
-                                        opacity: 1
-                                    },
-                                    '50%': {
-                                        transform: 'scale(1.1) rotate(-90deg)',
-                                        opacity: 0.7
-                                    },
-                                    '100%': {
-                                        transform: 'scale(1) rotate(-90deg)',
-                                        opacity: 1
-                                    }
-                                },
-                                animation: hasThread && hasUnreadReplies ? 'pulse 1.5s infinite' : 'none'
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
                             }}>
-                                <ReplyIcon sx={{ 
-                                    transform: 'rotate(-90deg)',
+                                <ReplyIcon sx={{
+                                    '@keyframes pulseColor': {
+                                        '0%': {
+                                            color: 'primary.main'
+                                        },
+                                        '50%': {
+                                            color: 'primary.dark'
+                                        },
+                                        '100%': {
+                                            color: 'primary.main'
+                                        }
+                                    },
+                                    animation: hasThread && hasUnreadReplies ? 'pulseColor 1.5s infinite' : 'none'
                                 }} />
                                 {message.replyCount > 0 && (
                                     <Box sx={{
