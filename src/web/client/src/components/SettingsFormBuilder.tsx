@@ -15,6 +15,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { SettingsListBuilder } from './SettingsListBuilder';
 import { PROVIDER_CONFIG_DEFAULTS, ProviderConfig } from '../../../../tools/providerConfig';
 import { MODEL_CONFIG_DEFAULTS, ModelProviderConfig } from '../../../../tools/modelProviderConfig';
+import { ErrorBoundary } from './shared/ErrorBoundary';
 
 interface SettingsFormBuilderProps {
     settings: any;
@@ -24,29 +25,10 @@ interface SettingsFormBuilderProps {
     onModelSelect: (key: string, provider: string) => void;
 }
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
     fallback: React.ReactNode;
     onError?: (error: Error, errorInfo: ErrorInfo) => void;
     children: React.ReactNode;
-}
-
-class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
-    state = { hasError: false };
-
-    static getDerivedStateFromError() {
-        return { hasError: true };
-    }
-
-    componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        this.props.onError?.(error, errorInfo);
-    }
-
-    render() {
-        if (this.state.hasError) {
-            return this.props.fallback;
-        }
-        return this.props.children;
-    }
 }
 
 const ModelConfigErrorFallback = () => (
