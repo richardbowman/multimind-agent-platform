@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import * as lancedb from "@lancedb/lancedb";
+import * as arrow from 'apache-arrow';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
 import { BaseVectorDatabase, IVectorDatabase, SearchResult } from "./IVectorDatabase";
