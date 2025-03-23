@@ -228,6 +228,16 @@ const columns: GridColDef[] = [
     }
 ];
 
+const transformLogs = (logs: LLMLogEntry[]) => {
+    return logs.map(log => ({
+        ...log,
+        agentName: log.context?.agentName || 'N/A',
+        provider: log.context?.provider || 'N/A',
+        stepType: log.context?.stepType || 'N/A',
+        taskId: log.context?.taskId || 'N/A'
+    }));
+};
+
 export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highlightText, filterLog }) => {
     const [selectedLog, setSelectedLog] = useState<any>(null);
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
@@ -261,7 +271,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
         <Box>
             <Box sx={{ height: 'calc(100vh - 200px)', width: '100%' }}>
                 <DataGrid
-                    rows={logs}
+                    rows={transformLogs(logs)}
                     columns={columns}
                     onRowClick={(params) => handleOpenDetails(params.row, params.row.id)}
                     loading={isLoading}
