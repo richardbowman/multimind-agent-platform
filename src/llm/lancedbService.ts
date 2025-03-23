@@ -33,11 +33,11 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 // Create new table with simplified schema
                 const schema = new arrow.Schema([
                     new arrow.Field('id', new arrow.Utf8()),
-                    new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Float32())),
+                    new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Field('v', new arrow.Float32()))),
                     new arrow.Field('text', new arrow.Utf8()),
                     new arrow.Field('type', new arrow.Utf8()),
                     new arrow.Field('subtype', new arrow.Utf8()),
-                    new arrow.Field('metadata_json', new arrow.Utf8())
+                    // new arrow.Field('metadata_json', new arrow.Utf8())
                 ]);
 
                 // Create empty table with schema
@@ -62,7 +62,7 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 text: doc,
                 type: collection.metadatas[i].type || '',
                 subtype: collection.metadatas[i].subtype || '',
-                metadata_json: JSON.stringify(collection.metadatas[i])
+                // metadata_json: JSON.stringify(collection.metadatas[i])
             }));
 
             await this.table.add(data);
@@ -99,10 +99,10 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                     }
                     return `${key} = ${value}`;
                 }
-                if (typeof value === 'string') {
-                    return `json_extract(metadata_json, '$.${key}') = '${value}'`;
-                }
-                return `json_extract(metadata_json, '$.${key}') = ${value}`;
+                // if (typeof value === 'string') {
+                //     return `json_extract(metadata_json, '$.${key}') = '${value}'`;
+                // }
+                // return `json_extract(metadata_json, '$.${key}') = ${value}`;
             })
             .join(' AND ');
         return conditions;
@@ -128,12 +128,10 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
     }
 
     async deleteDocuments(where: any): Promise<void> {
-        await syncQueue.enqueue(async () => {
-            if (!this.table) throw new Error("Table not initialized");
+        if (!this.table) throw new Error("Table not initialized");
 
-            const whereClause = this.buildWhereClause(where);
-            await this.table.delete(whereClause);
-        });
+        const whereClause = this.buildWhereClause(where);
+        // await this.table.delete(whereClause);
     }
 }
 
