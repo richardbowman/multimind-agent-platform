@@ -14,9 +14,44 @@ export namespace ArrayUtils {
         return item !== undefined && item !== null;
     }
 
+    type FilterValue = 
+        | string 
+        | number 
+        | boolean 
+        | Date 
+        | null 
+        | string[] 
+        | number[]
+        | boolean[]
+        | Date[]
+        | FilterOperatorMap;
+
+    interface FilterOperatorMap {
+        $eq?: FilterValue;
+        $ne?: FilterValue;
+        $gt?: number | Date;
+        $gte?: number | Date;
+        $lt?: number | Date;
+        $lte?: number | Date;
+        $in?: (string | number | boolean | Date)[];
+        $nin?: (string | number | boolean | Date)[];
+        $exists?: boolean;
+        $regex?: string | RegExp;
+        $all?: (string | number | boolean | Date)[];
+        $elemMatch?: FilterCriteria;
+    }
+
+    interface FilterCriteria {
+        [key: string]: FilterValue | FilterCriteria;
+        $and?: FilterCriteria[];
+        $or?: FilterCriteria[];
+        $nor?: FilterCriteria[];
+        $not?: FilterCriteria;
+    }
+
     export function filter<T extends Record<string, any>>(
         array: T[], 
-        filter: Record<string, any>
+        filter: FilterCriteria
     ): T[] {
         return array.filter(item => {
             return Object.entries(filter).every(([key, filterValue]) => {
@@ -40,8 +75,11 @@ export namespace ArrayUtils {
                 }
 
                 // Handle comparison operators
-                if (typeof filterValue === 'object' && filterValue !== null) {
-                    return Object.entries(filterValue).every(([operator, value]) => {
+                if (typeof filterValue === 'object' && filterValue !== null && !Array.isArray(filterValue) && !(filterValue instanceof Date)) {
+                    const operatorMap = filterValue as FilterOperatorMap;
+                    return Object.entries(operatorMap).every(([operator, value]) => {
+                        if (value === undefined) return false;
+                        
                         switch (operator) {
                             case '$eq': return itemValue === value;
                             case '$ne': return itemValue !== value;
@@ -52,9 +90,10 @@ export namespace ArrayUtils {
                             case '$in': return Array.isArray(value) && value.includes(itemValue);
                             case '$nin': return Array.isArray(value) && !value.includes(itemValue);
                             case '$exists': return value ? itemValue !== undefined : itemValue === undefined;
-                            case '$regex': 
-                                return typeof itemValue === 'string' && 
-                                    new RegExp(value).test(itemValue);
+                            case '$regex': {
+                                const regex = typeof value === 'string' ? new RegExp(value) : value;
+                                return typeof itemValue === 'string' && regex.test(itemValue);
+                            }
                             case '$all': 
                                 return Array.isArray(itemValue) && 
                                     Array.isArray(value) &&
