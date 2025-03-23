@@ -203,25 +203,25 @@ const columns: GridColDef[] = [
             params.value === 'ERROR' ? 'error-cell' : 'success-cell'
     },
     {
-        field: 'context.agent',
+        field: 'agentName',
         headerName: 'Agent',
         width: 150,
         valueFormatter: (value) => value || 'N/A'
     },
     {
-        field: 'context.provider',
+        field: 'provider',
         headerName: 'Provider',
         width: 150,
         valueFormatter: (value) => value || 'N/A'
     },
     {
-        field: 'context.stepType',
+        field: 'stepType',
         headerName: 'Step Type',
         width: 150,
         valueFormatter: (value) => value || 'N/A'
     },
     {
-        field: 'context.taskId',
+        field: 'taskId',
         headerName: 'Task',
         width: 200,
         valueFormatter: (value) => value ? `Task: ${value}` : 'N/A'
