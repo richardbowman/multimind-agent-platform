@@ -1,0 +1,50 @@
+{
+  "name": "multimind-agent-platform",
+  "version": "0.1.43",
+  "main": "dist/main/main.electron.js",
+  "scripts": {
+    "uuid": "tsx src/cli/generate-uuid.ts",
+    "test": "jest",
+    "dev": "yarn electron:dev",
+    "build": "yarn build:app",
+    "package": "yarn electron:package",
+    "docs": "mkdocs serve",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "generate-icon": "node scripts/generate-icon.js",
+    "generate-icon:dev": "node scripts/generate-icon.js --dev",
+    "release": "electron-builder --publish always --config ./electron-builder.ts",
+    "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
+    "watch:schemas": "chokidar 'src/schemas/**/*.ts' -c 'yarn schemas'",
+    "start": "yarn electron:start:dev",
+    "clean": "rimraf dist",
+    "download-whisper-models": "node scripts/download-whisper-models.js",
+    "build:clean": "yarn clean && yarn build:app",
+    "build:app": "concurrently \"yarn generate-icon\" \"yarn build:electron\" \"yarn build:renderer\"",
+    "build:electron": "vite build --mode electron",
+    "build:renderer": "vite build",
+    "watch": "concurrently \"yarn watch:app\" \"yarn watch:schemas\"",
+    "watch:app": "concurrently \"yarn watch:renderer\" \"yarn watch:electron\"",
+    "watch:renderer": "vite",
+    "watch:electron": "vite build --mode electron --watch",
+    "electron:dev": "concurrently \"yarn watch:renderer\" \"yarn watch:electron\" \"yarn watch:schemas\" \"wait-on dist/main/main.electron.js dist/renderer/index.html && yarn electron:start:dev\"",
+    "electron:start:dev": "nodemon --watch 'dist/main/main.electron.js' --delay 3 --exec \"electron . --dev-mode --inspect\"",
+    "electron:build": "yarn download-whisper-models && electron-builder --config ./electron-builder.ts",
+    "electron:package": "yarn build:clean && yarn electron:build",
+    "electron:package:all": "electron-builder --config ./electron-builder.ts build --mac --win --linux",
+    "electron:deploy:linux": "electron-builder --config ./electron-builder.ts build --linux --publish always",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    // Keep all existing dependencies from package.json
+  },
+  "devDependencies": {
+    // Keep all existing devDependencies from package.json
+    // Add Vite-specific dependencies
+    "vite": "^5.2.0",
+    "vite-plugin-electron": "^0.15.0",
+    "vite-plugin-electron-renderer": "^0.15.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite-tsconfig-paths": "^4.3.0"
+  }
+}
