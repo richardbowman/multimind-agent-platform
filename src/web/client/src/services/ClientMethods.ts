@@ -42,8 +42,18 @@ class ClientMethodsImplementation implements ClientMethods {
         this.contextMethods.addPendingFiles(files);
     }
 
+    private unreadMessages = new Set<string>();
+
     async onMessage(messages: ClientMessage[]) {
         console.debug('Messages received from backend', messages);
+
+        // Track unread messages
+        for (const message of messages) {
+            if (message.channel_id !== this.messageContext.currentChannelId ||
+                (message.thread_id && message.thread_id !== this.messageContext.currentThreadId)) {
+                this.unreadMessages.add(message.id);
+            }
+        }
 
         // Check for messages with verbal conversation flag
         const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');

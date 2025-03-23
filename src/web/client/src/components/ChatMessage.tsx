@@ -38,6 +38,7 @@ interface ChatMessageProps {
     onViewThread: (messageId: string) => void;
     onViewMetadata: (message: any) => void;
     hasUnreadReplies?: boolean;
+    onMessageRead?: (messageId: string) => void;
 }
 
 const ArtifactLoader: React.FC<{ artifactId: string }> = ({ artifactId }) => {
@@ -269,7 +270,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         {hasThread && (
                         <IconButton
                             size="small"
-                            onClick={() => onViewThread(message.id)}
+                            onClick={() => {
+                                onViewThread(message.id);
+                                if (onMessageRead) {
+                                    onMessageRead(message.id);
+                                }
+                            }}
                             sx={{
                                 p: 0.5,
                                 bgcolor: 'action.hover',
