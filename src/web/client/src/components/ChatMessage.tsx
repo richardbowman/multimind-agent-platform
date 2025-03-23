@@ -315,8 +315,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         position: 'absolute',
                                         top: -6,
                                         right: -6,
-                                        bgcolor: 'error.main',
-                                        color: 'error.contrastText',
+                                        bgcolor: hasUnreadReplies ? 'error.main' : 'primary.main',
+                                        color: hasUnreadReplies ? 'error.contrastText' : 'primary.contrastText',
                                         borderRadius: '50%',
                                         width: 16,
                                         height: 16,
@@ -326,7 +326,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         fontSize: '0.6rem',
                                         border: '1px solid',
                                         borderColor: 'background.paper',
-                                        boxShadow: '0 0 4px rgba(255, 0, 0, 0.5)',
+                                        boxShadow: hasUnreadReplies ? '0 0 4px rgba(255, 0, 0, 0.5)' : 'none',
                                         '@keyframes pulseScale': {
                                             '0%': {
                                                 transform: 'scale(1)'
