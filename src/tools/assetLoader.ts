@@ -218,18 +218,22 @@ async function generateActionsArtifact(actionsGuide: Artifact, artifactManager: 
     // Check if we already have this artifact
     const existingArtifacts = await artifactManager.getArtifacts({ 
         type: ArtifactType.Document, 
-        subtype: DocumentSubtype.Reference 
+        subtype: DocumentSubtype.Procedure 
     });
     const existingArtifact = existingArtifacts.find(a => a.metadata?.source === 'generated://actions-reference');
 
     try {
-        await artifactManager.saveArtifact({
-            ...existingArtifact?.id ? { id: existingArtifact.id } : {},
-            type: ArtifactType.Document,
-            subtype: DocumentSubtype.Reference,
-            content: JSON.stringify(actions, null, 2),
-            metadata: metadata
-        });
+        if (existingArtifact?.metadata?.contentHash !== metadata.contentHash) {
+            await artifactManager.saveArtifact({
+                ...existingArtifact?.id ? { id: existingArtifact.id } : {},
+                type: ArtifactType.Document,
+                content: JSON.stringify(actions, null, 2),
+                metadata: {
+                    ...metadata,
+                    subtype: DocumentSubtype.Procedure
+                }
+            });
+        }
         Logger.info('Generated actions reference artifact');
     } catch (e) {
         Logger.error('Failed to generate actions reference artifact', e);
