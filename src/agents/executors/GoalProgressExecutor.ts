@@ -76,8 +76,10 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
 
         // Update task statuses based on the analysis
         if (result?.goalsInProgress?.length) {
-            await Promise.all(result.goalsInProgress.map(async goalId => {
+            await Promise.all(result.goalsInProgress.map(async goalIndex => {
                 try {
+                    const goalId = params.channelGoals[parseInt(goalIndex)-1].id;
+
                     const task = isUUID(goalId) && await this.taskManager.getTaskById(goalId);
                     if (task && task.status !== TaskStatus.InProgress) {
                         await this.taskManager.markTaskInProgress(goalId);
@@ -90,14 +92,15 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
                         }
                     }
                 } catch (error) {
-                    Logger.error(`Failed to mark task ${goalId} as in-progress: ${error}`);
+                    Logger.error(`Failed to mark task ${goalIndex} as in-progress: ${error}`);
                 }
             }));
         }
 
         if (result?.goalsCompleted?.length) {
-            await Promise.all(result.goalsCompleted.map(async goalId => {
+            await Promise.all(result.goalsCompleted.map(async goalIndex => {
                 try {
+                    const goalId = params.channelGoals[parseInt(goalIndex)-1].id;
                     const task = isUUID(goalId) && await this.taskManager.getTaskById(goalId);
                     if (task && task.status !== TaskStatus.Completed) {
                         await this.taskManager.completeTask(goalId);
@@ -114,7 +117,7 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
                         }
                     }
                 } catch (error) {
-                    Logger.error(`Failed to mark task ${goalId} as complete: ${error}`);
+                    Logger.error(`Failed to mark task ${goalIndex} as complete: ${error}`);
                 }
             }));
         }

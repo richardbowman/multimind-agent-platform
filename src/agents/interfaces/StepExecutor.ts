@@ -130,7 +130,7 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
                         step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
                     ) || []
                 ) || [];
-        
+                
                 // Get procedure guides from search, excluding any already in use
                 const searchedGuides = (await _step.params.artifactManager.searchArtifacts(
                     `Procedure guides: ${StringUtils.truncateWithEllipsis(params.stepGoal||params.message||params.goal||"", 1000)}`,

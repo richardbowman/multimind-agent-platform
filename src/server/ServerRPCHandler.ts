@@ -107,7 +107,10 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         const _s = await this.getSettings();
 
         Logger.info(`Reindexing collection: ${_s.chromaCollection}`);
-        await this.services.vectorDB.reindexCollection(_s.chromaCollection);
+        for(const collection of this.services.vectorCollections) {
+            await collection.reindexCollection();
+
+        }
 
         const performIndexing = async () => {
             try {

@@ -143,19 +143,21 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         await sleep();
 
         Logger.progress('Loading vector database', 0.3, "loading");
-        const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
-        const artifactManager = new ArtifactManager(vectorDB, chatService);
+        const docsVectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
+        const proceduresVectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
+
+        const artifactManager = new ArtifactManager(docsVectorDB, proceduresVectorDB, chatService);
         await artifactManager.initialize();
 
         await sleep();
 
-        vectorDB.on("needsReindex", async () => {
+        docsVectorDB.on("needsReindex", async () => {
             Logger.progress("Reindexing vector database", 0.4, "loading");
             await artifactManager.indexArtifacts();
         });
 
-        await vectorDB.initializeCollection(_s.chromaCollection);
-
+        await docsVectorDB.initializeCollection(_s.chromaCollection);
+        await proceduresVectorDB.initializeCollection("procedures");
 
         const tasks = new SimpleTaskManager();
         await tasks.initialize();
@@ -212,23 +214,21 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         // Load all agents dynamically
         const jsonAgentObjects = await AgentLoader.loadAgents({
             llmServices,
-            vectorDBService: vectorDB,
             taskManager: tasks,
             artifactManager,
             chatStorage,
-            settingsManager: settingsManager,
-            agents: agents
+            settingsManager,
+            agents
         });
 
         // Load all agents dynamically
         const markdownAgentObjects = await AgentLoader.loadMarkdownConfigurableAgents({
             llmServices,
-            vectorDBService: vectorDB,
             taskManager: tasks,
             artifactManager,
             chatStorage,
-            settingsManager: settingsManager,
-            agents: agents
+            settingsManager,
+            agents
         });
 
         const agentObjects = [...jsonAgentObjects.entries(), ...markdownAgentObjects.entries()];
@@ -308,7 +308,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             llmLogger: chatService.getLogger(),
             logReader: new LogReader(),
             llmService: chatService,
-            vectorDB,
+            vectorCollections: [docsVectorDB, proceduresVectorDB],
             cleanup: shutdown,
             agents
         };

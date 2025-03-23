@@ -1,5 +1,5 @@
 ---
-agent: PersonalAssistant
+agent: Personal Assistant
 title: "Brainstorming Session Procedure"
 ---
 

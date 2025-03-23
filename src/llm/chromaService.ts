@@ -151,12 +151,12 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
     async clearCollection(): Promise<void> {
         if (!this.collection) throw new Error("Collection not initialized");
         Logger.info("Clearing ChromaDB collection");
-        await this.collection.delete();
+        if (this.collection) await this.collection.delete();
     }
 
-    async reindexCollection(name: string): Promise<void> {
+    async reindexCollection(): Promise<void> {
         await this.clearCollection();
-        await this.initializeCollection(name);
+        if (this.collection) await this.initializeCollection(this.collection.name);
     }
 
     async getTokenCount(content: string) {

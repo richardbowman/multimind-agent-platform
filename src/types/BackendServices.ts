@@ -32,7 +32,7 @@ export interface BackendServices extends BackendServicesOnly {
     taskManager: TaskManager;
     artifactManager: ArtifactManager;
     llmService: ILLMService;
-    vectorDB: IVectorDatabase;
+    vectorCollections: IVectorDatabase[];
     llmLogger: LLMCallLogger;
     agents: Agents;
 }

@@ -3,7 +3,7 @@ import * as path from 'path';
 import { Sequelize } from 'sequelize';
 import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
-import { IVectorDatabase } from '../llm/IVectorDatabase';
+import { IVectorDatabase, SearchResult } from '../llm/IVectorDatabase';
 import { ILLMService } from '../llm/ILLMService';
 import { Artifact, ArtifactItem, ArtifactType, DocumentSubtype, SpreadsheetSubType } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
@@ -14,6 +14,8 @@ import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { ArtifactModel } from './artifactModel';
 import { DatabaseMigrator } from 'src/database/migrator';
 import VectraService from 'src/llm/vectraService';
+import { ArrayUtils } from 'src/utils/ArrayUtils';
+import { FilterCriteria } from 'src/types/FilterCriteria';
 
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
@@ -516,10 +518,10 @@ export class ArtifactManager {
     filter?: Record<string, any>,
     limit: number = 5, 
     minScore: number = 0.5
-  ): Promise<Array<{ artifact: ArtifactItem, score: number }>> {
+  ): Promise<Array<{ artifact: Artifact, score: number }>> {
     try {
       // Convert filter to vector DB query format
-      const where: Record<string, any> = {};
+      const where: FilterCriteria = {};
       if (filter) {
         const supportedFilters = Object.entries(filter).filter(([key]) => ['type', 'subtype'].includes(key));
         for (const [key, value] of supportedFilters) {
@@ -539,42 +541,23 @@ export class ArtifactManager {
       const vectorDb = filter?.subtype === DocumentSubtype.Procedure ? this.procedureVectorDb : this.docsVectorDb;
 
       // Search the vector database
-      let results;
+      let results : SearchResult[];
       try {
-        const vectorResults = (await vectorDb.query([query], where, limit * 3)).slice(0, limit);
-        
+        results = (await vectorDb.query([query], where, limit))
+          .filter(r => r.score > minScore)
+          .sort((a, b) => b.score - a.score);
       } catch (e) {
         const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
         Logger.error(message, e)
         throw new Error(message);
       }
 
-      // Map results to artifacts with scores
-      const artifacts: Array<{ artifact: ArtifactItem, score: number }> = [];
-      for (const result of results) {
-        if (result.score >= minScore) {
-          const artifact = await this.loadArtifact(result.metadata.artifactId as UUID);
-          if (!artifact) {
-            Logger.warn(`Artifact not found in database: ${result.metadata.artifactId}`);
-            continue;
-          }
-          if (artifact) {
-            artifacts.push({
-              artifact: {
-                id: artifact.id,
-                type: artifact.type,
-                metadata: artifact.metadata
-              },
-              score: result.score
-            });
-          }
-        }
-      }
+      const artifactResults = (await Promise.all(results.map(async ({metadata, score}) => ({
+        artifact: await this.loadArtifact(metadata.artifactId as UUID),
+        score
+      })))).filter(r => !!r.artifact);
 
-      // Sort by score descending
-      artifacts.sort((a, b) => b.score - a.score);
-
-      return artifacts;
+      return artifactResults;
     } catch (error) {
       Logger.error('Error searching artifacts:', error);
       throw new Error(`Failed to search artifacts: ${asError(error).message}`);

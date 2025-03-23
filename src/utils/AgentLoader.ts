@@ -3,22 +3,16 @@ import { Agent } from '../agents/agents';
 import { AgentConstructorParams } from '../agents/interfaces/AgentConstructorParams';
 import Logger from '../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
-import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { ILLMService, LLMServices } from 'src/llm/ILLMService';
+import { LLMServices } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
-import path from "path";
-import fs from "fs";
 import { UUID } from 'src/types/uuid';
-import { parseAsync } from '@babel/core';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { MarkdownAgentConstructorParams, MarkdownConfigurableAgent } from 'src/agents/markdownConfigurableAgent';
-import { ModelType } from "src/llm/types/ModelType";
 
 
 export interface AgentLoaderParams {
     llmServices: LLMServices;
-    vectorDBService: IVectorDatabase;
     artifactManager: ArtifactManager
     taskManager: TaskManager;
     chatStorage: LocalChatStorage;

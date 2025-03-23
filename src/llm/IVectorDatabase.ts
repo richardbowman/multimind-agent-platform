@@ -24,7 +24,7 @@ export interface IVectorDatabase extends EventEmitter {
         artifactId?: string
     ): Promise<void>;
     clearCollection(): Promise<void>;
-    reindexCollection(name: string): Promise<void>;
+    reindexCollection(): Promise<void>;
     getTokenCount(content: string): Promise<number>;
     deleteDocuments(where: FilterCriteria): Promise<void>;
 }

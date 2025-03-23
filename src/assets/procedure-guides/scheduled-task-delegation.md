@@ -1,5 +1,5 @@
 ---
-agent: PersonalAssistant
+agent: Personal Assistant
 title: "Deferred/Scheduled Task Delegation Procedure"
 ---
 

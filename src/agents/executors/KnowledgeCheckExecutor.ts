@@ -83,7 +83,7 @@ export class KnowledgeCheckExecutor extends BaseStepExecutor<StepResponse> {
                         }
                     }
                 } catch (error) {
-                    Logger.error(`Error querying ChromaDB: ${error}`);
+                    Logger.error(`Error querying vector database: ${error}`);
                 }
             }
 

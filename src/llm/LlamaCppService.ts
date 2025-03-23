@@ -12,6 +12,8 @@ import { ConfigurationError } from "src/errors/ConfigurationError";
 import { app } from "electron";
 import { Worker } from "node:worker_threads";
 import { createUUID } from "src/types/uuid";
+import { LLMProvider } from "./types/LLMProvider";
+import { Settings } from "src/tools/settings";
 
 interface HFModel {
     id: string;
@@ -79,8 +81,8 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     private embeddingContext: any;
     private gpuMode: string;
 
-    constructor(gpuMode: string) {
-        super('llama-cpp');
+    constructor(gpuMode: string, settings: Settings) {
+        super(LLMProvider.LLAMA_CPP, settings);
 
         this.gpuMode = gpuMode;
 

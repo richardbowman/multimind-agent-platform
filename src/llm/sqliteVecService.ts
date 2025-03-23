@@ -303,9 +303,9 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
         });
     }
 
-    async reindexCollection(name: string): Promise<void> {
+    async reindexCollection(): Promise<void> {
         await this.clearCollection();
-        await this.initializeCollection(name);
+        await this.initializeCollection(this.collectionName);
     }
 
     async getTokenCount(content: string): Promise<number> {
