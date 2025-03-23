@@ -27,13 +27,13 @@ My name is Atlas. My job is to help make your life easier.
 - [x] generate-slides
 - [x] delegation
 - [x] retrieve-full-artifact
-- [x] search-artifact
-- [x] csv-processing
-- [x] schedule-task
+- [x] artifact-excerpts
+- [x] csv-processor
+- [x] create-task
 - [x] view-tasks
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] goal-progress
-- [x] list-agent-capabilities
+- [x] list-agents
 
 ## Capabilities
 - Create and edit documents
