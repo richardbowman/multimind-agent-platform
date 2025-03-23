@@ -113,7 +113,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     messages,
     onToggleExpansion,
     onViewThread,
-    onViewMetadata
+    onViewMetadata,
+    hasUnreadReplies,
+    onMessageRead
 }) => {
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
