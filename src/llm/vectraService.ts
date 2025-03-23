@@ -16,7 +16,7 @@ import { createUUID, UUID } from "src/types/uuid";
 
 const syncQueue = new AsyncQueue();
 
-class VectraService extends EventEmitter implements IVectorDatabase {
+class VectraService extends BaseVectorDatabase implements IVectorDatabase {
     private index: LocalIndex | null = null;
     private collectionName: string = '';
 
@@ -89,66 +89,6 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         });
     }
 
-    computeHash(content: string): string {
-        const hash = crypto.createHash('sha256');
-        hash.update(content);
-        return hash.digest('hex');
-    }
-
-    async handleContentChunks(
-        content: string,
-        url: string,
-        task: string,
-        projectId: string,
-        title: string,
-        type = 'content',
-        subtype: string,
-        artifactId?: UUID
-    ): Promise<void> {
-        const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 2000,
-            chunkOverlap: 100,
-        });
-
-        const docId = artifactId || createUUID();
-        // await saveToFile(projectId, type, docId, content);
-
-        const chunks = await splitter.createDocuments([content]);
-
-        const addCollection: { ids: string[], metadatas: any[], documents: string[] } = {
-            ids: [],
-            metadatas: [],
-            documents: []
-        };
-
-        chunks.forEach((c, index) => {
-            const chunkContent = c.pageContent;
-            const hashId = this.computeHash(chunkContent);
-
-            if (addCollection.ids.includes(hashId)) return;
-
-            addCollection.ids.push(hashId);
-
-            const metadata = {
-                url,
-                projectId,
-                type,
-                subtype,
-                task,
-                title,
-                docId,
-                chunkId: index + 1,
-                chunkTotal: chunks.length,
-                artifactId
-            };
-
-            addCollection.metadatas.push(metadata);
-            addCollection.documents.push(chunkContent);
-        });
-
-        await this.addDocuments(addCollection);
-        
-    }
 
     async clearCollection(): Promise<void> {
         await syncQueue.enqueue(async () => {
