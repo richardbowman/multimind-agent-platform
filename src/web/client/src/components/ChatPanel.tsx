@@ -62,7 +62,8 @@ interface ChatPanelProps {
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, rightDrawerWidth, showWelcome, onSwitchToWelcome }) => {
     const theme = useTheme();
-    const { threadMessages: messages, unreadMessages, markMessageRead } = useMessages();
+    const { threadMessages: messages } = useThreadMessages();
+    const { unreadChildren, markMessageRead } = useMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
     const { filteredTasks: tasks } = useFilteredTasks();
@@ -447,7 +448,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         setSelectedMessage(message);
                                         setMetadataDialogOpen(true);
                                     }}
-                                    hasUnreadReplies={unreadMessages.has(message.id)}
+                                    unreadChildren={unreadChildren}
                                     onMessageRead={markMessageRead}
                                 />
                             </ToolbarActionsProvider>

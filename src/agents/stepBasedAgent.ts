@@ -22,6 +22,7 @@ import { Artifact } from 'src/tools/artifact';
 import Logger from '../helpers/logger';
 import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
 import { error } from 'console';
+import { StringUtils } from 'src/utils/StringUtils';
 
 interface ExecutorCapability {
     stepType: string;
@@ -92,7 +93,8 @@ export abstract class StepBasedAgent extends Agent {
             try {
                 // Use require.context to load executors
                 const executorContext = (require as any).context('./executors', true, /\.ts$/);
-                const module = executorContext(`./${executorConfig.className}.ts`);
+                const name = StringUtils.isString(executorConfig) ? executorConfig : `./${executorConfig.className}.ts`;
+                const module = executorContext(name);
                 const ExecutorClass = module[executorConfig.className] || module.default;
 
                 Logger.info(`Initializing ${executorConfig.className} executor `)

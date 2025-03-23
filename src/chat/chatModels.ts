@@ -159,15 +159,15 @@ export class UserHandleModel extends Model<UserHandleAttributes>
     this.init({
       user_id: {
         type: DataTypes.UUID,
-        primaryKey: true
+        allowNull: false
       },
       handle: {
         type: DataTypes.STRING,
-        allowNull: false
+        primaryKey: true
       }
     }, {
       sequelize,
-      tableName: 'user_handles',
+      tableName: 'user_handles_v2',
       timestamps: false
     });
   }

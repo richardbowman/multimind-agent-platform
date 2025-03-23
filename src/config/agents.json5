@@ -14,22 +14,6 @@
   
         ]
       },
-      "PersonalAssistant": {
-        "className": "MarkdownConfigurableAgent",
-        "sourcePath": "markdownConfigurableAgent.ts",
-        "userId": "0051ce41-3fe7-4efa-9734-e6801ea4544b",
-        "handle": "@assistant",
-        "description": "A helpful general purpose agent.",
-        "enabled": true,
-        "configArtifact": {
-          "id": "personal-assistant-config",
-          "type": "document",
-          "metadata": {
-            "chatHandle": "@assistant",
-            "source": "assets/agents/personal-assistant.md"
-          }
-        }
-      },
       "CoderManager": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
@@ -520,7 +504,7 @@
               }
             },
             {
-              "className": "GenerateMarkwhenExecutor"
+              "className": "GenerateRoadmapExecutor"
             },
             {
               "className": "GenerateSpreadsheetExecutor"

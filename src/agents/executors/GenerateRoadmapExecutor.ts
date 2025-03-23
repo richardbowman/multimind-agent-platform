@@ -9,8 +9,8 @@ import { JSONSchema } from 'openai/lib/jsonschema';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
-@StepExecutorDecorator(ExecutorType.GENERATE_MARKWHEN, 'Create/revise a Gantt timeline roadmap.')
-export class GenerateMarkwhenExecutor extends GenerateArtifactExecutor {
+@StepExecutorDecorator(ExecutorType.GENERATE_ROADMAP, 'Create/revise a Gantt timeline roadmap.')
+export class GenerateRoadmapExecutor extends GenerateArtifactExecutor {
     /**
      * Gets the JSON Schema for Gantt chart data
      * @returns JSONSchema for GanttData structure

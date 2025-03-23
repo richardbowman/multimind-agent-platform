@@ -87,15 +87,17 @@ export interface StepSequenceConfig {
     }>;
 }
 
+export interface ExecutorConfig {
+    className: string;
+    config?: Record<string, any>;
+}
+
 export interface AgentConfig {
     purpose: string;
     finalInstructions: string;
     supportsDelegation: boolean;
     plannerType: PlannerType;
-    executors: {
-        className: string;
-        config?: Record<string, any>;
-    }[];
+    executors: ExecutorConfig[];
     stepSequences?: StepSequenceConfig[];
 }
 

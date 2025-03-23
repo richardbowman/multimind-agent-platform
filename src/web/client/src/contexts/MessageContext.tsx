@@ -9,11 +9,12 @@ export interface MessageContextType {
   currentChannelId: UUID | null;
   currentThreadId: UUID | null;
   isLoading: boolean;
+  unreadChildren: Set<string> | null;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
   setCurrentChannelId: (channelId: UUID | null) => void;
   setCurrentThreadId: React.Dispatch<React.SetStateAction<UUID | null>>;
-  unreadMessages: Set<string>;
+  setUnreadChildren: React.Dispatch<React.SetStateAction<Set<string> | null>>;
   markMessageRead: (messageId: string) => void;
 }
 
@@ -25,7 +26,7 @@ export const MessageProvider = ({ children }: { children: React.ReactNode }) => 
   const { currentChannelId, setCurrentChannelId } = useChannels();
   const [currentThreadId, setCurrentThreadId] = useState<UUID | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [unreadMessages, setUnreadMessages] = useState<Set<string>>(new Set());
+  const [unreadChildren, setUnreadChildren] = useState<Set<string>>(new Set());
 
   const fetchMessages = useCallback(async (channelId: UUID | null, threadId: UUID | null) => {
     if (!channelId) return;
@@ -48,7 +49,7 @@ export const MessageProvider = ({ children }: { children: React.ReactNode }) => 
       });
       
       // Mark sent messages as read
-      setUnreadMessages(prev => {
+      setUnreadChildren(prev => {
         const newSet = new Set(prev);
         newSet.delete(result.id);
         return newSet;
@@ -64,7 +65,7 @@ export const MessageProvider = ({ children }: { children: React.ReactNode }) => 
   }, [currentChannelId, currentThreadId, fetchMessages]);
 
   const markMessageRead = useCallback((messageId: string) => {
-    setUnreadMessages(prev => {
+    setUnreadChildren(prev => {
       const newSet = new Set(prev);
       newSet.delete(messageId);
       return newSet;
@@ -76,13 +77,14 @@ export const MessageProvider = ({ children }: { children: React.ReactNode }) => 
     currentChannelId,
     currentThreadId,
     isLoading,
+    unreadChildren,
     sendMessage,
     setMessages,
     setCurrentChannelId,
     setCurrentThreadId,
-    unreadMessages,
+    setUnreadChildren,
     markMessageRead
-  }), [messages, currentChannelId, currentThreadId, isLoading, sendMessage, unreadMessages, markMessageRead]);
+  }), [messages, currentChannelId, currentThreadId, isLoading, sendMessage, unreadChildren, setUnreadChildren, markMessageRead]);
 
   return (
     <MessageContext.Provider value={value}>

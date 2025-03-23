@@ -12,7 +12,7 @@ import fs from "fs";
 import { UUID } from 'src/types/uuid';
 import { parseAsync } from '@babel/core';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
-import { MarkdownConfigurableAgent } from 'src/agents/markdownConfigurableAgent';
+import { MarkdownAgentConstructorParams, MarkdownConfigurableAgent } from 'src/agents/markdownConfigurableAgent';
 import { ModelType } from "src/llm/types/ModelType";
 
 
@@ -46,19 +46,18 @@ export class AgentLoader {
 
             for (const artifact of artifactItems) {
                 try {
-                    const configParams: AgentConstructorParams = {
+                    const configParams: MarkdownAgentConstructorParams = {
                         ...params,
-                        config: {
-                            configArtifactId: artifact.id
-                        },
+                        configArtifact: artifact,
                         chatClient: new LocalTestClient(artifact.id, "", params.chatStorage),
-                        settings: params.settingsManager.getSettings()
+                        settings: params.settingsManager.getSettings(),
+                        userId: artifact.id
                     };
 
                     const agent = new MarkdownConfigurableAgent(configParams);
                     await agent.initialize();
                     
-                    agentsMap.set(artifact.metadata?.agentName || `agent-${artifact.id}`, agent);
+                    agentsMap.set(agent.agentName, agent);
                     Logger.info(`Loaded markdown configurable agent from artifact ${artifact.id}`);
                 } catch (error) {
                     Logger.error(`Failed to load agent from artifact ${artifact.id}:`, error);

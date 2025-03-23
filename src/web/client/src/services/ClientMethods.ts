@@ -42,18 +42,8 @@ class ClientMethodsImplementation implements ClientMethods {
         this.contextMethods.addPendingFiles(files);
     }
 
-    private unreadMessages = new Set<string>();
-
     async onMessage(messages: ClientMessage[]) {
         console.debug('Messages received from backend', messages);
-
-        // Track unread messages
-        for (const message of messages) {
-            if (message.channel_id !== this.messageContext.currentChannelId ||
-                (message.thread_id && message.thread_id !== this.messageContext.currentThreadId)) {
-                this.unreadMessages.add(message.id);
-            }
-        }
 
         // Check for messages with verbal conversation flag
         const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');
@@ -172,9 +162,24 @@ class ClientMethodsImplementation implements ClientMethods {
                 onClick: () => {
                     this.messageContext.setCurrentChannelId(latestMessage.channel_id);
                     this.messageContext.setCurrentThreadId(latestMessage.thread_id || null);
+                    this.messageContext.markMessageRead(latestMessage.props?.["root-id"]);
                 }
             });
+            
         };
+
+        // Track unread messages
+        for (const message of messages) {
+            if (message.channel_id !== this.messageContext.currentChannelId ||
+                (message.thread_id && message.thread_id !== this.messageContext.currentThreadId)) {
+                if (latestMessage.props?.["root-id"])        {
+                    this.messageContext.setUnreadChildren((prev) => (new Set([
+                        ...prev||[],
+                        latestMessage.props!["root-id"]
+                    ])));
+                }
+            }
+        }
 
         // Get all unique artifact IDs from messages
         const artifactIds : UUID[] = messages.flatMap(m => m.props?.artifactIds || []).filter(a => !!a);
