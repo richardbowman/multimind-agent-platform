@@ -53,17 +53,25 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
             }
 
             if (token.type === 'list' && currentSection) {
+                // Initialize section as array if it's a list
                 if (!config[currentSection]) {
-                    config[currentSection] = {};
+                    config[currentSection] = [];
                 }
 
                 for (const item of token.items) {
                     const text = item.text.trim();
+                    
+                    // Handle key-value pairs
                     const kvMatch = text.match(/^(.+?):\s*(.+)/);
                     if (kvMatch) {
                         const key = kvMatch[1].trim();
                         const value = kvMatch[2].trim();
                         
+                        // Convert section to object if we find key-value pairs
+                        if (Array.isArray(config[currentSection])) {
+                            config[currentSection] = {};
+                        }
+
                         // Try to parse numbers/booleans
                         if (/^\d+$/.test(value)) {
                             config[currentSection][key] = parseInt(value, 10);
@@ -74,6 +82,9 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                         } else {
                             config[currentSection][key] = value;
                         }
+                    } else {
+                        // Add simple list items to array
+                        config[currentSection].push(text);
                     }
                 }
             }
