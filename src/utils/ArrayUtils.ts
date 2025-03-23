@@ -1,7 +1,7 @@
 export namespace ArrayUtils {
     export function deduplicateById<T extends { id: any }>(array: T[]): T[] {
         const seenIds = new Set();
-        return array.filter(item => {
+        const filtered = array.filter(item => {
             if (seenIds.has(item.id)) {
                 return false;
             }
@@ -20,10 +20,11 @@ export namespace ArrayUtils {
         [key in FilterOperator]?: FilterCriteria[keyof FilterCriteria]
     };
 
-    export function filter<T extends Record<string, any>>(
+    export function filter<T extends Record<string, any>, U = T>(
         array: T[], 
-        filter: FilterCriteria & { [key: string]: any }
-    ): T[] {
+        filter: FilterCriteria & { [key: string]: any },
+        mapper?: (item: T) => U
+    ): U[] {
         return array.filter(item => {
             return Object.entries(filter).every(([key, filterValue]) => {
                 const itemValue = key.split('.').reduce((obj, k) => obj?.[k], item);
@@ -84,6 +85,8 @@ export namespace ArrayUtils {
                 return itemValue === filterValue;
             });
         });
+
+        return mapper ? filtered.map(mapper) : filtered as unknown as U[];
     }
 }
 
