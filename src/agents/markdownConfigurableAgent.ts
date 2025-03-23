@@ -104,10 +104,49 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
             }
         }
 
+        // Register executors from config
+        if (config.executors) {
+            for (const executorName of config.executors) {
+                try {
+                    const ExecutorClass = await this.loadExecutorClass(executorName);
+                    const executor = new ExecutorClass(this.getExecutorParams());
+                    this.registerStepExecutor(executor);
+                    Logger.info(`Registered executor: ${executorName}`);
+                } catch (error) {
+                    Logger.error(`Failed to register executor ${executorName}:`, error);
+                }
+            }
+        }
+
         // Apply any additional configuration from the markdown
         this.config = {
             ...this.config,
             ...config
         };
+    }
+
+    private async loadExecutorClass(executorName: string): Promise<any> {
+        // Try to load from built-in executors first
+        try {
+            const builtInPath = `../executors/${executorName}`;
+            const module = await import(builtInPath);
+            return module.default || module[executorName];
+        } catch (error) {
+            Logger.verbose(`Executor ${executorName} not found in built-in executors, trying custom path`);
+        }
+
+        // Try to load from custom path if specified in config
+        if (this.config.executorPaths) {
+            for (const path of this.config.executorPaths) {
+                try {
+                    const module = await import(path);
+                    return module.default || module[executorName];
+                } catch (error) {
+                    Logger.verbose(`Executor ${executorName} not found at ${path}`);
+                }
+            }
+        }
+
+        throw new Error(`Could not find executor class for ${executorName}`);
     }
 }
