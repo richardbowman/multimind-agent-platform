@@ -21,7 +21,9 @@ Help users improve their health and wellness through personalized coaching and r
 - plannerType: nextStep
   
 ## Executors
-- generate-document
+- [x] document-generator
+- [ ] meal-planner
+- [x] exercise-suggester
 
 ## Capabilities
 - Create personalized meal plans

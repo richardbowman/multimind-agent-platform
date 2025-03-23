@@ -70,30 +70,68 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                 for (const item of token.items) {
                     const text = item.text.trim();
                     
-                    // Handle key-value pairs
-                    const kvMatch = text.match(/^(.+?):\s*(.+)/);
-                    if (kvMatch) {
-                        const key = kvMatch[1].trim();
-                        const value = kvMatch[2].trim();
+                    // Handle checklist items (starts with [ ] or [x])
+                    const checklistMatch = text.match(/^\[(x|\s)\]\s*(.+)/);
+                    if (checklistMatch) {
+                        const isChecked = checklistMatch[1] === 'x';
+                        const itemText = checklistMatch[2].trim();
                         
-                        // Convert section to object if we find key-value pairs
-                        if (Array.isArray(config[currentSection])) {
-                            config[currentSection] = {};
+                        // For executors section, only include checked items
+                        if (currentSection === 'executors' && !isChecked) {
+                            continue;
                         }
+                        
+                        // Handle key-value pairs in checklist items
+                        const kvMatch = itemText.match(/^(.+?):\s*(.+)/);
+                        if (kvMatch) {
+                            const key = kvMatch[1].trim();
+                            const value = kvMatch[2].trim();
+                            
+                            // Convert section to object if we find key-value pairs
+                            if (Array.isArray(config[currentSection])) {
+                                config[currentSection] = {};
+                            }
 
-                        // Try to parse numbers/booleans
-                        if (/^\d+$/.test(value)) {
-                            config[currentSection][key] = parseInt(value, 10);
-                        } else if (/^\d+\.\d+$/.test(value)) {
-                            config[currentSection][key] = parseFloat(value);
-                        } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
-                            config[currentSection][key] = value.toLowerCase() === 'true';
+                            // Try to parse numbers/booleans
+                            if (/^\d+$/.test(value)) {
+                                config[currentSection][key] = parseInt(value, 10);
+                            } else if (/^\d+\.\d+$/.test(value)) {
+                                config[currentSection][key] = parseFloat(value);
+                            } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+                                config[currentSection][key] = value.toLowerCase() === 'true';
+                            } else {
+                                config[currentSection][key] = value;
+                            }
                         } else {
-                            config[currentSection][key] = value;
+                            // Add simple checklist items to array
+                            config[currentSection].push(itemText);
                         }
                     } else {
-                        // Add simple list items to array
-                        config[currentSection].push(text);
+                        // Handle regular list items
+                        const kvMatch = text.match(/^(.+?):\s*(.+)/);
+                        if (kvMatch) {
+                            const key = kvMatch[1].trim();
+                            const value = kvMatch[2].trim();
+                            
+                            // Convert section to object if we find key-value pairs
+                            if (Array.isArray(config[currentSection])) {
+                                config[currentSection] = {};
+                            }
+
+                            // Try to parse numbers/booleans
+                            if (/^\d+$/.test(value)) {
+                                config[currentSection][key] = parseInt(value, 10);
+                            } else if (/^\d+\.\d+$/.test(value)) {
+                                config[currentSection][key] = parseFloat(value);
+                            } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+                                config[currentSection][key] = value.toLowerCase() === 'true';
+                            } else {
+                                config[currentSection][key] = value;
+                            }
+                        } else {
+                            // Add simple list items to array
+                            config[currentSection].push(text);
+                        }
                     }
                 }
             }
