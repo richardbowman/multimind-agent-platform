@@ -13,12 +13,47 @@ export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifa
     let ganttData: GanttData = { tasks: [] };
     
     try {
-        ganttData = JSON.parse(content);
+        if (!content) {
+            throw new Error('No content provided');
+        }
+        
+        const parsed = JSON.parse(content);
+        
+        // Validate basic structure
+        if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.tasks)) {
+            throw new Error('Invalid Gantt data structure');
+        }
+        
+        // Validate tasks
+        const validTasks = parsed.tasks.filter(task => 
+            task && 
+            typeof task === 'object' &&
+            task.id !== undefined &&
+            task.text !== undefined &&
+            task.start !== undefined &&
+            task.end !== undefined
+        );
+        
+        if (validTasks.length === 0) {
+            throw new Error('No valid tasks found');
+        }
+        
+        ganttData = {
+            tasks: validTasks,
+            links: Array.isArray(parsed.links) ? parsed.links : [],
+            scales: Array.isArray(parsed.scales) ? parsed.scales : []
+        };
+        
     } catch (error) {
         console.error('Error parsing Gantt data:', error);
         return (
             <Box sx={{ p: 2 }}>
-                <Typography color="error">Invalid Gantt data format</Typography>
+                <Typography color="error" variant="body1">
+                    Error rendering Gantt chart: {error.message}
+                </Typography>
+                <Typography variant="caption">
+                    {artifact?.metadata?.title || 'Untitled Gantt Chart'}
+                </Typography>
             </Box>
         );
     }
@@ -27,17 +62,25 @@ export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifa
 
     useEffect(() => {
         if (ganttRef.current && ganttData.tasks.length > 0) {
-            const tasks = ganttData.tasks.map(task => ({
-                id: task.id.toString(),
-                name: task.text,
-                start: task.start,
-                end: task.end,
-                progress: task.progress || 0,
-                dependencies: ganttData.links
-                    ?.filter(link => link.target === task.id)
-                    .map(link => link.source.toString()) || '',
-                custom_class: task.type === 'summary' ? 'summary' : ''
-            }));
+            const tasks = ganttData.tasks.map(task => {
+                // Ensure required fields exist
+                const id = task.id?.toString() || Math.random().toString(36).substring(2);
+                const name = task.text || 'Unnamed Task';
+                const start = task.start || new Date().toISOString();
+                const end = task.end || new Date(Date.now() + 86400000).toISOString(); // Default 1 day duration
+                
+                return {
+                    id,
+                    name,
+                    start,
+                    end,
+                    progress: task.progress || 0,
+                    dependencies: (ganttData.links || [])
+                        .filter(link => link?.target === task.id)
+                        .map(link => link?.source?.toString()) || '',
+                    custom_class: task.type === 'summary' ? 'summary' : ''
+                };
+            });
 
             new Gantt(ganttRef.current, tasks, {
                 header_height: 50,
