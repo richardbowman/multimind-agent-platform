@@ -20,6 +20,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTasks } from '../contexts/TaskContext';
 import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
+import { TaskType } from '../../../../tools/taskManager';
 import { useIPCService } from '../contexts/IPCContext';
 
 const flyRight = keyframes`
@@ -64,7 +65,7 @@ export const TaskStatusPanel: React.FC = () => {
     const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [taskTypes, setTaskTypes] = useState<string[]>([]);
+    const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
     
     // Track task positions for animation
     useEffect(() => {
@@ -164,16 +165,16 @@ export const TaskStatusPanel: React.FC = () => {
                     size="small"
                     sx={{ flexGrow: 1 }}
                 >
-                    <ToggleButton value="Step" aria-label="step">
+                    <ToggleButton value={TaskType.Step} aria-label="step">
                         Step
                     </ToggleButton>
-                    <ToggleButton value="Goal" aria-label="goal">
+                    <ToggleButton value={TaskType.Goal} aria-label="goal">
                         Goal
                     </ToggleButton>
-                    <ToggleButton value="Recurring" aria-label="recurring">
+                    <ToggleButton value={TaskType.Recurring} aria-label="recurring">
                         Recurring
                     </ToggleButton>
-                    <ToggleButton value="Standard" aria-label="standard">
+                    <ToggleButton value={TaskType.Standard} aria-label="standard">
                         Standard
                     </ToggleButton>
                 </ToggleButtonGroup>
