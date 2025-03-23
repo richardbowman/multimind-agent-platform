@@ -29,8 +29,51 @@ export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifa
                     id: 'save-roadmap',
                     icon: <Save />,
                     label: 'Save Roadmap',
-                    onClick: () => {
+                    onClick: async () => {
+                        if (!ganttObjRef.current || !artifact) return;
                         
+                        // Get current tasks from Gantt instance
+                        const tasks = ganttObjRef.current.tasks.map(task => ({
+                            id: task.id,
+                            text: task.name,
+                            start: task.start,
+                            end: task.end,
+                            progress: task.progress,
+                            type: task.custom_class === 'summary' ? 'summary' : 'task'
+                        }));
+
+                        // Get current links if they exist
+                        const links = ganttData.links || [];
+
+                        // Create updated Gantt data
+                        const updatedData = {
+                            tasks,
+                            links,
+                            scales: ganttData.scales || []
+                        };
+
+                        try {
+                            // Save updated artifact
+                            await fetch(`/api/artifacts/${artifact.id}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    content: JSON.stringify(updatedData),
+                                    metadata: {
+                                        ...artifact.metadata,
+                                        updatedAt: new Date().toISOString()
+                                    }
+                                })
+                            });
+
+                            // Show success message
+                            alert('Roadmap saved successfully!');
+                        } catch (error) {
+                            console.error('Error saving roadmap:', error);
+                            alert('Failed to save roadmap');
+                        }
                     }
                 },
                 {
