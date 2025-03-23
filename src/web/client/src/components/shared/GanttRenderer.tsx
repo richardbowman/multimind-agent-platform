@@ -5,7 +5,7 @@ import Gantt from 'frappe-gantt';
 import { GanttData } from '../../../../../schemas/GanttData';
 import '../../../../../../node_modules/frappe-gantt/dist/frappe-gantt.css';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
-import { Save, Today } from '@mui/icons-material';
+import { Save, Today, CalendarViewWeek, CalendarViewMonth, CalendarToday } from '@mui/icons-material';
 
 interface MarkwhenRendererProps {
     content: string;
@@ -34,9 +34,41 @@ export const GanttRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifa
                     }
                 },
                 {
-                    id: 'artifact-panel-pin',
-                    icon: <Today/>,
-                    label: 'Go to today',
+                    id: 'view-day',
+                    icon: <Today />,
+                    label: 'Day View',
+                    onClick: () => {
+                        ganttObjRef.current?.change_view_mode('Day');
+                    }
+                },
+                {
+                    id: 'view-week',
+                    icon: <CalendarViewWeek />,
+                    label: 'Week View',
+                    onClick: () => {
+                        ganttObjRef.current?.change_view_mode('Week');
+                    }
+                },
+                {
+                    id: 'view-month',
+                    icon: <CalendarViewMonth />,
+                    label: 'Month View',
+                    onClick: () => {
+                        ganttObjRef.current?.change_view_mode('Month');
+                    }
+                },
+                {
+                    id: 'view-year',
+                    icon: <CalendarToday />,
+                    label: 'Year View',
+                    onClick: () => {
+                        ganttObjRef.current?.change_view_mode('Year');
+                    }
+                },
+                {
+                    id: 'go-to-today',
+                    icon: <Today />,
+                    label: 'Go to Today',
                     onClick: () => {
                         ganttObjRef.current?.scroll_current();
                     }
