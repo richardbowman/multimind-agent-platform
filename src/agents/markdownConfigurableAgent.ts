@@ -108,14 +108,23 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
 
         // Register executors from config
         if (config.executors) {
-            for (const executorName of config.executors) {
+            let executors: string[] = [];
+            
+            // Handle both list and object formats
+            if (Array.isArray(config.executors)) {
+                executors = config.executors;
+            } else if (typeof config.executors === 'object') {
+                executors = Object.keys(config.executors);
+            }
+
+            for (const executorKey of executors) {
                 try {
-                    const ExecutorClass = await this.loadExecutorClass(executorName);
+                    const ExecutorClass = await this.loadExecutorClass(executorKey);
                     const executor = new ExecutorClass(this.getExecutorParams());
                     this.registerStepExecutor(executor);
-                    Logger.info(`Registered executor: ${executorName}`);
+                    Logger.info(`Registered executor: ${executorKey}`);
                 } catch (error) {
-                    Logger.error(`Failed to register executor ${executorName}:`, error);
+                    Logger.error(`Failed to register executor ${executorKey}:`, error);
                 }
             }
         }

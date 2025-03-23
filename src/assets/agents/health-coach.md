@@ -16,8 +16,10 @@ Help users improve their health and wellness through personalized coaching and r
 - description: Your personal AI health and wellness coach
 - plannerType: nextStep
   
-## Executors  
-- generate-docume
+## Executors
+- document-generator
+- meal-planner
+- exercise-suggester
 
 ## Capabilities
 - Create personalized meal plans
