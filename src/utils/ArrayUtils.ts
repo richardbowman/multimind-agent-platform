@@ -14,53 +14,15 @@ export namespace ArrayUtils {
         return item !== undefined && item !== null;
     }
 
-    type FilterValue = 
-        | string 
-        | number 
-        | boolean 
-        | Date 
-        | null 
-        | string[] 
-        | number[]
-        | boolean[]
-        | Date[]
-        | FilterOperatorMap;
+    import { FilterCriteria, FilterOperator } from '../types/FilterCriteria';
 
-    interface FilterOperatorMap {
-        $eq?: FilterValue;
-        $ne?: FilterValue;
-        $gt?: number | Date;
-        $gte?: number | Date;
-        $lt?: number | Date;
-        $lte?: number | Date;
-        $in?: (string | number | boolean | Date)[];
-        $nin?: (string | number | boolean | Date)[];
-        $exists?: boolean;
-        $regex?: string | RegExp;
-        $all?: (string | number | boolean | Date)[];
-        $elemMatch?: FilterCriteria;
-    }
-
-    interface FilterCriteria {
-        // Regular properties
-        [key: string]: FilterValue | FilterOperatorMap | FilterCriteria;
-        
-        // Logical operators
-        $and?: FilterCriteria[];
-        $or?: FilterCriteria[];
-        $nor?: FilterCriteria[];
-        $not?: FilterCriteria;
-    }
-
-    // Helper type to extract value types from FilterCriteria
-    type FilterValueType<T> = 
-        T extends FilterCriteria ? FilterValue | FilterOperatorMap | FilterCriteria :
-        T extends Array<infer U> ? FilterValueType<U> :
-        T;
+    type FilterOperatorMap = {
+        [key in FilterOperator]?: FilterCriteria[keyof FilterCriteria]
+    };
 
     export function filter<T extends Record<string, any>>(
         array: T[], 
-        filter: FilterCriteria
+        filter: FilterCriteria & { [key: string]: any }
     ): T[] {
         return array.filter(item => {
             return Object.entries(filter).every(([key, filterValue]) => {
