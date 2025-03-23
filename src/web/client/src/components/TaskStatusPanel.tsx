@@ -9,7 +9,9 @@ import {
     IconButton,
     Grid2 as Grid,
     Tooltip,
-    Dialog
+    Dialog,
+    ToggleButtonGroup,
+    ToggleButton
 } from '@mui/material';
 import { TaskDialog } from './TaskDialog';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -62,6 +64,7 @@ export const TaskStatusPanel: React.FC = () => {
     const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [taskTypes, setTaskTypes] = useState<string[]>([]);
     
     // Track task positions for animation
     useEffect(() => {
@@ -108,7 +111,10 @@ export const TaskStatusPanel: React.FC = () => {
         // Group by status first
         tasks.forEach(task => {
             if (task?.status && groups[task.status]) {
-                groups[task.status].push(task);
+                // Filter by task type if any types are selected
+                if (taskTypes.length === 0 || taskTypes.includes(task.type)) {
+                    groups[task.status].push(task);
+                }
             }
         });
 
@@ -146,10 +152,32 @@ export const TaskStatusPanel: React.FC = () => {
             overflow: 'hidden',
             minHeight: 0
         }}>
-            <Toolbar variant="dense" sx={{ minHeight: 48 }}>
-                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <Toolbar variant="dense" sx={{ minHeight: 48, gap: 2 }}>
+                <Typography variant="h6" component="div">
                     Task Board
                 </Typography>
+                
+                <ToggleButtonGroup
+                    value={taskTypes}
+                    onChange={(_, newTypes) => setTaskTypes(newTypes)}
+                    aria-label="task types"
+                    size="small"
+                    sx={{ flexGrow: 1 }}
+                >
+                    <ToggleButton value="research" aria-label="research">
+                        Research
+                    </ToggleButton>
+                    <ToggleButton value="coding" aria-label="coding">
+                        Coding
+                    </ToggleButton>
+                    <ToggleButton value="documentation" aria-label="documentation">
+                        Documentation
+                    </ToggleButton>
+                    <ToggleButton value="other" aria-label="other">
+                        Other
+                    </ToggleButton>
+                </ToggleButtonGroup>
+
                 <Tooltip title="Cancel all outstanding tasks">
                     <IconButton
                         color="inherit"
