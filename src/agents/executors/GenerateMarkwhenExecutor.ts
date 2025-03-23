@@ -9,103 +9,12 @@ import { JSONSchema } from 'openai/lib/jsonschema';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_MARKWHEN, 'Create/revise a Markwhen timeline roadmap.')
 export class GenerateMarkwhenExecutor extends GenerateArtifactExecutor {
-    protected getGanttSchema(): JSONSchema {
-        return {
-            type: "object",
-            properties: {
-                tasks: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            id: { type: "number", description: "Unique numeric ID for the task" },
-                            text: { type: "string", description: "Task name or description" },
-                            start: { 
-                                type: "string", 
-                                format: "date-time",
-                                description: "Start date in ISO format (YYYY-MM-DDTHH:mm:ssZ)"
-                            },
-                            end: { 
-                                type: "string", 
-                                format: "date-time",
-                                description: "End date in ISO format (YYYY-MM-DDTHH:mm:ssZ)"
-                            },
-                            duration: { 
-                                type: "number", 
-                                description: "Duration in days",
-                                minimum: 0
-                            },
-                            progress: {
-                                type: "number",
-                                description: "Progress percentage (0-100)",
-                                minimum: 0,
-                                maximum: 100
-                            },
-                            type: {
-                                type: "string",
-                                enum: ["task", "summary"],
-                                description: "Task type - 'task' for regular tasks, 'summary' for parent tasks"
-                            },
-                            parent: {
-                                type: "number",
-                                description: "Parent task ID for subtasks",
-                                minimum: 0
-                            }
-                        },
-                        required: ["id", "text", "start", "end", "type"]
-                    }
-                },
-                links: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            id: { type: "number", description: "Unique numeric ID for the link" },
-                            source: { 
-                                type: "number", 
-                                description: "Source task ID",
-                                minimum: 0
-                            },
-                            target: { 
-                                type: "number", 
-                                description: "Target task ID",
-                                minimum: 0
-                            },
-                            type: {
-                                type: "string",
-                                enum: ["e2e", "s2s", "f2f", "s2f"],
-                                description: "Dependency type between tasks"
-                            }
-                        },
-                        required: ["id", "source", "target", "type"]
-                    }
-                },
-                scales: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            unit: {
-                                type: "string",
-                                enum: ["year", "month", "week", "day", "hour"],
-                                description: "Time unit for the scale"
-                            },
-                            step: {
-                                type: "number",
-                                description: "Step size for the time unit",
-                                minimum: 1
-                            },
-                            format: {
-                                type: "string",
-                                description: "Date format string"
-                            }
-                        },
-                        required: ["unit", "step", "format"]
-                    }
-                }
-            },
-            required: ["tasks"]
-        };
+    /**
+     * Gets the JSON Schema for Gantt chart data
+     * @returns JSONSchema for GanttData structure
+     */
+    protected async getGanttSchema(): Promise<JSONSchema> {
+        return getGeneratedSchema('GanttData');
     }
 
     protected addContentFormattingRules(prompt: ModelConversation<ArtifactGenerationStepResponse>) {
