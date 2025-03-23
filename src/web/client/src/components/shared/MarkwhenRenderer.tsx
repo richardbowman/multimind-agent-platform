@@ -3,34 +3,11 @@ import { Box, Typography } from '@mui/material';
 import { ArtifactItem } from '../../../../../tools/artifact';
 import { Gantt, Willow } from 'wx-react-gantt';
 import 'wx-react-gantt/dist/gantt.css';
+import { GanttData } from '../../../../../schemas/GanttData';
 
 interface MarkwhenRendererProps {
     content: string;
     artifact?: ArtifactItem;
-}
-
-interface GanttData {
-    tasks: Array<{
-        id: number;
-        text: string;
-        start: Date;
-        end: Date;
-        duration?: number;
-        progress?: number;
-        type?: 'task' | 'summary';
-        parent?: number;
-    }>;
-    links?: Array<{
-        id: number;
-        source: number;
-        target: number;
-        type: string;
-    }>;
-    scales?: Array<{
-        unit: string;
-        step: number;
-        format: string;
-    }>;
 }
 
 export const MarkwhenRenderer: React.FC<MarkwhenRendererProps> = ({ content, artifact }) => {
