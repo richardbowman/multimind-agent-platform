@@ -52,10 +52,6 @@ export interface GanttData {
          * Target task ID
          */
         target: number;
-        /**
-         * Dependency type between tasks
-         */
-        type: 'e2e' | 's2s' | 'f2f' | 's2f';
     }>;
     scales?: Array<{
         /**

@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Box, Typography } from '@mui/material';
 import { ArtifactItem } from '../../../../../tools/artifact';
-import { Gantt, Willow } from 'wx-react-gantt';
-import 'wx-react-gantt/dist/gantt.css';
+import { Gantt } from 'frappe-gantt';
 import { GanttData } from '../../../../../schemas/GanttData';
 
 interface MarkwhenRendererProps {
@@ -24,21 +23,44 @@ export const MarkwhenRenderer: React.FC<MarkwhenRendererProps> = ({ content, art
         );
     }
 
+    const ganttRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (ganttRef.current && ganttData.tasks.length > 0) {
+            const tasks = ganttData.tasks.map(task => ({
+                id: task.id.toString(),
+                name: task.text,
+                start: task.start,
+                end: task.end,
+                progress: task.progress || 0,
+                dependencies: ganttData.links
+                    ?.filter(link => link.target === task.id)
+                    .map(link => link.source.toString()) || '',
+                custom_class: task.type === 'summary' ? 'summary' : ''
+            }));
+
+            new Gantt(ganttRef.current, tasks, {
+                header_height: 50,
+                column_width: 30,
+                step: 24,
+                view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
+                bar_height: 20,
+                bar_corner_radius: 3,
+                arrow_curve: 5,
+                padding: 18,
+                view_mode: 'Month',
+                date_format: 'YYYY-MM-DD',
+                custom_popup_html: null
+            });
+        }
+    }, [ganttData]);
+
     return (
         <Box sx={{ width: '100%', height: '100%', p: 2 }}>
             <Typography variant="h6" gutterBottom>
                 {artifact?.metadata?.title || 'Gantt Chart'}
             </Typography>
-            <Willow>
-                <Gantt 
-                    tasks={ganttData.tasks} 
-                    links={ganttData.links} 
-                    scales={ganttData.scales || [
-                        { unit: 'month', step: 1, format: 'MMMM yyy' },
-                        { unit: 'day', step: 1, format: 'd' }
-                    ]}
-                />
-            </Willow>
+            <div ref={ganttRef} style={{ width: '100%', height: '600px' }} />
         </Box>
     );
 };

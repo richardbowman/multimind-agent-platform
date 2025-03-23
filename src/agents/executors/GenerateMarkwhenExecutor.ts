@@ -18,25 +18,23 @@ export class GenerateMarkwhenExecutor extends GenerateArtifactExecutor {
     }
 
     protected addContentFormattingRules(prompt: ModelConversation<ArtifactGenerationStepResponse>) {
-        const schema = this.getGanttSchema();
         prompt.addInstruction(`GANTT CHART DATA FORMAT RULES:
 - Generate JSON data for a Gantt chart inside <artifact_gantt> blocks
-- Follow this JSON Schema for proper structure:
-${JSON.stringify(schema, null, 2)}
+- Tasks must include: id, text, start date, end date
+- Optional fields: progress (0-100), type ('task' or 'summary')
+- Links should specify dependencies between tasks
 - Use ISO 8601 date format for all date fields
 - Ensure all IDs are unique numbers
-- Maintain proper task hierarchy using parent IDs
-- Include dependencies with links where needed`);
+- Maintain proper task hierarchy using parent IDs`);
     }
 
     protected getContentRules(): string {
         return `GANTT CHART DATA FORMATTING RULES:
 - Use valid JSON format INSIDE of the <artifact_gantt> blocks
-- Follow the provided JSON Schema exactly
-- Include all required fields for tasks and links
+- Include all required fields for tasks
 - Use proper ISO 8601 date formatting
 - Maintain task hierarchy with parent/child relationships
-- Include dependencies with links where needed`;
+- Specify dependencies in links array`;
     }
 
     protected getSupportedFormat(): string {
