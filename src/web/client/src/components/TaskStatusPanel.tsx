@@ -262,7 +262,6 @@ export const TaskStatusPanel: React.FC = () => {
                                         height={height}
                                         width={width}
                                         itemCount={tasks.length}
-                                        itemSize={112} // Adjust based on your TaskCard height
                                         itemData={tasks}
                                         overscanCount={5}
                                     >
