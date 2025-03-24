@@ -22,66 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "DataAssistant": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "c3d4e5f6-a7b8-4c9d-9e0f-1a2b3c4d5e6f",
-        "handle": "@data",
-        "description": "Specializes in API data extraction and analysis",
-        "enabled": true,
-        "config": {
-          "purpose": "My name is Data Assistant. My goal is to help extract and analyze data from APIs.",
-          "finalInstructions": "To work with an attached list of links, first peform artifact selection, then link selection, then use the scraper, and then generate the artifact.",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "LinkSelectionExecutor"
-            },
-            {
-              "className": "ArtifactSelectorExecutor"
-            },
-            {
-              "className": "APIScraperExecutor"
-            },
-            {
-              "className": "NodeExecutorExecutor"
-            },
-            {
-              "className": "GenerateChartExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "GenerateDiagramExecutor"
-            },
-            {
-              "className": "GoalConfirmationExecutor"
-            },
-            {
-              "className": "AnswerQuestionsExecutor"
-            },
-            {
-              "className": "ReplyExecutor"
-            }
-          ],
-          "stepSequences": [
-            {
-              "id": "API-DATA-EXTRACTION",
-              "name": "API Data Extraction",
-              "description": "Extract and analyze data from APIs",
-              "guide": "api-data-extraction.md"
-            },
-            {
-              "id": "CSV-DATA-EXTRACTION",
-              "name": "CSV Data Extraction",
-              "description": "Extract and analyze data from spreadsheets",
-              "guide": "csv-data-extraction.md"
-            }
-          ]
-        }
-      },
       "ResearchManager": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
