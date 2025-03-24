@@ -69,4 +69,6 @@ export interface ArtifactMetadata extends Record<string, any> {
   updatedAt?: Date;
   title?: string;
   subtype: DocumentSubtype|SpreadsheetSubType|string;
+  description?: string;
+  summary?: string;
 }

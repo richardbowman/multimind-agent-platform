@@ -33,11 +33,11 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 // Create new table with simplified schema
                 const schema = new arrow.Schema([
                     new arrow.Field('id', new arrow.Utf8()),
-                    new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Field("", new arrow.Float32()))),
+                    new arrow.Field('vector', new arrow.FixedSizeList(768, new arrow.Field("vector", new arrow.Float32()))),
                     new arrow.Field('text', new arrow.Utf8()),
                     new arrow.Field('type', new arrow.Utf8()),
                     new arrow.Field('subtype', new arrow.Utf8()),
-                    // new arrow.Field('metadata_json', new arrow.Utf8())
+                    new arrow.Field('metadata_json', new arrow.Utf8())
                 ]);
 
                 // Create empty table with schema
@@ -78,8 +78,8 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
 
             const results = await this.table.search(queryEmbedding)
                 .limit(nResults)
-                .where(where ? this.buildWhereClause(where) : undefined)
-                .execute();
+                .where(where ? this.buildWhereClause(where) : "")
+                .toArray();
 
             return results.map((result: any) => ({
                 id: result.id,
@@ -96,8 +96,9 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 if (key === 'type' || key === 'subtype') {
                     if (typeof value === 'string') {
                         return `${key} = '${value}'`;
+                    } else if (typeof value === 'object' && value['$eq']) {
+                        return `${key} = '${value['$eq']}'`;
                     }
-                    return `${key} = ${value}`;
                 }
                 // if (typeof value === 'string') {
                 //     return `json_extract(metadata_json, '$.${key}') = '${value}'`;
@@ -131,7 +132,7 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
         if (!this.table) throw new Error("Table not initialized");
 
         const whereClause = this.buildWhereClause(where);
-        // await this.table.delete(whereClause);
+        await this.table.delete(whereClause);
     }
 }
 

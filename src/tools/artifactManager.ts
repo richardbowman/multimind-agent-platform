@@ -16,6 +16,7 @@ import { DatabaseMigrator } from 'src/database/migrator';
 import VectraService from 'src/llm/vectraService';
 import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { FilterCriteria } from 'src/types/FilterCriteria';
+import { ModelType } from 'src/llm/types/ModelType';
 
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
@@ -477,6 +478,7 @@ export class ArtifactManager {
         [],
         {
         opts: {
+          modelType: ModelType.SUMMARIZE,
           temperature: 0.2,
           maxPredictedTokens: 200,
           context: {

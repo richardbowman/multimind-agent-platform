@@ -6,7 +6,8 @@ export enum ModelType {
     ADVANCED_REASONING = "advancedReasoning",
     CODING = "coding",
     DOCUMENT = "document",
-    EMBEDDINGS = 'embeddings'
+    EMBEDDINGS = 'embeddings',
+    SUMMARIZE = 'summarize'
 }
 
 export const ModelTypeFallbackStrategy : Record<ModelType, ModelType|null> = {
@@ -15,5 +16,6 @@ export const ModelTypeFallbackStrategy : Record<ModelType, ModelType|null> = {
     [ModelType.DOCUMENT]: ModelType.CONVERSATION,
     [ModelType.CONVERSATION]: null,
     [ModelType.REASONING]: ModelType.CONVERSATION,
+    [ModelType.SUMMARIZE]: ModelType.CONVERSATION,
     [ModelType.EMBEDDINGS]: null
 }

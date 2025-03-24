@@ -1,3 +1,5 @@
+import { asError } from "src/types/types";
+
 export interface RetryOptions {
     maxRetries?: number;
     initialDelayMs?: number;
@@ -55,11 +57,16 @@ export async function withRetry<T>(
                 )
             ]);
 
-            if (await validate(result)) {
-                return result;
+            try {
+                if (await validate(result)) {
+                    return result;
+                }    
+            } catch (error) {
+                throw new Error(`Validation failed: ${asError(error).message}`);
+            } finally {
+                lastResult = result;
             }
             
-            lastResult = result;
             throw new Error('Validation failed');
         } catch (error) {
             lastError = error as Error;

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { ArtifactType } from '../../../../tools/artifact';
+import { ArtifactType, ArtifactItem } from '../../../../tools/artifact';
 import {
     Dialog,
     DialogTitle,
@@ -27,20 +27,8 @@ const SUBTYPE_MAPPING: Record<ArtifactType, string[]> = {
     [ArtifactType.Unknown]: []
 };
 
-interface Asset {
-    id: string;
-    type: ArtifactType;
-    metadata: {
-        title: string;
-        description?: string;
-        previewUrl?: string;
-        createdAt?: string;
-        updatedAt?: string;
-    };
-}
-
 interface ArtifactSelectionDialogProps {
-    assets: Asset[];
+    assets: ArtifactItem[];
     onSelect: (assetIds: string[]) => void;
     onClose: () => void;
 }
@@ -99,7 +87,16 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
     }, [selectedTypes]);
 
     const filteredAssets = useMemo(() => {
-        return assets
+        // map summaries to description
+        const mappedAssets = assets.map(a => ({
+            ...a,
+            metadata: {
+                ...a.metadata,
+                description: a.metadata?.description || a.metadata?.summary
+            }
+        }));
+        
+        return mappedAssets
             .filter(asset => {
                 const matchesSearch = asset.metadata.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);

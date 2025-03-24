@@ -47,7 +47,7 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
     const { CssBaseline, Container, Container, Button... } = MaterialUI;
     const { Add } = MaterialIcons;
     // use MUI themes
-    const theme = WebsiteLibs.getTheme('themeName');
+    const theme = WebsiteLibs.getTheme('dark');
     const ThemeProvider = WebsiteLibs.ThemeProvider;
 
     const App = () => {
@@ -72,7 +72,9 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 
 ## CSV 
 
-- CSV parsing utilities are available through CSV.parseSync(content) : { data : [] } and CSV.stringifySync({ data: [] }) : string
+CSV parsing utilities are available:
+- CSV.parseSync(content : string) : Record<string, string>[]
+- CSV.stringifySync(Record<string, string>[]) : string
 
 ## Themes
 
