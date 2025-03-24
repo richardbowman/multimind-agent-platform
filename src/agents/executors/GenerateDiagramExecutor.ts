@@ -19,11 +19,7 @@ export class GenerateDiagramExecutor extends GenerateArtifactExecutor {
         return 'mermaid';
     }
 
-    getArtifactType(codeBlockType: string): ArtifactType {
-        if (codeBlockType === "mermaid") {
-            return ArtifactType.Diagram;
-        } else {
-            return ArtifactType.Unknown;
-        }
+    getArtifactType(): ArtifactType {
+        return ArtifactType.Diagram;
     }
 }
