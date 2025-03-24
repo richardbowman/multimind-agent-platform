@@ -22,48 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ContentManager": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
-        "handle": "@content",
-        "description": "Manages content creation and organization for larger writing assignments that need multiple sections (the writer is part of their team).",
-        "enabled": true,
-        "config": {
-          "purpose": "You are planning how to create high-quality content. Break down the content creation into steps of research, outlining, writing and editing.",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "GoalConfirmationExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "OutlineExecutor"
-            },
-            {
-              "className": "AssignWritersExecutor"
-            },
-            {
-              "className": "EditingExecutor"
-            },
-            {
-              "className": "DocumentRetrievalExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "CSVMergeExecutor"
-            },
-            {
-              "className": "CombineArtifactsExecutor"
-            }
-          ]
-        }
-      },
       "ContentWriter": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
