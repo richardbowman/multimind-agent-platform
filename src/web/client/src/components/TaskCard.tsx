@@ -142,48 +142,41 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 }}
                 secondary={
                     <React.Fragment>
-                        {task.assignee && (
-                            <Typography 
-                                variant="caption" 
-                                component="span"
-                                sx={{ 
-                                    display: 'inline-block',
-                                    color: 'text.secondary',
-                                    textDecoration: task.complete ? 'line-through' : 'none',
-                                    opacity: task.complete ? 0.7 : 1,
-                                    whiteSpace: 'nowrap',
-                                    overflow: 'hidden',
-                                    textOverflow: 'ellipsis',
-                                    maxWidth: '100%'
-                                }}
-                            >
-                                {handles.find(h => h.id === task.assignee)?.handle || task.assignee}
-                            </Typography>
-                        )}
-                        <Typography 
-                            variant="caption" 
+                        <Box 
                             component="span"
                             sx={{ 
-                                display: 'block',
-                                color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'text.secondary',
+                                display: 'flex',
+                                gap: 0.5,
+                                alignItems: 'center',
+                                color: 'text.secondary',
                                 textDecoration: task.complete ? 'line-through' : 'none',
-                                opacity: task.complete ? 0.7 : 1
+                                opacity: task.complete ? 0.7 : 1,
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                maxWidth: '100%'
                             }}
                         >
-                            <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center' }}>
-                                <Tooltip title={task.type}>
-                                    {task.type === 'goal' && <FlagIcon fontSize="small" />}
-                                    {task.type === 'step' && <DirectionsWalkIcon fontSize="small" />}
-                                    {task.type === 'recurring' && <RepeatIcon fontSize="small" />}
-                                    {task.type === 'standard' && <TaskIcon fontSize="small" />}
-                                </Tooltip>
-                                {task.props?.stepType && (
-                                    <Typography variant="caption" component="span">
-                                        ({task.props.stepType})
-                                    </Typography>
-                                )}
-                            </Box>
-                        </Typography>
+                            <Tooltip title={task.type}>
+                                {task.type === 'goal' && <FlagIcon fontSize="small" />}
+                                {task.type === 'step' && <DirectionsWalkIcon fontSize="small" />}
+                                {task.type === 'recurring' && <RepeatIcon fontSize="small" />}
+                                {task.type === 'standard' && <TaskIcon fontSize="small" />}
+                            </Tooltip>
+                            {task.props?.stepType && (
+                                <Typography variant="caption" component="span">
+                                    ({task.props.stepType})
+                                </Typography>
+                            )}
+                            {task.assignee && (
+                                <Typography 
+                                    variant="caption" 
+                                    component="span"
+                                >
+                                    {handles.find(h => h.id === task.assignee)?.handle || task.assignee}
+                                </Typography>
+                            )}
+                        </Box>
                     </React.Fragment>
                 }
             />
