@@ -42,87 +42,7 @@ export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, thr
     }, [allArtifacts, channelId, currentChannelId, channels]);
 
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const { actions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
     const theme = useTheme();
-    
-    const prevChannelId = useRef<string | null>(null);
-    const prevThreadId = useRef<string | null>(null);
-
-    const isPinned = useCallback((artifact?: Artifact) => {
-        if (!currentChannelId) return false;
-        const targetArtifact = artifact || currentArtifact;
-        if (!targetArtifact) return false;
-        
-        // Check if the artifact is in the current channel's artifactIds
-        const currentChannel = channels.find(c => c.id === currentChannelId);
-        return currentChannel?.artifactIds?.includes(targetArtifact.id) || false;
-    }, [currentArtifact, currentChannelId, channels]);
-
-    useEffect(() => {
-        if (!currentArtifact) return;
-
-        const navigationActions = [
-            {
-                icon: <ChevronLeftIcon />,
-                label: 'Previous Artifact',
-                onClick: () => {
-                    const currentIndex = artifacts.findIndex(a => a.id === currentArtifact.id);
-                    const prevArtifact = artifacts[currentIndex - 1];
-                    if (prevArtifact) {
-                        setArtifactId(prevArtifact.id);
-                    }
-                },
-                disabled: artifacts.findIndex(a => a.id === currentArtifact.id) === 0
-            },
-            {
-                id: 'artifact-panel-pin',
-                icon: isPinned(currentArtifact) ? <PushPinIcon /> : <PushPinOutlinedIcon />,
-                label: isPinned(currentArtifact) ? 'Unpin from Channel' : 'Pin to Channel',
-                onClick: () => {
-                    if (currentChannelId && currentArtifact) {
-                        if (isPinned(currentArtifact)) {
-                            removeArtifactFromChannel(currentChannelId, currentArtifact.id);
-                        } else {
-                            addArtifactToChannel(currentChannelId, currentArtifact.id);
-                        }
-                    }
-                }
-            },
-            {
-                id: 'artifact-panel-next',
-                icon: <ChevronRightIcon />,
-                label: 'Next Artifact',
-                onClick: () => {
-                    const currentIndex = artifacts.findIndex(a => a.id === currentArtifact.id);
-                    const nextArtifact = artifacts[currentIndex + 1];
-                    if (nextArtifact) {
-                        setArtifactId(nextArtifact.id);
-                    }
-                },
-                disabled: artifacts.findIndex(a => a.id === currentArtifact.id) === artifacts.length - 1
-            },
-            {
-                id: 'artifact-panel-close',
-                icon: <CloseIcon />,
-                label: 'Close',
-                onClick: () => setDrawerOpen(false)
-            }
-        ];
-
-        registerActions('artifact-panel', navigationActions);
-        return () => unregisterActions('artifact-panel');
-    }, [currentArtifact, artifacts, currentChannelId, isPinned, registerActions, unregisterActions]);
-
-    // Update pin state when artifact or channel changes
-    // Update pin state when selected artifact or channel changes
-    useEffect(() => {
-        if (currentArtifact && currentChannelId) {
-            updateActionState('artifact-panel-pin', { 
-                icon: isPinned(currentArtifact) ? <PushPinIcon /> : <PushPinOutlinedIcon />,
-                label: isPinned(currentArtifact) ? 'Unpin from Channel' : 'Pin to Channel'
-            });
-        }
-    }, [currentArtifact, currentChannelId, isPinned, updateActionState]);
 
     const handleArtifactClick = (artifact: ArtifactItem) => {
         setArtifactId(artifact.id);
@@ -175,6 +95,10 @@ export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, thr
                 open={drawerOpen}
                 onClose={() => handleDrawerClose()}
                 currentArtifact={currentArtifact}
+                artifacts={artifacts}
+                onArtifactChange={(artifact) => setArtifactId(artifact.id)}
+                showNavigation={true}
+                showPinActions={true}
             />
         </Box>
     );
