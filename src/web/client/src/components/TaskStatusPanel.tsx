@@ -153,6 +153,7 @@ export const TaskStatusPanel: React.FC = () => {
         <Box sx={{ 
             p: 2, 
             display: 'flex',
+            flex: 1,
             flexDirection: 'column',
             overflow: 'hidden',
             minHeight: 0
