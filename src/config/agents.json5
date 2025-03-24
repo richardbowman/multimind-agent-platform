@@ -22,52 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ResearchAssistant": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "90b9c45a-e79e-43e7-b4f5-3e852cd723a4",
-        "handle": "@research-assistant",
-        "description": "Performs web search and summarizes matching pages. Can download a specific page if provided.",
-        "enabled": true,
-        "config": {
-          "purpose": "You are a research assistant who performs web searches to meet the goal.",
-          "finalInstructions": "IN YOUR REASONING, Explain the step strategies you considered.",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "UrlExecutor"
-            },
-            {
-              "className": "GoalConfirmationExecutor"
-            },
-            {
-              "className": "WebSearchExecutor"
-            },
-            {
-              "className": "LinkSelectionExecutor"
-            },
-            {
-              "className": "ArtifactSelectorExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "WebScrapeExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "GenerateDocumentExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            }
-          ]
-        }
-      },
       "ScienceAssistant": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
