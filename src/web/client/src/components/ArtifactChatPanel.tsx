@@ -44,6 +44,12 @@ export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, thr
     const [drawerOpen, setDrawerOpen] = useState(false);
     const theme = useTheme();
 
+    const isPinned = useCallback((artifact?: ArtifactItem) => {
+        if (!currentChannelId || !artifact) return false;
+        const currentChannel = channels.find(c => c.id === currentChannelId);
+        return currentChannel?.artifactIds?.includes(artifact.id) || false;
+    }, [currentChannelId, channels]);
+
     const handleArtifactClick = (artifact: ArtifactItem) => {
         setArtifactId(artifact.id);
         setDrawerOpen(true);
