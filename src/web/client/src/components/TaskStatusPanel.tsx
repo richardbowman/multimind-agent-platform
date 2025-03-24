@@ -267,6 +267,7 @@ export const TaskStatusPanel: React.FC = () => {
                                         width={width}
                                         itemCount={tasks.length}
                                         itemData={tasks}
+                                        itemSize={100}
                                         overscanCount={5}
                                     >
                                         {({ data, index, style }) => {
