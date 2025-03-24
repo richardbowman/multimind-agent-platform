@@ -1,4 +1,6 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useCallback } from 'react';
+import { FixedSizeList as List } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 import { 
     Box, 
     Typography,
@@ -240,31 +242,47 @@ export const TaskStatusPanel: React.FC = () => {
                             {statusLabels[status as TaskStatus]} ({tasks.length})
                         </Typography>
                         
-                        <ScrollView>
-                            {tasks.map(task => (
-                                <Box 
-                                    key={task.id} 
-                                    sx={{ 
-                                        p: 0,
-                                        animation: getTaskAnimation(task.id, task.status),
-                                        willChange: 'transform, opacity'
-                                    }}
-                                >
-                                    <TaskCard 
-                                        task={task}
-                                        onClick={() => {
-                                            setSelectedTask(task);
-                                            setDialogOpen(true);
+                        <Box sx={{ flex: 1 }}>
+                            <AutoSizer>
+                                {({ height, width }) => (
+                                    <List
+                                        height={height}
+                                        width={width}
+                                        itemCount={tasks.length}
+                                        itemSize={112} // Adjust based on your TaskCard height
+                                        itemData={tasks}
+                                        overscanCount={5}
+                                    >
+                                        {({ data, index, style }) => {
+                                            const task = data[index];
+                                            return (
+                                                <Box 
+                                                    style={style}
+                                                    sx={{ 
+                                                        p: 0,
+                                                        animation: getTaskAnimation(task.id, task.status),
+                                                        willChange: 'transform, opacity'
+                                                    }}
+                                                >
+                                                    <TaskCard 
+                                                        task={task}
+                                                        onClick={() => {
+                                                            setSelectedTask(task);
+                                                            setDialogOpen(true);
+                                                        }}
+                                                        onCheckboxClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedTask(task);
+                                                            setDialogOpen(true);
+                                                        }}
+                                                    />
+                                                </Box>
+                                            );
                                         }}
-                                        onCheckboxClick={(e) => {
-                                            e.stopPropagation();
-                                            setSelectedTask(task);
-                                            setDialogOpen(true);
-                                        }}
-                                    />
-                                </Box>
-                            ))}
-                        </ScrollView>
+                                    </List>
+                                )}
+                            </AutoSizer>
+                        </Box>
                         </Paper>
                     </Box>
                 ))}
