@@ -4,10 +4,15 @@ import {
     Typography, 
     ListItem, 
     ListItemText, 
-    Checkbox
+    Checkbox,
+    Tooltip
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import FolderIcon from '@mui/icons-material/Folder';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import FlagIcon from '@mui/icons-material/Flag';
+import RepeatIcon from '@mui/icons-material/Repeat';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { useDataContext } from '../contexts/DataContext';
 
 interface TaskCardProps {
@@ -159,8 +164,19 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                                 opacity: task.complete ? 0.7 : 1
                             }}
                         >
-                            Type: {task.type}
-                            {task.props?.stepType && ` (${task.props.stepType})`}
+                            <Box component="span" sx={{ display: 'inline-flex', gap: 0.5, alignItems: 'center' }}>
+                                <Tooltip title={task.type}>
+                                    {task.type === 'goal' && <FlagIcon fontSize="small" />}
+                                    {task.type === 'step' && <ListAltIcon fontSize="small" />}
+                                    {task.type === 'recurring' && <RepeatIcon fontSize="small" />}
+                                    {task.type === 'standard' && <CheckCircleOutlineIcon fontSize="small" />}
+                                </Tooltip>
+                                {task.props?.stepType && (
+                                    <Typography variant="caption" component="span">
+                                        ({task.props.stepType})
+                                    </Typography>
+                                )}
+                            </Box>
                         </Typography>
                     </React.Fragment>
                 }
