@@ -68,15 +68,52 @@
         }
       },
       "OnboardingConsultant": {
-        "className": "OnboardingConsultant",
-        "sourcePath": "onboardingConsultant.ts",
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
         "userId": "c7776380-6cda-44b9-8113-890706cd1ec1",
         "handle": "@onboarding",
         "description": "Handles user onboarding processes",
         "enabled": true,
         "autoResponseChannelIds": [
           "6eda3cc4-2762-4cbc-917c-820458dc1ef6"
-        ]
+        ],
+        "config": {
+          "purpose": "You are an Onboarding Agent focused on helping users achieve their goals with the Multimind platform. The service is designed to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform are trained and educated on what the user would like to achieve with the platform.",
+          "finalInstructions": "Use the appropriate sequence based on user context:\n- For new users: Follow the new-user sequence to understand their goals\n- For existing users: Use the followup sequence to continue their onboarding",
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "EstablishIntentExecutor"
+            },
+            {
+              "className": "UnderstandGoalsExecutor"
+            },
+            {
+              "className": "AnswerQuestionsExecutor"
+            },
+            {
+              "className": "GenerateDocumentExecutor"
+            },
+            {
+              "className": "CreateChannelExecutor"
+            },
+            {
+              "className": "ListTemplatesExecutor"
+            },
+            {
+              "className": "TemplateSelectorExecutor"
+            },
+            {
+              "className": "DelegationExecutor"
+            },
+            {
+              "className": "GoalProgressExecutor"
+            },
+            {
+              "className": "NextActionExecutor"
+            }
+          ]
+        }
       },
       "ProductManagerAnalyst": {
         "className": "ConfigurableAgent",
