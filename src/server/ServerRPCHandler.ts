@@ -37,6 +37,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         } else {
             task = await this.services.taskManager.completeTask(taskId);
         }
+        // For individual task retrieval, return full details
         return {
             id: task.id,
             projectId: task.projectId,
