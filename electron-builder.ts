@@ -99,34 +99,33 @@ export default {
         target: [{
             target: "dmg",
             arch: [
-                "arm64",
                 "x64"
             ]
-        } /*disable now to save $ , {
-            target: "zip",
+        },
+        {
+            target: "dmg",
             arch: [
-                "arm64",
-                "x64"
+                "arm64"
             ]
-        }*/],
-
+        }],
         artifactName: "${name}.macOS.${version}.${arch}.${ext}"
     },
     win: {
         target: [{
             target: "nsis",
             arch: [
-                "x64",
+                "x64"
+            ]
+        },
+        {
+            target: "nsis",
+            arch: [
                 "arm64"
             ]
         }],
 
         artifactName: "${name}.Windows.${version}.${arch}.${ext}"
     },
-    // appx: {
-    //     identityName: appxIdentityName,
-    //     artifactName: "${name}.Windows.${version}.${arch}.${ext}"
-    // },
     nsis: {
         oneClick: true,
         perMachine: false,
@@ -137,10 +136,16 @@ export default {
         target: [{
             target: "AppImage",
             arch: [
-                "x64",
-                "arm64"
+                "x64"
             ]
-        }, {
+        },
+        {
+            target: "AppImage",
+            arch: [
+                "x64"
+            ]
+        },
+        {
             target: "snap",
             arch: [
                 "x64"
