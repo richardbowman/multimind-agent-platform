@@ -252,11 +252,12 @@ stepResult.response.status && `<toolResult>${stepResult.response.status}</toolRe
             // Build output grouped by posts
             let output = "# 📝 STEP HISTORY BY POST:\n\n";
             
-            // First show steps grouped by posts
-            posts.forEach((post, index) => {
+            // First show steps grouped by posts, ignoring partials
+            const filteredPosts = posts.filter(p => !p.props.partial);
+            filteredPosts.forEach((post, index) => {
                 const postSteps = postMap.get(post.id);
                 if (postSteps && postSteps.length > 0) {
-                    output += `## POST ${index + 1} OF ${posts.length}${index === posts.length-1?" [THIS POST]":"[PREVIOUS POST]"}:\n`;
+                    output += `## POST ${index + 1} OF ${filteredPosts.length}${index === filteredPosts.length-1?" [THIS POST]":"[PREVIOUS POST]"}:\n`;
                     if (handles) output += `- User: ${handles?.[post.user_id] ?? "(unknown)"}\n`;
                     output += `- Message: ${post.message}\n`;
                     output += `### COMPLETED STEPS:\n`;

@@ -45,6 +45,7 @@ import { BaseLLMService } from "./BaseLLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 import { ModelInfo } from "./types";
 import { Settings } from "src/tools/settings";
+import { LLMProvider } from "./types/LLMProvider";
 
 export default class LMStudioService extends BaseLLMService implements IEmbeddingService {
     private lmStudioClient: LMStudioClient;
@@ -56,6 +57,10 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         this.lmStudioClient = new LMStudioClient({
             baseUrl: baseUrl
         });
+    }
+
+    providerType(): string {
+        return LLMProvider.LMSTUDIO;
     }
 
     async shutdown(): Promise<void> {
@@ -279,6 +284,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
                 };
             }
 
+            const startTime = Date.now();
             let prediction;
             try {
                 prediction = await this.chatModel.respond(messageChain, {
@@ -302,11 +308,13 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
                 }
             };
 
+            const durationMs = Date.now() - startTime;
+
             await this.logger.logCall('sendLLMRequest', {
                 messages: params.messages,
                 systemPrompt: params.systemPrompt,
                 opts: params.opts
-            }, result.response);
+            }, result.response, undefined, durationMs, params.context);
 
             return result;
         } catch (error) {
