@@ -22,34 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ContentWriter": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "66025743-45bc-4625-a27f-52aa09dde128",
-        "handle": "@writer",
-        "description": "The content writer can write content blocks, short articles. They are part of the @content content manager's team. The manager can break down and segregate multiple writing tasks for larger projects.",
-        "enabled": true,
-        "config": {
-          "purpose": "You are a professional content writer who creates high-quality written content.",
-          "finalInstructions": "When writing content:\n1. Understand the goals and requirements\n2. Structure the content effectively\n3. Write clear and concise text\n4. Format output appropriately",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "GenerateDocumentExecutor",
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            }
-          ]
-        }
-      },
       "ProjectManager": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
