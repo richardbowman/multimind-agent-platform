@@ -28,6 +28,44 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
 
     protected getInstructionByOperation(operation: OperationTypes): string {
         const baseInstructions = super.getInstructionByOperation(operation);
-        return (operation === 'append' || operation === 'patch') ? baseInstructions + "You must use the same columns as the original document." : baseInstructions;
+        if (operation === 'append' || operation === 'patch') {
+            return baseInstructions + `You must:
+- Use the same columns as the original document
+- Include the header row in your response for validation
+- The actual data rows will be appended without duplicating headers`;
+        }
+        return baseInstructions;
+    }
+
+    protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
+        const metadata = await super.prepareArtifactMetadata(result);
+        if (result.operation === 'append' && result.content) {
+            // Store the expected headers for validation
+            const lines = result.content.split('\n');
+            if (lines.length > 0) {
+                metadata.expectedHeaders = lines[0];
+            }
+        }
+        return metadata;
+    }
+
+    protected async validateAndPrepareAppendContent(newContent: string, existingContent: string): Promise<string> {
+        const newLines = newContent.split('\n');
+        const existingLines = existingContent.split('\n');
+        
+        if (newLines.length < 1 || existingLines.length < 1) {
+            return newContent;
+        }
+
+        const newHeaders = newLines[0];
+        const existingHeaders = existingLines[0];
+
+        // Validate headers match
+        if (newHeaders !== existingHeaders) {
+            throw new Error(`Header mismatch. Expected: ${existingHeaders}, Received: ${newHeaders}`);
+        }
+
+        // Return only data rows from new content
+        return newLines.slice(1).join('\n');
     }
 }

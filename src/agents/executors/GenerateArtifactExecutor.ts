@@ -227,7 +227,13 @@ new replacement text
                             result.operation = 'create'; // Update operation
                         } else {
                             if (result.operation === 'append') {
-                                artifactUpdate.content = `${existingArtifact?.content || ""}\n${result.content}`;
+                                try {
+                                    const validatedContent = await this.validateAndPrepareAppendContent(result.content, existingArtifact?.content || "");
+                                    artifactUpdate.content = `${existingArtifact?.content || ""}\n${validatedContent}`;
+                                } catch (error) {
+                                    Logger.error('CSV append validation failed:', error);
+                                    throw error;
+                                }
                             } else if (result.operation === 'replace') {
                                 artifactUpdate.content = result.content;
                             } else if (result.operation === 'patch') {
