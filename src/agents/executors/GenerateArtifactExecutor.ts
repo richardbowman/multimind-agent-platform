@@ -332,8 +332,10 @@ new replacement text
     }
 
     protected stripCodeBlockFormatting(content: string): string {
-        // Remove any code block formatting tags (```format```) from the content
-        return content.replace(/```[a-zA-Z]*\n([\s\S]*?)\n```/g, '$1').trim();
+        // Only remove outer formatting tags if the entire content is wrapped in them
+        const outerFormatRegex = /^```[a-zA-Z]*\n([\s\S]*)\n```$/;
+        const match = content.match(outerFormatRegex);
+        return match ? match[1].trim() : content;
     }
 
     protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
