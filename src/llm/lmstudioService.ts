@@ -1,12 +1,11 @@
 // lmstudioService.ts
 
-import { EmbeddingSpecificModel, LLMPredictionConfig, LLMSpecificModel, LMStudioClient, ModelDescriptor } from "@lmstudio/sdk";
+import { EmbeddingModel, LLM, LLMPredictionConfig, LMStudioClient } from "@lmstudio/sdk";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { LLMCallLogger } from "./LLMLogger";
 
-import { EmbedderModelInfo, IEmbeddingFunction, IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
+import { EmbedderModelInfo, IEmbeddingFunction, IEmbeddingService, LLMRequestParams } from "./ILLMService";
 
 interface LMStudioRequestParams extends LLMRequestParams {
     messages: ModelMessageHistory[];
@@ -14,9 +13,9 @@ interface LMStudioRequestParams extends LLMRequestParams {
 }
 
 class MyEmbedder implements IEmbeddingFunction {
-    private embeddingModel: EmbeddingSpecificModel;
+    private embeddingModel: EmbeddingModel;
 
-    constructor(embeddingModel: EmbeddingSpecificModel) {
+    constructor(embeddingModel: EmbeddingModel) {
         this.embeddingModel = embeddingModel;
     }
 
@@ -24,7 +23,7 @@ class MyEmbedder implements IEmbeddingFunction {
         const embeddings: number[][] = [];
         for (let i=0; i<texts.length; i++) {
             if (texts.length > 5) Logger.progress(`Indexing documents (Chunk ${i+1} of ${texts.length})`, (i+1)/ texts.length, "index-chunks");
-            const modelEmbedding = await this.embeddingModel.embedString(texts[i]);
+            const modelEmbedding = await this.embeddingModel.embed(texts[i]);
             embeddings.push(modelEmbedding.embedding);
         }
         return embeddings;
@@ -40,19 +39,20 @@ export interface MessageOpts {
     contextWindowLength?: number;
 }
 
-import { ILLMService, ModelRole, StructuredOutputPrompt } from "./ILLMService";
+import { ModelRole, StructuredOutputPrompt } from "./ILLMService";
 
 import { BaseLLMService } from "./BaseLLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 import { ModelInfo } from "./types";
+import { Settings } from "src/tools/settings";
 
 export default class LMStudioService extends BaseLLMService implements IEmbeddingService {
     private lmStudioClient: LMStudioClient;
     private embeddingModel?: IEmbeddingFunction;
-    private chatModel?: LLMSpecificModel;
+    private chatModel?: LLM;
 
-    constructor(baseUrl?: string) {
-        super("lmstudio");
+    constructor(settings: Settings, baseUrl?: string) {
+        super("lmstudio", settings);
         this.lmStudioClient = new LMStudioClient({
             baseUrl: baseUrl
         });
@@ -71,7 +71,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         try {
             const loadedModels = await this.lmStudioClient.embedding.listLoaded();
             if (loadedModels.find((model) => model.identifier === modelPath) !== undefined) {
-                this.embeddingModel = new MyEmbedder(await this.lmStudioClient.embedding.get(modelPath));
+                this.embeddingModel = new MyEmbedder(await this.lmStudioClient.embedding.model(modelPath));
                 Logger.info("Connected to existing embedding model.");
             } else {
                 this.embeddingModel = new MyEmbedder(await this.lmStudioClient.embedding.load(modelPath));
@@ -96,7 +96,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         }
 
         try {
-            this.chatModel = await this.lmStudioClient.llm.createDynamicHandle(modelPath);
+            this.chatModel = await this.lmStudioClient.llm.model(modelPath);
             Logger.info("Connected to existing LLaMA model.");
         } catch (error) {
             Logger.error("Failed to connect to LLaMA model:", error);
@@ -178,7 +178,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         return this.embeddingModel;
     }
 
-    getChatModel(): LLMSpecificModel {
+    getChatModel(): LLM {
         if (!this.chatModel) throw new Error("LMStudioService not initalized");
         return this.chatModel;
     }
@@ -215,12 +215,12 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
     private async getAvailableModelsInternal(): Promise<ModelInfo[]> {
         try {
             // Get both loaded and available models
-            const loadedModels : ModelDescriptor[] = await this.lmStudioClient.llm.listLoaded();
+            const loadedModels : LLM[] = await this.lmStudioClient.llm.listLoaded();
             // const availableModels = await this.lmStudioClient.llm.listModels();
             
             // Combine and deduplicate models
             const allModels = [...loadedModels]; //, ...availableModels];
-            const uniqueModels = new Map<string, ModelDescriptor>();
+            const uniqueModels = new Map<string, LLM>();
             allModels.forEach(model => uniqueModels.set(model.identifier, model));
             
             return Array.from(uniqueModels.values()).map(model => ({
@@ -244,7 +244,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
 
         let messageChain = [...params.messages];
         if (params.systemPrompt) {
-            messageChain.unshift({ role: ModelRole.ASSISTANT, content: params.systemPrompt });
+            messageChain.unshift({ role: ModelRole.SYSTEM, content: params.systemPrompt });
         }
 
         // Handle context window truncation if needed

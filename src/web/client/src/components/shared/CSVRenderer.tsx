@@ -13,6 +13,7 @@ import { Artifact } from '../../../../../tools/artifact';
 import { useFilteredArtifacts } from '../../contexts/FilteredArtifactContext';
 import { useArtifacts } from '../../contexts/ArtifactContext';
 import { UUID } from '../../../../../types/uuid';
+import { ToolbarActionsProvider } from '../../contexts/ToolbarActionsContext';
 
 interface CSVRendererProps {
     content: string;
@@ -213,12 +214,13 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                     {content}
                 </Box>
             )}
-            <ArtifactDrawer
-                open={state.drawerOpen}
-                onClose={() => setState(prev => ({ ...prev, drawerOpen: false }))}
-                currentArtifact={artifact}
-                actions={[]}
-            />
+            <ToolbarActionsProvider>
+                <ArtifactDrawer
+                    open={state.drawerOpen}
+                    onClose={() => setState(prev => ({ ...prev, drawerOpen: false }))}
+                    currentArtifact={artifact}
+                />
+            </ToolbarActionsProvider>
         </Box>
     );
 };

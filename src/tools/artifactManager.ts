@@ -250,7 +250,11 @@ export class ArtifactManager {
         }
       }
 
-      await this.indexArtifact(artifact);
+      try {
+        await this.indexArtifact(artifact);
+      } catch (e) {
+        Logger.error(`Vector indexing failed for ${artifact.id}`)
+      }
       
       return artifact;
     });

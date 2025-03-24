@@ -11,6 +11,8 @@ import { Task } from 'src/tools/taskManager';
 import { Settings } from 'src/tools/settings';
 import { TaskEventType } from "src/shared/TaskEventType";
 import { LLMLogEntry } from 'src/llm/LLMLogModel';
+import { ModelType } from 'src/llm/types/ModelType';
+import { LLMProvider } from 'src/llm/types/LLMProvider';
 
 export interface LogEntry {
     timestamp: string;
@@ -91,8 +93,7 @@ export interface ServerMethods {
      */
     deleteChannel(channelId: UUID): Promise<void>;
 
-    getAvailableModels(provider: string, search?: string): Promise<ModelInfo[]|ClientError>;
-    getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]|ClientError>;
+    getAvailableModels(provider: LLMProvider, modelType: ModelType, search?: string): Promise<ModelInfo[]|EmbedderModelInfo[]|ClientError>;
     rebuildVectorDB(): Promise<void>;
     getProject(projectId: string): Promise<ClientProject>;
     markTaskComplete(taskId: string, complete: boolean): Promise<Task>;

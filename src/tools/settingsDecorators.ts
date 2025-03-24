@@ -15,7 +15,8 @@ export function ClientSettings(metadata: {
     showInList?: boolean;
     selector?: {
         component: string,
-        providerField: string
+        providerField: string;
+        modelTypeField: string;
     }
     required?: boolean;
     visibleWhen?: (settings: Settings) => boolean;

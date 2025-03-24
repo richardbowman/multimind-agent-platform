@@ -1,33 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box, Typography,
-    TextField,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Button,
+    Box, Typography, Button,
     Alert, Drawer,
     List,
     ListItem,
     ListItemButton,
-    ListItemText,
-    IconButton,
-    Toolbar, Slider,
-    Dialog,
+    ListItemText, Toolbar, Dialog,
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions,
-    FormControlLabel,
-    Checkbox
+    DialogActions
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
-import ModelSelector from './ModelSelector';
-import { ModelConfigBuilder } from './ModelConfigBuilder';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
@@ -35,7 +21,6 @@ import { DrawerPage } from './GlobalArtifactViewer';
 import packageJson from '../../../../../package.json';
 import licenseText from '../../../../../docs/LICENSE.md';
 import { ActionToolbar } from './shared/ActionToolbar';
-import { AgentBuilder } from './AgentBuilder';
 import { ScrollView } from './shared/ScrollView';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
 
@@ -443,27 +428,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         Reset Settings
                     </Button>
                 </DialogActions>
-            </Dialog>
-
-            {/* Model Selector Dialog */}
-            <Dialog
-                open={modelDialog.open}
-                onClose={() => setModelDialog(prev => ({ ...prev, open: false }))}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogTitle>Select Model</DialogTitle>
-                <DialogContent>
-                    <ModelSelector
-                        value={getNestedValue(settings, modelDialog.key)}
-                        onChange={(newValue) => {
-                            console.log('Selected model:', newValue);
-                            handleChange(modelDialog.key, newValue);
-                            setModelDialog(prev => ({ ...prev, open: false }));
-                        }}
-                        provider={modelDialog.provider}
-                    />
-                </DialogContent>
             </Dialog>
         </Box>
     );

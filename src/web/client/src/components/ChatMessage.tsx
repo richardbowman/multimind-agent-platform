@@ -566,6 +566,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 </Box>
             )}
             {loadedArtifact && (
+                <ToolbarActionsProvider>
                     <ArtifactDrawer
                         open={!!loadedArtifact}
                         onClose={() => {
@@ -573,18 +574,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             setLoadedArtifact(null);
                         }}
                         currentArtifact={loadedArtifact}
-                        actions={[
-                            {
-                                label: 'Close',
-                                onClick: () => { 
-                                    setSelectedArtifact(null)
-                                    setLoadedArtifact(null);
-                                },
-                                variant: 'outlined'
-                            }
-                        ]}
                         title={`Attachment ${currentAttachmentIndex + 1} of ${uniqueArtifacts.length}`}
                     />
+                </ToolbarActionsProvider>
             )}
         </Paper>
     );

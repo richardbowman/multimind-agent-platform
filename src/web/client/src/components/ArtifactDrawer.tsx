@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Drawer, styled } from '@mui/material';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
-import { Close } from '@mui/icons-material';
+import { ChevronLeft, ChevronRight, Close, PushPin, PushPinOutlined } from '@mui/icons-material';
+import { useChannels } from '../contexts/ChannelContext';
 
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',

@@ -1,6 +1,8 @@
-import { BackendServicesConfigNeeded } from "../types/BackendServices";
-import { ClientMethods, ServerMethods, UploadGGUFParameters } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
+import path from 'node:path';
+import { BackendServicesConfigNeeded } from "../types/BackendServices";
+import { getDataPath } from "src/helpers/paths";
+import { ClientMethods, ServerMethods, UploadGGUFParameters } from "../shared/RPCInterface";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
 import { Settings } from "src/tools/settings";
@@ -9,13 +11,11 @@ import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { UpdateStatus } from "src/shared/UpdateStatus";
 import { AppUpdater } from "electron-updater";
-import { ConfigurationError } from "src/errors/ConfigurationError";
-import { asError } from "src/types/types";
 import { createWriteStream, WriteStream } from "node:fs";
 import { mkdir } from "node:fs/promises";
-import { getDataPath } from "src/helpers/paths";
-import path from 'node:path';
 import { LogEntry } from "./LogReader";
+import { ModelType } from "src/llm/types/ModelType";
+import { LLMProvider } from "src/llm/types/LLMProvider";
 
 interface ClientError {
     message: string;
@@ -38,19 +38,21 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
 
     async getSettings(): Promise<Settings> {
         const settings = this.partialServices.settingsManager.getSettings();
-
-        // test getting defaults
-        // const defaults = new Settings();
-        // const clientSettings = getClientSettingsMetadata(defaults);
-
         return settings;
     }
 
-    async getAvailableModels(provider: string, search?: string): Promise<ModelInfo[]|ClientError> {
+    async getAvailableModels(provider: LLMProvider, modelType: ModelType, search?: string): Promise<ModelInfo[]|EmbedderModelInfo[]|ClientError> {
         try {
             const _s = this.partialServices.settingsManager.getSettings();
-            const service = LLMServiceFactory.createService(_s, _s.providers.find(p => p.type === provider));
-            const models = await service.getAvailableModels({ textFilter: search });
+            let service, models;
+            if (modelType === ModelType.EMBEDDINGS) {
+                service = LLMServiceFactory.createEmbeddingService(_s, _s.providers.find(p => p.type === provider));
+                models = await service.getAvailableEmbedders();
+    
+            } else {
+                service = LLMServiceFactory.createService(_s, _s.providers.find(p => p.type === provider));
+                models =  await service.getAvailableModels({ textFilter: search });
+            }
             
             // Filter models if search term provided
             if (search && search.trim().length > 0) {
@@ -64,15 +66,6 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
             return models;
         } catch (e) {
             return {message: e.message}
-        }
-    }
-
-    async getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]|ClientError> {
-        try {
-            const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
-            return service.getAvailableEmbedders();
-        } catch (e) {
-            return { message: "Error getting available embedders: "+asError(e)?.message||"Unknown error getting available embedders" };
         }
     }
 

@@ -39,7 +39,8 @@ export class ModelProviderConfig {
         description: 'Model identifier for the selected provider',
         selector: {
             component: 'ModelSelector',
-            providerField: 'provider'
+            providerField: 'provider',
+            modelTypeField: 'type'
         },
         showInList: true
     })

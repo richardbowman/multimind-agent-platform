@@ -51,7 +51,7 @@ async function createLLMProviders(settings: Settings): Promise<LLMProviders> {
 async function createLLMServices(providers: LLMProviders, settings: Settings): Promise<LLMServices> {
     const services: LLMServices = {};
 
-    const enabledConfigs = settings.modelConfigs.filter(c => c.enabled);
+    const enabledConfigs = settings.modelConfigs.filter(c => c.enabled && c.type !== ModelType.EMBEDDINGS);
 
     for (const config of enabledConfigs) {
         try {
@@ -108,13 +108,13 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         //        Logger.progress('Initializing LLM services...', 0.1);
 
 
-        const embeddingConfig = _s.modelConfigs.find(c => c.type === ModelType.EMBEDDINGS);
+        const embeddingConfig = _s.modelConfigs.find(c => c.enabled && c.type === ModelType.EMBEDDINGS);
 
         if (!embeddingConfig) {
             throw new ConfigurationError("No embeddings model configuration avaiable.");
         }
 
-        const embeddingProvider = _s.providers.find(p => p.type === embeddingConfig?.provider);
+        const embeddingProvider = _s.providers.find(p => p.type === embeddingConfig.provider);
 
         if (!embeddingProvider) {
             throw new ConfigurationError("No embeddings provider matches the embedding configuration");

@@ -6,7 +6,7 @@ import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
+import { CloseFullscreen, CropFree, OpenInFull } from '@mui/icons-material';
 
 interface MermaidProps {
     content: string;
@@ -63,12 +63,13 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
             },
             {
                 id: 'mermaid-reset-zoom',
+                icon: <CropFree/>,
                 label: 'Reset Zoom',
                 onClick: handleResetZoom
             },
             {
                 id: 'mermaid-fullscreen',
-                icon: isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />,
+                icon: isFullscreen ? <CloseFullscreen/> : <OpenInFull/>,
                 label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
                 onClick: toggleFullscreen
             }
@@ -298,10 +299,12 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                         <IconButton onClick={handleZoomOut} disabled={zoomLevel <= 0.5}>
                             <ZoomOutIcon />
                         </IconButton>
-                        <Button onClick={handleResetZoom}>Reset Zoom</Button>
+                        <IconButton onClick={handleResetZoom}>
+                            <CropFree/>
+                        </IconButton>
                     </Box>
                     <IconButton onClick={toggleFullscreen}>
-                        <FullscreenExitIcon />
+                        <CloseFullscreen />
                     </IconButton>
                 </DialogActions>
             </Dialog>

@@ -8,6 +8,8 @@ import './ModelSelector.css';
 import { useIPCService } from '../contexts/IPCContext';
 import { ClientError } from '../../../../shared/RPCInterface';
 import { useSnackbar } from '../contexts/SnackbarContext';
+import { LLMProvider } from '../../../../llm/types/LLMProvider';
+import { ModelType } from '../../../../llm/types/ModelType';
 
 // Helper function to convert ArrayBuffer to base64
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -24,10 +26,11 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 interface ModelSelectorProps {
     value?: string;
     onChange?: (value: string) => void;
-    provider: string;
+    provider: LLMProvider;
+    modelType: ModelType;
 }
 
-const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider }) => {
+const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider, modelType }) => {
     const snackbar = useSnackbar();
     const [models, setModels] = useState<ModelInfo[]>([]);
     const [loading, setLoading] = useState(false);
@@ -93,7 +96,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                         }
 
                         // Update the model list
-                        const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
+                        const models = await ipcService.getRPC().getAvailableModels(LLMProvider.LLAMA_CPP, ModelType.CONVERSATION);
                         setModels(models);
 
                         handleSelect({ id: file.name });
@@ -126,6 +129,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
         try {
             const result = await ipcService.getRPC().getAvailableModels(
                 provider,
+                modelType,
                 searchTerm
             );
             if (result instanceof ClientError) throw result;

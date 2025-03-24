@@ -18,6 +18,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ModelSelector from './ModelSelector';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
 import { getClientSettingsMetadata, SettingMetadata } from '../../../../tools/settingsDecorators';
+import { LLMProvider } from '../../../../llm/types/LLMProvider';
+import { ModelType } from '../../../../llm/types/ModelType';
 
 interface SettingsListConfigBuilderProps {
     settings: any;
@@ -40,11 +42,13 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
     const [modelDialog, setModelDialog] = useState<{
         open: boolean;
         key: string;
-        provider: string;
+        provider: LLMProvider;
+        modelType: ModelType;
     }>({
         open: false,
         key: '',
-        provider: ''
+        provider: '',
+        modelType: ''
     });
     const [configForm, setConfigForm] = useState<any>({});
 
@@ -293,11 +297,12 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                         metadata={configMetadata}
                         categories={configCategories}
                         onSettingChange={handleFormChange}
-                        onModelSelect={(key, provider) => {
+                        onModelSelect={(key, modelType, provider) => {
                             setModelDialog({
                                 open: true,
                                 key,
-                                provider
+                                provider,
+                                modelType
                             });
                         }}
                     />
@@ -327,6 +332,7 @@ export const SettingsListBuilder: React.FC<SettingsListConfigBuilderProps> = ({
                             handleFormChange(modelDialog.key, newValue);
                             setModelDialog(prev => ({ ...prev, open: false }));
                         }}
+                        modelType={modelDialog.modelType}
                         provider={modelDialog.provider}
                     />
                 </DialogContent>

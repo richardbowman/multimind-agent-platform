@@ -25,7 +25,7 @@ export async function withRetry<T>(
     const {
         maxRetries = 3,
         initialDelayMs = 1000,
-        timeoutMs = 10000,
+        timeoutMs = 180000,
         backoffFactor = 2,
         minDelayBetweenTasksMs = 100
     } = options;

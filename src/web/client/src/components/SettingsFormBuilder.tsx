@@ -16,13 +16,15 @@ import { SettingsListBuilder } from './SettingsListBuilder';
 import { PROVIDER_CONFIG_DEFAULTS, ProviderConfig } from '../../../../tools/providerConfig';
 import { MODEL_CONFIG_DEFAULTS, ModelProviderConfig } from '../../../../tools/modelProviderConfig';
 import { ErrorBoundary } from './shared/ErrorBoundary';
+import { LLMProvider } from '../../../../llm/types/LLMProvider';
+import { ModelType } from '../../../../llm/types/ModelType';
 
 interface SettingsFormBuilderProps {
     settings: any;
     metadata: any;
     categories: any;
     onSettingChange: (key: string, value: string | number | boolean) => void;
-    onModelSelect: (key: string, provider: string) => void;
+    onModelSelect: (key: string, modelType: ModelType, provider: LLMProvider) => void;
 }
 
 export interface ErrorBoundaryProps {
@@ -72,6 +74,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
             case 'select':
                 if (metadata.selector?.component === 'ModelSelector') {                                                                            
                     const provider = getNestedValue(settings, metadata.selector.providerField);                                                    
+                    const modelType = getNestedValue(settings, metadata.selector.modelTypeField);
                                                                                                                                                    
                     return (                                                                                                                       
                         <Box sx={{ width: '100%' }}>                                                                                               
@@ -84,7 +87,7 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                     readOnly: true,                                                                                                
                                     endAdornment: (                                                                                                
                                         <IconButton                                                                                                
-                                            onClick={() => onModelSelect(metadata.key, provider || '')}                                            
+                                            onClick={() => onModelSelect(metadata.key, modelType, provider || '')}                                            
                                             edge="end"                                                                                             
                                         >                                                                                                          
                                             <SearchIcon />                                                                                         
