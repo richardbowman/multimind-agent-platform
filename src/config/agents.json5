@@ -14,43 +14,6 @@
   
         ]
       },
-      "CoderManager": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "6e3a8f1d-221e-43f0-98cb-b43e933797f9",
-        "handle": "@coding-manager",
-        "description": "A coding supervisor who specializes in coding architecture and managing the developer",
-        "enabled": true,
-        "config": {
-          "purpose": "My name is Sentry. My job is to help make write code to automate tasks.",
-          "finalInstructions": "",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "GenerateSlidesExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "GenerateDocumentExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "CSVProcessingExecutor"
-            },
-            {
-              "className": "DelegationExecutor"
-            }
-          ]
-        }
-      },  
       "CoderAssistant": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
