@@ -13,7 +13,8 @@ import {
     Tooltip,
     Dialog,
     ToggleButtonGroup,
-    ToggleButton
+    ToggleButton,
+    styled
 } from '@mui/material';
 import { TaskDialog } from './TaskDialog';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -269,6 +270,25 @@ export const TaskStatusPanel: React.FC = () => {
                                         itemData={tasks}
                                         itemSize={100}
                                         overscanCount={5}
+                                        style={{
+                                            scrollbarWidth: 'thin',
+                                            scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent',
+                                            '&::-webkit-scrollbar': {
+                                                width: '8px',
+                                                height: '8px'
+                                            },
+                                            '&::-webkit-scrollbar-track': {
+                                                background: 'transparent'
+                                            },
+                                            '&::-webkit-scrollbar-thumb': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                                borderRadius: '4px',
+                                                border: '2px solid transparent'
+                                            },
+                                            '&::-webkit-scrollbar-thumb:hover': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.4)'
+                                            }
+                                        }}
                                     >
                                         {({ data, index, style }) => {
                                             const task = data[index];
