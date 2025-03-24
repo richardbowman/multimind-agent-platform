@@ -92,7 +92,7 @@ export const PROVIDER_CONFIG_DEFAULTS = [
     },
     {
         type: LLMProvider.LMSTUDIO,
-        baseUrl: 'http://127.0.0.1:1234'
+        baseUrl: 'ws://127.0.0.1:1234'
     }
 ];
 
