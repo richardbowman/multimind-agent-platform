@@ -435,6 +435,27 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return Object.freeze(TaskModel.mapToTask(task));
     }
 
+    async deleteProject(projectId: string): Promise<void> {
+        const project = await ProjectModel.findByPk(projectId, {
+            include: [TaskModel]
+        });
+        
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
+
+        // Delete all tasks in the project
+        await TaskModel.destroy({
+            where: { projectId }
+        });
+
+        // Delete the project
+        await project.destroy();
+
+        // Emit projectDeleted event
+        await this.asyncEmit('projectDeleted', { projectId });
+    }
+
     async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
         const project = await ProjectModel.findByPk(projectId);
         if (!project) {

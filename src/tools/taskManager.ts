@@ -120,4 +120,5 @@ export interface TaskManager extends EventEmitter {
     getTaskById(taskId: UUID): Promise<Readonly<Task> | null>;
     updateTask(taskId: UUID, updates: Partial<Task>): Promise<Task>;
     updateProject(projectId: string, updates: Partial<Project>): Promise<Project>;
+    deleteProject(projectId: UUID): Promise<void>;
 }
