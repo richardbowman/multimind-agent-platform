@@ -22,64 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ScienceAssistant": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "c5ba5ff1-5f6b-47af-bdd1-2d07aca00a9a",
-        "handle": "@science-assistant",
-        "description": "Performs scentific searches and summarizes matching pages. Can download a specific page if provided.",
-        "enabled": true,
-        "config": {
-          "purpose": "You are a scientific assistant who performs PubMed searches to meet the goal.",
-          "finalInstructions": "IN YOUR REASONING, Explain the step strategies you considered.",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "UrlExecutor"
-            },
-            {
-              "className": "GoalConfirmationExecutor"
-            },
-            {
-              "className": "PubMedSearchExecutor"
-            },
-            {
-              "className": "CSVMergeExecutor"
-            },
-            {
-              "className": "LinkSelectionExecutor"
-            },
-            {
-              "className": "ArtifactSelectorExecutor"
-            },
-            {
-              "className": "WebScrapeExecutor"
-            },
-            {
-              "className": "ValidationExecutor"
-            },
-            {
-              "className": "CSVProcessingExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "GenerateDocumentExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "ThinkingExecutor"
-            }
-          ]
-        }
-      },
       "ScienceReviewer": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
