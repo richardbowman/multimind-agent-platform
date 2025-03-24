@@ -14,34 +14,6 @@
   
         ]
       },
-      "CoderAssistant": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "6a7d97f9-e262-4cda-92c6-7a7b2cf8268d",
-        "handle": "@coding-assistant",
-        "description": "An agent who specializes in coding (use code to extract, filter, combine CSV files).",
-        "enabled": true,
-        "config": {
-          "purpose": "My name is Sentry. My job is to help make write code to automate tasks.",
-          "finalInstructions": "",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "WebsiteExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "NodeExecutorExecutor"
-            }
-          ]
-        }
-      },  
       "SimpleAgent": {
         "className": "SimpleAgent",
         "sourcePath": "simpleAgent.ts",
