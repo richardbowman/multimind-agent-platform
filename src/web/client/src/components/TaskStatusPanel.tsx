@@ -171,16 +171,28 @@ export const TaskStatusPanel: React.FC = () => {
                     sx={{ flexGrow: 1 }}
                 >
                     <ToggleButton value={TaskType.Step} aria-label="step">
-                        Step
+                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                            <DirectionsWalkIcon fontSize="small" />
+                            <span>Step</span>
+                        </Box>
                     </ToggleButton>
                     <ToggleButton value={TaskType.Goal} aria-label="goal">
-                        Goal
+                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                            <FlagIcon fontSize="small" />
+                            <span>Goal</span>
+                        </Box>
                     </ToggleButton>
                     <ToggleButton value={TaskType.Recurring} aria-label="recurring">
-                        Recurring
+                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                            <RepeatIcon fontSize="small" />
+                            <span>Recurring</span>
+                        </Box>
                     </ToggleButton>
                     <ToggleButton value={TaskType.Standard} aria-label="standard">
-                        Standard
+                        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                            <TaskIcon fontSize="small" />
+                            <span>Standard</span>
+                        </Box>
                     </ToggleButton>
                 </ToggleButtonGroup>
 
