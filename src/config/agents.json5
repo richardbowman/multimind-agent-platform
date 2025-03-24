@@ -22,43 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ResearchManager": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "supportsDelegation": true,
-        "userId": "48d176a8-9f55-47c2-90ca-6dd2bba8e262",
-        "handle": "@research-manager",
-        "description": "Manages and coordinates complex research activities that span multiple topics, requiring multiple independent research assistants to assist them.",
-        "enabled": true,
-        "config": {
-          "purpose": "My name is Jarvis. I can help structure larger research projects that require multiple steps and multiple research processes.",
-          "finalInstructions": "",
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "GenerateDocumentExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "GenerateSlidesExecutor"
-            },
-            {
-              "className": "DelegationExecutor"
-            },
-            {
-              "className": "CSVProcessingExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "UnderstandGoalsExecutor"
-            }
-          ]
-        }
-      },       
       "ContentManager": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
