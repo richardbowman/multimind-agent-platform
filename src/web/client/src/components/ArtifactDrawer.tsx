@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Drawer, styled } from '@mui/material';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
+import { Close } from '@mui/icons-material';
 
 const DrawerHeader = styled('div')(({ theme }) => ({
     display: 'flex',
@@ -21,14 +22,6 @@ interface ArtifactDrawerProps {
     open: boolean;
     onClose: () => void;
     currentArtifact: Artifact | null;
-    actions: Array<{
-        icon?: React.ReactNode;
-        label: string;
-        onClick: () => void;
-        disabled?: boolean;
-        variant?: 'text' | 'outlined' | 'contained';
-        color?: 'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
-    }>;
 }
 
 export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({ 
@@ -36,7 +29,18 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
     onClose, 
     currentArtifact
 }) => {
-    const { actions } = useToolbarActions();
+    const { actions, registerActions, updateActionState, unregisterActions } = useToolbarActions();
+
+    useEffect(() => {
+        registerActions("artifact-drawer", [{
+            icon: <Close/>,
+            id: "artifact-close",
+            label: "Close Drawer",
+            onClick: onClose
+        }]);
+
+        return () => { unregisterActions("artifact-drawer"); }
+    }, []);
 
     return (
         <Drawer

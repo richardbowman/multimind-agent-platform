@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { Artifact, ArtifactItem } from '../../../../tools/artifact';
-import { useDataContext } from '../contexts/DataContext';
 import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
-import { ArtifactDisplay } from './shared/ArtifactDisplay';
-import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Typography, List, useTheme } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -14,7 +11,6 @@ import { ArtifactDrawer } from './ArtifactDrawer';
 import { ArtifactCard } from './ArtifactCard';
 import { useFilteredArtifacts } from '../contexts/FilteredArtifactContext';
 import { useChannels } from '../contexts/ChannelContext';
-import { useArtifacts } from '../contexts/ArtifactContext';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -177,9 +173,8 @@ export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, thr
 
             <ArtifactDrawer
                 open={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
+                onClose={() => handleDrawerClose()}
                 currentArtifact={currentArtifact}
-                actions={actions}
             />
         </Box>
     );
