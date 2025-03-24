@@ -157,7 +157,9 @@ new replacement text
                 });
 
                 const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
-                const documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, tag);
+                let documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, tag);
+                // Strip any code block formatting tags from the content
+                documentContent = this.stripCodeBlockFormatting(documentContent);
                 const message = StringUtils.extractNonCodeContent(unstructuredResult.message, ["thinking", tag]);
                 const result = {
                     ...json,
@@ -327,6 +329,11 @@ new replacement text
             Logger.error(`Error loading supported ${artifactType} subtypes:`, error);
         }
         return undefined;
+    }
+
+    protected stripCodeBlockFormatting(content: string): string {
+        // Remove any code block formatting tags (```format```) from the content
+        return content.replace(/```[a-zA-Z]*\n([\s\S]*?)\n```/g, '$1').trim();
     }
 
     protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
