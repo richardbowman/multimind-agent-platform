@@ -129,48 +129,6 @@
           ]
         }
       },
-       "DataGatherer": {
-         "className": "ConfigurableAgent",
-         "sourcePath": "configurableAgent.ts",
-         "userId": "9d2c67c3-68e3-4f6c-b613-c8cb4c8d4f6a",
-         "handle": "@data",
-         "description": "Gather and summarize website (please provide exact URLs)",
-         "enabled": false,
-         "config": {
-           "purpose": "My name is Data Gatherer. \
-   My goal is to help you collect, process and analyze data from web sources.",
-           "finalInstructions": "In order to perform data gathering for the user, you must be provided with clear URLs to download a webpage, or a clear document name to find. DO NOT CONFIRM YOU UNDERSTAND THE GOAL WITHOUT UNDERSTANDING WHAT YOUR FOLLOWUP WILL BE. To create your initial plan:\
-1. confirm you completely understand the data retrieval request (i.e. you have been provided with a URL or a document title) \
-2. depending on if the user requested a document or a website, use the appropriate tool. ",
-           "executors": [
-             {
-               "className": "UrlExecutor"
-             },
-             {
-               "className": "GenerateDocumentExecutor",
-               "config": {
-                 "defaultFormat": "markdown",
-                 "artifactTypes": ["data", "report", "summary"]
-               }
-             },
-             {
-               "className": "GenerateSpreadsheetExecutor"
-             },
-             {
-              "className": "DocumentRetrievalExecutor"
-             },
-             {
-               "className": "GoalConfirmationExecutor"
-             },
-             {
-               "className": "AnswerQuestionsExecutor"
-             },
-             {
-               "className": "GoalProgressExecutor"
-             }
-           ]
-         }
-       },
       "MarketingStrategist": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
