@@ -185,7 +185,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             // For local models, modelId is just the filename
             const isLocal = !modelId.includes('/') || modelId.startsWith("local/");
             let modelPath = isLocal
-                ? path.join(modelDir, modelId.startsWith("local/") ? modelId.substring(6) : modelId) // Local models go directly in modelDir
+                ? path.join(modelDir, modelId.startsWith("local/") ? modelId.substring(6) + ".gguf" : modelId) // Local models go directly in modelDir
                 : path.join(modelDir, ...modelId.split('/')); // Remote models use repo subdirs
 
             // Check if model exists
