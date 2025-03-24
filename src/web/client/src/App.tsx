@@ -229,7 +229,11 @@ const AppContent: React.FC = () => {
                                 width: leftDrawerWidth,
                                 flexShrink: 0,
                                 '& .MuiDrawer-paper': {
-                                    width: 250
+                                    width: 250,
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    backdropFilter: 'blur(10px)',
+                                    WebkitBackdropFilter: 'blur(10px)',
+                                    borderRight: '1px solid rgba(255, 255, 255, 0.1)'
                                 },
                             }}
                             PaperProps={{
