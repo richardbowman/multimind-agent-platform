@@ -22,28 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ScienceReviewer": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "b19d3d42-329d-46b2-bf48-389c000074dd",
-        "handle": "@science-reviewer",
-        "description": "Can review the specifics of a paper and extract analysis.",
-        "enabled": true,
-        "config": {
-          "purpose": "You are a scientific reviewer who uses the paper information provided and analyzes with scientific rigor",
-          "finalInstructions": "",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              "className": "ThinkingExecutor"
-            }
-          ]
-        }
-      },
       "DataAssistant": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
