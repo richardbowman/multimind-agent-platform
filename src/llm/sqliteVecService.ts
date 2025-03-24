@@ -1,20 +1,15 @@
-import { EventEmitter } from "events";
 import { Database } from 'sqlite3';
-import * as crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import * as sqliteVec from "sqlite-vec";
-import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
+import { BaseVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
 import { IEmbeddingService, ILLMService } from "./ILLMService";
 import { getDataPath } from "src/helpers/paths";
-import { asError } from "src/types/types";
-import { createUUID, UUID } from "src/types/uuid";
 
 const syncQueue = new AsyncQueue();
 
-class SQLiteVecService extends EventEmitter implements IVectorDatabase {
+class SQLiteVecService extends BaseVectorDatabase {
     private db: Database | null = null;
     private collectionName: string = '';
     private dimensions: number = 768; // Default embedding dimensions
@@ -233,64 +228,6 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             conditions: conditions.join(' AND '),
             params
         };
-    }
-
-    computeHash(content: string): string {
-        const hash = crypto.createHash('sha256');
-        hash.update(content);
-        return hash.digest('hex');
-    }
-
-    async handleContentChunks(
-        content: string,
-        url: string,
-        task: string,
-        projectId: string,
-        title: string,
-        type = 'content',
-        subtype: string,
-        artifactId?: UUID
-    ): Promise<void> {
-        const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 2000,
-            chunkOverlap: 100,
-        });
-
-        const docId = artifactId || createUUID();
-        const chunks = await splitter.createDocuments([content]);
-
-        const addCollection: { ids: string[], metadatas: any[], documents: string[] } = {
-            ids: [],
-            metadatas: [],
-            documents: []
-        };
-
-        chunks.forEach((c, index) => {
-            const chunkContent = c.pageContent;
-            const hashId = this.computeHash(chunkContent);
-
-            if (addCollection.ids.includes(hashId)) return;
-
-            addCollection.ids.push(hashId);
-
-            const metadata = {
-                url,
-                projectId,
-                type,
-                subtype,
-                task,
-                title,
-                docId,
-                chunkId: index + 1,
-                chunkTotal: chunks.length,
-                artifactId
-            };
-
-            addCollection.metadatas.push(metadata);
-            addCollection.documents.push(chunkContent);
-        });
-
-        await this.addDocuments(addCollection);
     }
 
     async clearCollection(): Promise<void> {

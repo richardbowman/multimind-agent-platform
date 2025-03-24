@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
+import { BaseVectorDatabase, IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
 import { saveToFile } from "../tools/storeToFile";
 import { ConversationContext } from "../chat/chatClient";
@@ -16,7 +16,7 @@ import { createUUID, UUID } from "src/types/uuid";
 
 const syncQueue = new AsyncQueue();
 
-class VectraService extends BaseVectorDatabase implements IVectorDatabase {
+class VectraService extends BaseVectorDatabase {
     private index: LocalIndex | null = null;
     private collectionName: string = '';
 

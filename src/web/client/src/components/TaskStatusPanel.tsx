@@ -113,7 +113,7 @@ export const TaskStatusPanel: React.FC = () => {
         tasks.forEach(task => {
             if (task?.status && groups[task.status]) {
                 // Filter by task type if any types are selected
-                const taskType = task.props?.type || TaskType.Standard;
+                const taskType = task.type;
                 if (taskTypes.length === 0 || taskTypes.includes(taskType)) {
                     groups[task.status].push(task);
                 }
@@ -131,7 +131,7 @@ export const TaskStatusPanel: React.FC = () => {
         });
 
         return groups;
-    }, [tasks]);
+    }, [tasks, taskTypes]);
 
     const statusColors = {
         [TaskStatus.Pending]: 'background.paper',

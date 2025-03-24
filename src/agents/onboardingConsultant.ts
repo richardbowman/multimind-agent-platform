@@ -15,6 +15,7 @@ import { NextActionExecutor } from './executors/NextActionExecutor';
 import { ListTemplatesExecutor } from './executors/ListTemplatesExecutor';
 import { GoalProgressExecutor } from './executors/GoalProgressExecutor';
 import { GenerateDocumentExecutor } from './executors/GenerateDocumentExecutor';
+import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
 
 
 
@@ -39,6 +40,7 @@ export interface OnboardingProject extends Project {
 export class OnboardingConsultant extends StepBasedAgent {
     constructor(params: AgentConstructorParams) {
         super(params);
+        this.agentName 
         this.planner = null;
 
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their goals with this platform called Multimind. The service is designed
@@ -69,5 +71,12 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
         this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
 
 
+        }
+        
+        protected getExecutorParams(): ExecutorConstructorParams {
+            return {
+                ...super.getExecutorParams(),
+                agentName: "OnboardingConsulant"
+            }
         }
 }
