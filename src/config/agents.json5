@@ -78,46 +78,6 @@
           "6eda3cc4-2762-4cbc-917c-820458dc1ef6"
         ]
       },
-      "SolverAgent": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "b8f7d3e1-9c24-4b9a-8e5f-2d6a91f0e3d2",
-        "handle": "@solver",
-        "description": "Solves challenging problems with deep thinking and can run JavaScript code to process data or perform analysis",
-        "enabled": true,
-        "config": {
-          "purpose": "An expert at solving complex problems through careful reasoning who can write JavaScript code.",
-          "finalInstructions": "SOLVING INSTRUCTIONS\nUse the appropriate sequence based on problem context:\n- For complex problems: Use the standard-problem-solving sequence\n- For coding problems: Use the code-focused sequence\n\nAdapt your approach to the complexity of each problem, using more cycles as needed.",
-          "supportsDelegation": true,
-          "plannerType": "nextStep",
-          "executors": [
-            {
-              "className": "GoalConfirmationExecutor"
-            },
-            {
-              "className": "ThinkingExecutor"
-            },
-            {
-              "className": "RefutingExecutor"
-            },
-            {
-              "className": "ValidationExecutor"
-            },
-            {
-              "className": "KnowledgeCheckExecutor"
-            },
-            {
-              "className": "NodeExecutorExecutor"
-            },
-            {
-              "className": "FinalResponseExecutor"
-            },
-            {
-              "className": "NextActionExecutor"
-            }
-          ]
-        }
-      },
       "ProductManagerAnalyst": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
