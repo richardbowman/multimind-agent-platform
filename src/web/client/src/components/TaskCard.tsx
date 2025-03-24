@@ -142,18 +142,24 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 }}
                 secondary={
                     <React.Fragment>
-                        <Typography 
-                            variant="caption" 
-                            component="span"
-                            sx={{ 
-                                display: 'block',
-                                color: 'text.secondary',
-                                textDecoration: task.complete ? 'line-through' : 'none',
-                                opacity: task.complete ? 0.7 : 1
-                            }}
-                        >
-                            {task.assignee && `Assigned to: ${handles.find(h => h.id === task.assignee)?.handle || task.assignee}`}
-                        </Typography>
+                        {task.assignee && (
+                            <Typography 
+                                variant="caption" 
+                                component="span"
+                                sx={{ 
+                                    display: 'inline-block',
+                                    color: 'text.secondary',
+                                    textDecoration: task.complete ? 'line-through' : 'none',
+                                    opacity: task.complete ? 0.7 : 1,
+                                    whiteSpace: 'nowrap',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    maxWidth: '100%'
+                                }}
+                            >
+                                {handles.find(h => h.id === task.assignee)?.handle || task.assignee}
+                            </Typography>
+                        )}
                         <Typography 
                             variant="caption" 
                             component="span"
