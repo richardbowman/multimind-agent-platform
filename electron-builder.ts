@@ -111,13 +111,19 @@ export default {
         artifactName: "${name}.macOS.${version}.${arch}.${ext}"
     },
     win: {
-        target: "nsis",
-        buildUniversalInstaller: false,
-        defaultArch: "x64",
-        arch: [
-            "x64",
-            "arm64"
-        ],
+        target: [{
+            target: "nsis",
+            arch: [
+                "x64"
+            ]
+        },
+        {
+            target: "nsis",
+            arch: [
+                "arm64"
+            ]
+        }],
+
         artifactName: "${name}.Windows.${version}.${arch}.${ext}"
     },
     nsis: {
