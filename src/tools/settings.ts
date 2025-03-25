@@ -4,71 +4,9 @@ import { ChatHandle } from 'src/types/chatHandle';
 import { MODEL_CONFIG_DEFAULT, ModelProviderConfig } from './modelProviderConfig';
 import { PROVIDER_CONFIG_DEFAULT, ProviderConfig } from './providerConfig';
 
-export class PubMedConfig {
-    @ClientSettings({
-        label: 'PubMed Max Results',
-        category: 'Search Settings',
-        type: 'number',
-        description: 'Maximum number of results to return from PubMed searches'
-    })
-    maxResults: number = 10;
-
-    @ClientSettings({
-        label: 'PubMed API Email',
-        category: 'Search Settings',
-        type: 'string',
-        description: 'Email address for PubMed API (required for rate limit tracking)'
-    })
-    apiEmail: string = '';
-
-    @ClientSettings({
-        label: 'PubMed API Tool',
-        category: 'Search Settings',
-        type: 'string',
-        description: 'Tool name for PubMed API (required for rate limit tracking)'
-    })
-    apiTool: string = 'YourAppName';
-}
-
-export class DuckDuckGoConfig {
-    @ClientSettings({
-        label: 'DuckDuckGo Headless Mode',
-        category: 'Search Settings',
-        type: 'boolean',
-        description: 'Run DuckDuckGo searches in headless browser mode',
-        visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
-    })
-    headless: boolean = true;
-
-    @ClientSettings({
-        label: 'DuckDuckGo Timeout (ms)',
-        category: 'Search Settings',
-        type: 'number',
-        description: 'Timeout for DuckDuckGo search operations',
-        visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
-    })
-    timeout: number = 30000;
-}
-export class BraveConfig {
-    @ClientSettings({
-        label: 'Brave Search API Key',
-        category: 'Search Settings',
-        type: 'string',
-        sensitive: true,
-        description: 'API key for Brave Search',
-        visibleWhen: (settings: Settings) => settings.searchProvider === 'brave'
-    })
-    apiKey: string = '';
-
-    @ClientSettings({
-        label: 'Brave Search Endpoint',
-        category: 'Search Settings',
-        type: 'string',
-        description: 'API endpoint for Brave Search',
-        visibleWhen: (settings: Settings) => settings.searchProvider === 'brave'
-    })
-    endpoint: string = 'https://api.search.brave.com/res/v1/web/search';
-}
+import { PubMedConfig } from './searchSettings/PubMedConfig';
+import { DuckDuckGoConfig } from './searchSettings/DuckDuckGoConfig';
+import { BraveConfig } from './searchSettings/BraveConfig';
 
 
 export enum PlannerType {
