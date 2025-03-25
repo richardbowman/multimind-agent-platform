@@ -17,7 +17,8 @@ export type FilterValue =
     | Date 
     | null 
     | string[] 
-    | number[];
+    | number[]
+    | { [key: string]: string | number }; // Allow enum-like objects
 
 export type FilterCriteria = {
     [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria | undefined;
