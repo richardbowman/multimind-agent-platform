@@ -17,7 +17,15 @@ const root = ReactDOM.createRoot(
 const ThemeWrapper = () => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const rpc = useIPCService();
-  const settings = await rpc.getRPC().getSettings();
+  const [settings, setSettings] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      const settings = await rpc.getRPC().getSettings();
+      setSettings(settings);
+    };
+    fetchSettings();
+  }, [rpc]);
 
   const theme = React.useMemo(() => {
     const isDark = prefersDarkMode;
