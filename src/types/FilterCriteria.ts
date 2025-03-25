@@ -19,10 +19,11 @@ export type FilterValue =
     | string[] 
     | number[];
 
-export interface FilterCriteria {
-    [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria;
+export type FilterCriteria = {
+    [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria | undefined;
+} & {
     $and?: FilterCriteria[];
     $or?: FilterCriteria[];
     $nor?: FilterCriteria[];
     $not?: FilterCriteria;
-}
+};
