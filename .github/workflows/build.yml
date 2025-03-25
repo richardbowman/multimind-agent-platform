@@ -145,6 +145,21 @@ jobs:
           fi
         shell: bash
 
+      - name: Sign Windows Executables with Azure
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: Azure/sign@v1
+        with:
+          tenantId: ${{ secrets.AZURE_TENANT_ID }}
+          clientId: ${{ secrets.AZURE_CLIENT_ID }}
+          clientSecret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          certificateId: ${{ secrets.AZURE_CERTIFICATE_ID }}
+          description: "Electron Application"
+          descriptionUrl: "https://github.com/${{ github.repository }}"
+          timestampUrl: "http://timestamp.digicert.com"
+          files: |
+            release/*.exe
+            release/*.msi
+
   linux-build:
     if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_linux == 'true' }}
     runs-on: ubuntu-latest
