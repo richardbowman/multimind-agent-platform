@@ -91,22 +91,67 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
     }
 
     private buildWhereClause(where: any): string {
-        const conditions = Object.entries(where)
-            .map(([key, value]) => {
-                if (key === 'type' || key === 'subtype') {
-                    if (typeof value === 'string') {
-                        return `${key} = '${value}'`;
-                    } else if (typeof value === 'object' && value['$eq']) {
-                        return `${key} = '${value['$eq']}'`;
-                    }
+        const buildCondition = (key: string, value: any): string => {
+            if (typeof value === 'object' && !Array.isArray(value)) {
+                // Handle operators like $eq, $ne, $in, etc.
+                const operator = Object.keys(value)[0];
+                const val = value[operator];
+                
+                switch (operator) {
+                    case '$eq':
+                        return `${key} = '${val}'`;
+                    case '$ne':
+                        return `${key} != '${val}'`;
+                    case '$in':
+                        if (Array.isArray(val)) {
+                            return `${key} IN (${val.map(v => `'${v}'`).join(', ')})`;
+                        }
+                        return `${key} = '${val}'`;
+                    case '$nin':
+                        if (Array.isArray(val)) {
+                            return `${key} NOT IN (${val.map(v => `'${v}'`).join(', ')})`;
+                        }
+                        return `${key} != '${val}'`;
+                    case '$gt':
+                        return `${key} > ${val}`;
+                    case '$gte':
+                        return `${key} >= ${val}`;
+                    case '$lt':
+                        return `${key} < ${val}`;
+                    case '$lte':
+                        return `${key} <= ${val}`;
+                    default:
+                        return '';
                 }
-                // if (typeof value === 'string') {
-                //     return `json_extract(metadata_json, '$.${key}') = '${value}'`;
-                // }
-                // return `json_extract(metadata_json, '$.${key}') = ${value}`;
-            })
-            .join(' AND ');
-        return conditions;
+            }
+            // Simple equality
+            return `${key} = '${value}'`;
+        };
+
+        const buildClause = (clause: any): string => {
+            if (clause.$and) {
+                return `(${clause.$and.map(buildClause).join(' AND ')})`;
+            }
+            if (clause.$or) {
+                return `(${clause.$or.map(buildClause).join(' OR ')})`;
+            }
+            if (clause.$not) {
+                return `NOT (${buildClause(clause.$not)})`;
+            }
+            
+            // Handle regular key-value pairs
+            return Object.entries(clause)
+                .map(([key, value]) => {
+                    if (key === '$and' || key === '$or' || key === '$not') {
+                        return '';
+                    }
+                    return buildCondition(key, value);
+                })
+                .filter(c => c)
+                .join(' AND ');
+        };
+
+        return buildClause(where);
     }
 
     async clearCollection(): Promise<void> {
