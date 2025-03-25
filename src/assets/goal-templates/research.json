@@ -4,10 +4,9 @@
     "description": "Template for setting up a web research channel with a research manager",
     "supportingAgents": [
         "@research-manager",
-        "@research-assistant",
-        "@router"
+        "@research-assistant"
     ],
-    "defaultResponder": "@router",
+    "defaultResponder": "@research-manager",
     "initialTasks": [
         {
             "description": "Today's latest world news",

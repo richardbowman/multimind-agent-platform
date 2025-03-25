@@ -43,7 +43,6 @@ Make sure to select no more than 10 executors to enable.
  - [ ] assign-writers
  - [ ] generate-slides
  - [ ] document-retrieval
- - [ ] web-research
  - [ ] create-channel
  - [ ] select-template
  - [ ] content-combination

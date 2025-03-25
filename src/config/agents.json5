@@ -28,7 +28,7 @@
         "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
         "handle": "@pm",
         "description": "Manages projects and coordinates tasks",
-        "enabled": true,
+        "enabled": false,
         "config": {
           "purpose": "My name is Mesa. \
   My goal is to help develop standardized processes for your business.",

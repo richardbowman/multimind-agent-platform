@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Drawer, Box, styled } from '@mui/material';
+import { Drawer, Box, styled, SxProps } from '@mui/material';
 
 const ResizableHandle = styled(Box)(({ theme }) => ({
     width: '1px',
@@ -24,6 +24,7 @@ interface ResizableDrawerProps {
     onResizeEnd?: (newWidth: number) => void;
     children: React.ReactNode;
     anchor: 'left' | 'right';
+    sx? : SxProps;
     open: boolean;
     onClose?: () => void;
 }
@@ -36,6 +37,7 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
     children,
     anchor,
     open,
+    sx,
     onClose,
     onResizeEnd
 }) => {
@@ -93,8 +95,10 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
             variant="persistent"
             open={open}
             onClose={onClose}
+            sx={sx}
             PaperProps={{
                 sx: {
+                    zIndex: 1,
                     borderLeft: 0,
                     width: width,
                     overflow: 'visible',

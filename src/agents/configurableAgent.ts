@@ -43,7 +43,7 @@ export class ConfigurableAgent extends StepBasedAgent {
 
         await this.initializeFromConfig(this.agentConfig);
 
-        if (this.planner === null) {
+        if (!this.planner) {
             this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
         }
     }

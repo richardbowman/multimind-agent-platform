@@ -22,7 +22,7 @@ interface GenerateResponse {
 }
 
 // Make artifacts available globally
-(global as any).ARTIFACTS = workerData.artifacts || [];
+(global as any).ARTIFACTS = workerData?.artifacts || [];
 
 (global as any).jsonUtils = {
     extractAndParseJsonBlocks: (text: string): any[] => {

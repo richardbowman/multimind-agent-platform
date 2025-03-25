@@ -18,7 +18,6 @@ export enum ExecutorType {
     WRITING = 'assign-writers',
     GENERATE_SLIDES = 'generate-slides',
     DOCUMENT_RETRIEVAL = 'document-retrieval',
-    WEB_RESEARCH = 'web-research',
     CREATE_CHANNEL = 'create-channel',
     SELECT_TEMPLATE = 'select-template',
     CONTENT_COMBINATION = 'content-combination',

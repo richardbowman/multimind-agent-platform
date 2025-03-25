@@ -27,7 +27,7 @@ Adapt your approach to the complexity of each problem, using more cycles as need
 - [x] thinking
 - [x] refuting
 - [x] validation
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] nodejs-code-execution
 - [x] final-response
 - [x] next-action

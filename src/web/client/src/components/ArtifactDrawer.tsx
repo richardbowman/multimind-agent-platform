@@ -104,6 +104,10 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
 
         registerActions("artifact-drawer", baseActions);
         return () => { unregisterActions("artifact-drawer"); }
+    }, []);
+
+    useEffect(() => {
+        // updateActionState()
     }, [currentArtifact, artifacts, onArtifactChange, showNavigation, showPinActions, currentChannelId]);
 
     return (

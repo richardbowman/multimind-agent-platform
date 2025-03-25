@@ -1,11 +1,8 @@
 import { ConfigurableAgent } from './configurableAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { ArtifactItem, ArtifactType } from "src/tools/artifact";
-import { UUID } from "src/types/uuid";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { getExecutorMetadata } from './decorators/executorDecorator';
-import { ModelType } from "src/llm/types/ModelType";
-import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { createChatHandle, isChatHandle } from 'src/types/chatHandle';
@@ -151,8 +148,9 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
 
     private async applyMarkdownConfig(config: Record<string, any>) {
         // Apply basic agent configuration
-        if (config.agent) {
-            this.agentName = config.agent.name;
+        if (config.agent_configuration) {
+            this.agentName = config.agent_configuration.name;
+            this.description = config.agent_configuration.description;
         }
 
         if (!config.purpose) {
@@ -181,8 +179,9 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         // Apply any additional configuration from the markdown
         this.agentConfig = {
             ...this.agentConfig,
-            plannerType: config.agent.plannerType,
-            supportsDelegation: config.agent.supportsDelegation,
+            plannerType: config.agent_configuration?.plannerType,
+            supportsDelegation: config.agent_configuration?.supportsDelegation,
+            description: config.agent_configuration?.description,
             ...config
         };
     }

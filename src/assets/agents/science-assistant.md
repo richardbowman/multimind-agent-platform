@@ -18,20 +18,20 @@ IN YOUR REASONING, Explain the step strategies you considered.
 - plannerType: nextStep
 
 ## Executors
+- [x] thinking
+- [x] check-knowledge
+- [x] retrieve-full-artifact
 - [x] url-extract
 - [x] goal-confirmation
 - [x] pubmed-search
-- [x] csv-merge
+- [x] run-search-engine
 - [x] select-links
 - [x] artifact-selector
-- [x] web-scrape
 - [x] validation
+- [x] csv-merge
 - [x] csv-processor
-- [x] knowledge-check
 - [x] generate-document
 - [x] generate-spreadsheet
-- [x] retrieve-full-artifact
-- [x] thinking
 
 ## Capabilities
 - Extract and analyze URLs

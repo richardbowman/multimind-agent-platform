@@ -20,7 +20,6 @@ Use the appropriate sequence based on user context:
 - plannerType: nextStep
 
 ## Executors
-- [x] establish-intent
 - [x] understand-goals
 - [x] process-answers
 - [x] generate-document

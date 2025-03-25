@@ -22,7 +22,7 @@ When writing content:
 - plannerType: nextStep
 
 ## Executors
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] retrieve-full-artifact
 - [x] generate-document
 - [x] generate-spreadsheet

@@ -26,7 +26,7 @@ My name is Jarvis. I can help structure larger research projects that require mu
 - [x] generate-slides
 - [x] delegation
 - [x] csv-processor
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] understand-goals
 
 ## Capabilities

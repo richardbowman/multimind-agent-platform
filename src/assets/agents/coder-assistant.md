@@ -23,7 +23,7 @@ My name is Sentry. My job is to help write code to automate tasks.
 ## Executors
 - [x] retrieve-full-artifact
 - [x] generate-website
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] nodejs-code-execution
 
 ## Capabilities

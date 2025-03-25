@@ -43,14 +43,7 @@ export abstract class StepBasedAgent extends Agent {
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params);
-        this.planner = planner || new MultiStepPlanner(
-            params.llmService,
-            params.taskManager,
-            params.userId,
-            this.modelHelpers,
-            this.stepExecutors,
-            this.agents
-        );
+        this.planner = planner;
     }
 
     protected getExecutorParams() : ExecutorConstructorParams {
@@ -321,7 +314,7 @@ export abstract class StepBasedAgent extends Agent {
             artifacts: params.context?.artifacts
         };
 
-        if (this.planner === null) {
+        if (!this.planner) {
             const goal = plannerParams.userPost ? `Reply to incoming message: ${plannerParams.userPost?.message}` : `Plan for task: '${params.projectTask?.description}' as part of project '${project.name}'`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
@@ -550,7 +543,7 @@ export abstract class StepBasedAgent extends Agent {
                         .filter(memberId => this.userId !== memberId)
                         .map(memberId => {
                             return this.agents.agents[memberId];
-                        });
+                        }).defined();
                 } else {
                     agentsOptions = Object.values(this.settings.agents).filter(a => a.userId).map(id => {
                         return this.agents.agents[id.userId];

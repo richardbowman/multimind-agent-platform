@@ -22,7 +22,7 @@ You are planning how to create high-quality content. Break down the content crea
 
 ## Executors
 - [x] goal-confirmation
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] outline
 - [x] assign-writers
 - [x] editing

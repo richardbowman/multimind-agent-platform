@@ -3,7 +3,7 @@ const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
   target: 'node',
-  entry: './src/agents/executors/nodeWorker.ts',
+  entry: './src/workers/nodeWorker.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: 'nodeWorker.js'

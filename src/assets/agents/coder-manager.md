@@ -25,7 +25,7 @@ My name is Sentry. My job is to help write code to automate tasks.
 - [x] generate-spreadsheet
 - [x] retrieve-full-artifact
 - [x] generate-document
-- [x] knowledge-check
+- [x] check-knowledge
 - [x] csv-processor
 - [x] delegation
 

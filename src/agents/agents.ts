@@ -89,7 +89,7 @@ export interface ThreadSummary {
 export abstract class Agent {
     public readonly messagingHandle?: string;
     public readonly userId: UUID;
-    public readonly description?: string;
+    public description?: string;
     public supportsDelegation: boolean = false;
 
     protected readonly chatClient: ChatClient;
