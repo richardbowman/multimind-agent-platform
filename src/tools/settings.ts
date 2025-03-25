@@ -268,7 +268,7 @@ export class Settings {
         label: 'Providers',
         category: 'Providers',
         type: 'section',
-        description: 'Configure provider connections'
+        description: 'Configure provider connections. NOTE: You must hit Save after changing these settings before you can configure Models with new/updated providers.'
     })
     providers: Partial<ProviderConfig>[] = PROVIDER_CONFIG_DEFAULT;
 
