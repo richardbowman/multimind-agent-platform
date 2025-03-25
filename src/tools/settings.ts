@@ -1,6 +1,4 @@
-import { UUID } from 'src/types/uuid';
 import { ClientSettings } from './settingsDecorators';
-import { ChatHandle } from 'src/types/chatHandle';
 import { MODEL_CONFIG_DEFAULT, ModelProviderConfig } from './modelProviderConfig';
 import { PROVIDER_CONFIG_DEFAULT, ProviderConfig } from './providerConfig';
 
@@ -8,116 +6,6 @@ import { PubMedConfig } from './searchSettings/PubMedConfig';
 import { DuckDuckGoConfig } from './searchSettings/DuckDuckGoConfig';
 import { BraveConfig } from './searchSettings/BraveConfig';
 
-
-export enum PlannerType {
-    NextStep = "nextStep"
-}
-
-export interface StepSequenceConfig {
-    id: string;
-    name: string;
-    description?: string;
-    steps: Array<{
-        executor: string;
-        description?: string;
-        config?: Record<string, any>;
-        interaction?: string;
-    }>;
-}
-
-export interface ExecutorConfig {
-    className: string;
-    config?: Record<string, any>;
-}
-
-export interface AgentConfig {
-    purpose: string;
-    finalInstructions: string;
-    supportsDelegation: boolean;
-    plannerType: PlannerType;
-    executors: ExecutorConfig[];
-    stepSequences?: StepSequenceConfig[];
-}
-
-export class APIConfig {
-    @ClientSettings({
-        label: 'API Key',
-        category: 'API Keys',
-        type: 'string',
-        sensitive: true
-    })
-    key: string = "";
-}
-
-export interface AgentDefinition {
-    className: string;
-    sourcePath: string;
-    userId: UUID;
-    handle?: ChatHandle;
-    description?: string;
-    enabled: boolean;
-    config?: AgentConfig;
-    autoRespondChannelIds?: String[];
-}
-
-
-export class AgentBuilderConfig {
-    @ClientSettings({
-        label: 'Agent Name',
-        category: 'Agents',
-        type: 'string',
-        required: true
-    })
-    name: string = '';
-
-    @ClientSettings({
-        label: 'Description',
-        category: 'Agents',
-        type: 'string'
-    })
-    description: string = '';
-
-    @ClientSettings({
-        label: 'Purpose',
-        category: 'Agents',
-        type: 'string',
-        required: true
-    })
-    purpose: string = '';
-
-    @ClientSettings({
-        label: 'Final Instructions',
-        category: 'Agents',
-        type: 'string',
-        required: true
-    })
-    finalInstructions: string = '';
-
-    @ClientSettings({
-        label: 'Planner Type',
-        category: 'Agents',
-        type: 'select',
-        options: ['nextStep'],
-        defaultValue: 'nextStep'
-    })
-    plannerType: PlannerType = PlannerType.NextStep;
-
-    @ClientSettings({
-        label: 'Auto Respond Channels',
-        category: 'Agents',
-        type: 'string',
-        description: 'Comma separated list of channel IDs to auto respond in'
-    })
-    autoRespondChannelIds: string = '';
-
-    @ClientSettings({
-        label: 'Enabled',
-        category: 'Agents',
-        type: 'boolean',
-        defaultValue: true
-    })
-    enabled: boolean = true;
-}
 
 export class TTSSettings {
     @ClientSettings({
@@ -143,7 +31,7 @@ export class TTSSettings {
 export class LanceDBSettings {
     @ClientSettings({
         label: 'Embedding Dimensions',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'number',
         description: 'Number of dimensions for embeddings (must match embedding model)',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
@@ -152,7 +40,7 @@ export class LanceDBSettings {
 
     @ClientSettings({
         label: 'Auto Vacuum',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'boolean',
         description: 'Enable automatic database vacuuming to optimize storage',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
@@ -161,7 +49,7 @@ export class LanceDBSettings {
 
     @ClientSettings({
         label: 'Journal Mode',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'select',
         options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
         description: 'SQLite journal mode (WAL recommended for better concurrency)',
@@ -173,7 +61,7 @@ export class LanceDBSettings {
 export class SQLiteVecSettings{
     @ClientSettings({
         label: 'Embedding Dimensions',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'number',
         description: 'Number of dimensions for embeddings (must match embedding model)',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
@@ -182,7 +70,7 @@ export class SQLiteVecSettings{
 
     @ClientSettings({
         label: 'Auto Vacuum',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'boolean',
         description: 'Enable automatic database vacuuming to optimize storage',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
@@ -191,7 +79,7 @@ export class SQLiteVecSettings{
 
     @ClientSettings({
         label: 'Journal Mode',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'select',
         options: ['DELETE', 'TRUNCATE', 'PERSIST', 'MEMORY', 'WAL', 'OFF'],
         description: 'SQLite journal mode (WAL recommended for better concurrency)',
@@ -258,7 +146,7 @@ export class Settings {
 
     @ClientSettings({
         label: 'ChromaDB URL',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'string',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'chroma'
     })
@@ -266,7 +154,7 @@ export class Settings {
 
     @ClientSettings({
         label: 'Database Collection Name',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'string',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'chroma'
     })
@@ -365,7 +253,7 @@ export class Settings {
     // Vector DB Settings
     @ClientSettings({
         label: 'Vector Database Type',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'select',
         options: ['vectra', 'chroma', 'sqlite_vec', 'lancedb'],
         description: 'Type of vector database to use for storing and querying embeddings'
@@ -374,7 +262,7 @@ export class Settings {
 
     @ClientSettings({
         label: 'SQLiteVec Settings',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'section',
         description: 'Configuration for SQLiteVec vector database',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
@@ -383,7 +271,7 @@ export class Settings {
 
     @ClientSettings({
         label: 'LanceDB Settings',
-        category: 'Vector DB',
+        category: 'Indexing',
         type: 'section',
         description: 'Configuration for LanceDB vector database',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'lancedb'
