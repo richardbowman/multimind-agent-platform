@@ -104,7 +104,11 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                         return `${key} != '${val}'`;
                     case '$in':
                         if (Array.isArray(val)) {
-                            return `${key} IN (${val.map(v => `'${v}'`).join(', ')})`;
+                            // Handle both string and non-string values properly
+                            const values = val.map(v => 
+                                typeof v === 'string' ? `'${v}'` : v
+                            );
+                            return `${key} IN (${values.join(', ')})`;
                         }
                         return `${key} = '${val}'`;
                     case '$nin':
