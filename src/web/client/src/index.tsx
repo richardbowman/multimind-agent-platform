@@ -7,6 +7,8 @@ import '@fontsource/inter/300.css';
 import '@fontsource/inter/400.css';
 import '@fontsource/inter/500.css';
 import '@fontsource/inter/700.css';
+import { useDataContext } from './contexts/DataContext';
+import { IPCProvider, useIPCService } from './contexts/IPCContext';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -14,12 +16,13 @@ const root = ReactDOM.createRoot(
 
 const ThemeWrapper = () => {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const settings = useSettings();
-  
+  const rpc = useIPCService();
+  const settings = await rpc.getRPC().getSettings();
+
   const theme = React.useMemo(() => {
     const isDark = prefersDarkMode;
-    
-    if (settings.theme === 'atom-one-dark') {
+
+    if (settings?.theme === 'atom-one-dark') {
       return createTheme({
         palette: {
           mode: 'dark',
@@ -139,16 +142,15 @@ const ThemeWrapper = () => {
         MuiPaper: {
           styleOverrides: {
             root: {
-              boxShadow: prefersDarkMode 
-                ? '0px 2px 4px rgba(0,0,0,0.2)' 
+              boxShadow: prefersDarkMode
+                ? '0px 2px 4px rgba(0,0,0,0.2)'
                 : '0px 2px 4px rgba(0,0,0,0.1)',
             },
           },
         },
       },
-    }),
-    [prefersDarkMode, settings.theme]
-  );
+    })
+  }, [prefersDarkMode, settings?.theme]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -160,6 +162,8 @@ const ThemeWrapper = () => {
 
 root.render(
   <React.StrictMode>
-    <ThemeWrapper />
+    <IPCProvider>
+      <ThemeWrapper />
+    </IPCProvider>
   </React.StrictMode>
 );
