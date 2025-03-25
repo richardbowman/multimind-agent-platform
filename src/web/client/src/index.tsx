@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import './styles/index.css';
 import App from './App';
 import { createTheme, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/700.css';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -15,6 +19,62 @@ const ThemeWrapper = () => {
     () => createTheme({
       palette: {
         mode: prefersDarkMode ? 'dark' : 'light',
+        primary: {
+          main: '#1de9b6',
+          contrastText: '#000',
+        },
+        secondary: {
+          main: '#00bfa5',
+        },
+        background: {
+          default: prefersDarkMode ? '#121212' : '#f5f5f5',
+          paper: prefersDarkMode ? '#1e1e1e' : '#ffffff',
+        },
+      },
+      typography: {
+        fontFamily: 'Inter, sans-serif',
+        h1: {
+          fontWeight: 700,
+          fontSize: '2.5rem',
+        },
+        h2: {
+          fontWeight: 600,
+          fontSize: '2rem',
+        },
+        h3: {
+          fontWeight: 500,
+          fontSize: '1.75rem',
+        },
+        body1: {
+          fontWeight: 400,
+          fontSize: '1rem',
+        },
+        button: {
+          fontWeight: 500,
+          textTransform: 'none',
+        },
+      },
+      shape: {
+        borderRadius: 8,
+      },
+      components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              borderRadius: 24,
+              padding: '8px 24px',
+            },
+          },
+        },
+        MuiPaper: {
+          styleOverrides: {
+            root: {
+              boxShadow: prefersDarkMode 
+                ? '0px 2px 4px rgba(0,0,0,0.2)' 
+                : '0px 2px 4px rgba(0,0,0,0.1)',
+            },
+          },
+        },
       },
     }),
     [prefersDarkMode]
