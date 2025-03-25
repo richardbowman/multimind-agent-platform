@@ -241,7 +241,6 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                                     </FormControl>
                                 );
                             })}
-                            ))}
                         </Box>
                     </Box>
                 );
