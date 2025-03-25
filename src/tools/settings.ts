@@ -119,6 +119,15 @@ export class Settings {
     displayScrapeBrowser: boolean = false;
 
     @ClientSettings({
+        label: 'UI Theme',
+        category: 'UI Settings',
+        type: 'select',
+        options: ['teal', 'atom-one-dark'],
+        description: 'Select the application theme'
+    })
+    theme: 'teal'|'atom-one-dark' = 'teal';
+
+    @ClientSettings({
         label: 'UI Zoom Level',
         category: 'UI Settings',
         type: 'slider',
