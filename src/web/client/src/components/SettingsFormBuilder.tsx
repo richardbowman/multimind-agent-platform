@@ -213,6 +213,15 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                     );
                 }
 
+                // Check if any metadata in this category is visible
+                const hasVisibleItems = metadataList.some(metadata => 
+                    !metadata.visibleWhen || metadata.visibleWhen(settings)
+                );
+
+                if (!hasVisibleItems) {
+                    return null;
+                }
+
                 return (
                     <Box
                         key={category}
