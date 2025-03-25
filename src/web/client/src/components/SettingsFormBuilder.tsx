@@ -224,15 +224,23 @@ export const SettingsFormBuilder: React.FC<SettingsFormBuilderProps> = ({
                         </Typography>
 
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {metadataList.map(metadata => (
-                                <FormControl key={metadata.key} fullWidth>
-                                    {renderInput(metadata)}
-                                    {metadata.description && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                            {metadata.description}
-                                        </Typography>
-                                    )}
-                                </FormControl>
+                            {metadataList.map(metadata => {
+                                // Skip rendering if visibleWhen condition is not met
+                                if (metadata.visibleWhen && !metadata.visibleWhen(settings)) {
+                                    return null;
+                                }
+                                
+                                return (
+                                    <FormControl key={metadata.key} fullWidth>
+                                        {renderInput(metadata)}
+                                        {metadata.description && (
+                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                {metadata.description}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+                                );
+                            })}
                             ))}
                         </Box>
                     </Box>
