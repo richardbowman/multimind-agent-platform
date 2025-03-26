@@ -190,12 +190,26 @@ class ClientMethodsImplementation implements ClientMethods {
                 this.artifactProvider.updateSpecificArtifacts(artifactIds);
             }
 
-            // Update messages directly in context
+            // Update messages directly in context, checking update_at timestamps
             this.messageContext.setMessages(prev => {
-                const filteredPrev = prev.filter(prevMessage =>
-                    !messages.some(newMessage => newMessage.id === prevMessage.id)
+                const updatedMessages = prev.map(prevMessage => {
+                    const newMessage = messages.find(m => m.id === prevMessage.id);
+                    if (newMessage) {
+                        // Only update if the new message is more recent
+                        if (!prevMessage.update_at || 
+                            (newMessage.update_at && newMessage.update_at > prevMessage.update_at)) {
+                            return newMessage;
+                        }
+                    }
+                    return prevMessage;
+                });
+
+                // Add any new messages that weren't in the previous list
+                const newMessages = messages.filter(newMessage => 
+                    !prev.some(prevMessage => prevMessage.id === newMessage.id)
                 );
-                return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
+
+                return [...updatedMessages, ...newMessages].sort((a, b) => a.create_at - b.create_at);
             });
         });
     }
