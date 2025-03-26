@@ -8,7 +8,7 @@ import Attachment from '@mui/icons-material/Attachment';
 import { MicrophoneButton } from './MicrophoneButton';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
-import { Box } from '@mui/material';
+import { Box, Menu, MenuItem } from '@mui/material';
 import { AttachmentCard } from './shared/AttachmentCard';
 import { UUID } from '../../../../types/uuid';
 import { useArtifacts } from '../contexts/ArtifactContext';
@@ -391,60 +391,42 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                             </div>
                         )}
                     </button>
-                    {showAttachmentMenu && (
-                        <div
-                            style={{
-                                position: 'absolute',
-                                bottom: '100%',
-                                left: 0,
-                                backgroundColor: '#2a2a2a',
-                                border: '1px solid #444',
-                                borderRadius: '4px',
-                                padding: '8px',
-                                zIndex: 1000,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '4px'
+                    <Menu
+                        open={showAttachmentMenu}
+                        onClose={() => setShowAttachmentMenu(false)}
+                        anchorEl={inputRef.current}
+                        anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                        sx={{
+                            '& .MuiPaper-root': {
+                                mt: 1,
+                                minWidth: 180,
+                            }
+                        }}
+                    >
+                        <MenuItem
+                            onClick={() => {
+                                showFileDialog();
+                                setShowAttachmentMenu(false);
                             }}
                         >
-                            <button
-                                style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    backgroundColor: '#444',
-                                    color: '#fff',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    whiteSpace: 'nowrap'
-                                }}
-                                onClick={() => {
-                                    showFileDialog();
-                                    setShowAttachmentMenu(false);
-                                }}
-                            >
-                                Attach File
-                            </button>
-                            <button
-                                style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '4px',
-                                    border: 'none',
-                                    backgroundColor: '#444',
-                                    color: '#fff',
-                                    cursor: 'pointer',
-                                    textAlign: 'left',
-                                    whiteSpace: 'nowrap'
-                                }}
-                                onClick={() => {
-                                    setShowAssetDialog(true);
-                                    setShowAttachmentMenu(false);
-                                }}
-                            >
-                                Attach Asset
-                            </button>
-                        </div>
-                    )}
+                            Attach File
+                        </MenuItem>
+                        <MenuItem
+                            onClick={() => {
+                                setShowAssetDialog(true);
+                                setShowAttachmentMenu(false);
+                            }}
+                        >
+                            Attach Asset
+                        </MenuItem>
+                    </Menu>
                 </div>
                 {showAssetDialog && 
                 <ArtifactSelectionDialog
