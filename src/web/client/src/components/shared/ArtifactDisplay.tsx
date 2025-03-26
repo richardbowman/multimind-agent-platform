@@ -40,10 +40,11 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         // Clean the filename by removing any existing extensions
         let fileName = (artifact.metadata?.title || 'artifact').replace(/\.[^/.]+$/, "");
         let mimeType = 'text/plain';
+        let fileExtension = 'txt';
 
         // Handle different content types
-        if (artifact.metadata?.mimeType?.startsWith('image/') || 
-            artifact.metadata?.mimeType === 'application/pdf') {
+        if (artifact.metadata?.mimeType?.startsWith('image/')) {
+            fileExtension = artifact.metadata.mimeType.split('/')[1];
             let binaryData;
             if (typeof artifact.content === 'string') {
                 if (artifact.content.startsWith('data:')) {
@@ -64,15 +65,48 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             
             fileContent = binaryData;
             mimeType = artifact.metadata.mimeType;
-            fileName = `${fileName}.${mimeType.split('/')[1]}`;
+        } else if (artifact.metadata?.mimeType === 'application/pdf') {
+            fileExtension = 'pdf';
+            let binaryData;
+            if (typeof artifact.content === 'string') {
+                if (artifact.content.startsWith('data:')) {
+                    const base64Data = artifact.content.split(',')[1];
+                    binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+                } else {
+                    binaryData = Uint8Array.from(atob(artifact.content), c => c.charCodeAt(0));
+                }
+            } else if (artifact.content instanceof ArrayBuffer) {
+                binaryData = new Uint8Array(artifact.content);
+            } else if (artifact.content instanceof Uint8Array) {
+                binaryData = artifact.content;
+            } else {
+                throw new Error('Unsupported binary content type');
+            }
+            fileContent = binaryData;
+            mimeType = artifact.metadata.mimeType;
         } else if (artifact.type === 'csv' || artifact.metadata?.mimeType === 'text/csv') {
             fileContent = artifact.content as string;
-            fileName += '.csv';
+            fileExtension = 'csv';
             mimeType = 'text/csv';
+        } else if (artifact.type === 'document') {
+            fileContent = artifact.content as string;
+            fileExtension = artifact.metadata?.mimeType === 'text/markdown' ? 'md' : 'txt';
+            mimeType = artifact.metadata?.mimeType || 'text/plain';
+        } else if (artifact.type === 'spreadsheet') {
+            fileContent = artifact.content as string;
+            fileExtension = 'csv';
+            mimeType = 'text/csv';
+        } else if (artifact.type === 'presentation') {
+            fileContent = artifact.content as string;
+            fileExtension = 'md';
+            mimeType = 'text/markdown';
         } else {
             fileContent = artifact.content as string;
-            fileName += '.md';
+            fileExtension = 'txt';
+            mimeType = 'text/plain';
         }
+
+        fileName = `${fileName}.${fileExtension}`;
 
         // Create blob and download
         const blob = new Blob([fileContent], { type: mimeType });
