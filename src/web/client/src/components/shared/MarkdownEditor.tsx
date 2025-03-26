@@ -1,5 +1,5 @@
 import React, { useActionState, useCallback, useEffect } from 'react';
-import { Box, Paper } from '@mui/material';
+import { Box, Paper, useTheme } from '@mui/material';
 import { BoldItalicUnderlineToggles, ChangeCodeMirrorLanguage, CodeBlockNode, codeBlockPlugin, codeMirrorPlugin, CodeToggle, ConditionalContents, CreateLink, diffSourcePlugin, DiffSourceToggleWrapper, headingsPlugin, imagePlugin, InsertCodeBlock, InsertFrontmatter, InsertTable, linkDialogPlugin, linkPlugin, listsPlugin, ListsToggle, markdownShortcutPlugin, MDXEditor, MDXEditorMethods, MDXEditorProps, quotePlugin, tablePlugin, thematicBreakPlugin, toolbarPlugin, UndoRedo } from '@mdxeditor/editor';
 import { useIPCService } from '../../contexts/IPCContext';
 import { ArtifactItem } from '../../../../../tools/artifact';
@@ -22,6 +22,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 }) => {
   const ipcService = useIPCService();
   const editorRef = React.useRef<MDXEditorMethods>(null);
+  const theme = useTheme();
   const { actions: toolbarActions, registerActions, unregisterActions } = useToolbarActions();
 
   const handleSave = useCallback(async () => {
@@ -56,11 +57,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <Box sx={{ p: 2, overflow: 'hidden', display: 'flex', flex:1, flexDirection: 'column' }}>
-      <Paper elevation={3} sx={{ p: 2, overflow: 'scroll', display: 'flex', flex:1, flexDirection: 'column', bgcolor: 'white' }}>
+      <Paper elevation={3} sx={{ p: 2, overflow: 'scroll', display: 'flex', flex:1, flexDirection: 'column' }}>
         <MDXEditor
           ref={editorRef}
           markdown={initialContent}
           readOnly={readOnly}
+          darkMode={theme.palette.mode === 'dark'}
           contentEditableClassName="prose"
           onError={({ error, source }) => {
             console.error(error, source);
