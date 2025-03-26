@@ -21,7 +21,7 @@ export const TaskListPanel: React.FC<TaskListPanelProps> = ({
     return (
         <Box sx={{ 
             width: '30%',
-            height: '70vh',
+            display: 'flex',
             p: 1,
             borderRight: '1px solid',
             borderColor: 'divider'
@@ -33,7 +33,7 @@ export const TaskListPanel: React.FC<TaskListPanelProps> = ({
                         mb: 1, 
                         position: 'sticky', 
                         top: 0, 
-                        bgcolor: 'background.default', 
+                        bgcolor: 'palette.background.paper', 
                         color: 'text.primary'
                     }}
                 >

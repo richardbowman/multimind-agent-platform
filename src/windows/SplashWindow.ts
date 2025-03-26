@@ -12,7 +12,7 @@ export class SplashWindow {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             width: 500,
-            height: 500,
+            height: 450,
             frame: false,
             transparent: true,
             resizable: false,

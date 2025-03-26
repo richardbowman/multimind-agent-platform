@@ -14,7 +14,7 @@ export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
     }
 
     protected getContentRules(): string {
-        return `DOCUMENT FORMATTING RULES:
+        return super.getContentRules() + `\n\nDOCUMENT FORMATTING RULES:
 - Use standard Markdown syntax INSIDE of the <artifact_markdown> blocks that demarcate the document contents.
 - Include proper headings and structure
 - Use lists, tables, and other formatting as needed

@@ -6,6 +6,7 @@ import { useDataContext } from '../contexts/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import { useChannels } from '../contexts/ChannelContext';
 import { useMessages } from '../contexts/MessageContext';
+import { Box } from '@mui/system';
 
 export const MicrophoneButton: React.FC = () => {
     const { currentChannelId } = useChannels();

@@ -5,7 +5,8 @@ import { TaskManager } from "../../tools/taskManager";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 import { UUID } from "src/types/uuid";
 import { Agents } from "src/utils/AgentLoader";
-import { AgentConfig, Settings } from "src/tools/settings";
+import { Settings } from "src/tools/settings";
+import { AgentConfig } from 'src/tools/AgentConfig';
 
 export interface AgentConstructorParams {
     agentName?: string;

@@ -5,7 +5,7 @@ export function getDataPath(): string {
     try {
         // Check if we're running in Electron
         if (process.versions['electron'] && app) {
-            return path.join(app.getPath('userData'), app.getName());
+            return app.getPath('userData');
         }
     } catch (error) {
         // Not running in Electron

@@ -326,7 +326,6 @@ const App: React.FC = () => {
     const { showSnackbar } = useSnackbar();
 
     return (
-        <IPCProvider>
             <SnackbarProvider>
                 <DataProvider>
                     <ChannelProvider>
@@ -345,7 +344,6 @@ const App: React.FC = () => {
                     </ChannelProvider>
                 </DataProvider>
             </SnackbarProvider>
-        </IPCProvider>
     );
 };
 

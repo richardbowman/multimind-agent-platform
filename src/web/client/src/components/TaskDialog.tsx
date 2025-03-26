@@ -98,12 +98,25 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             onClose={onClose}
             maxWidth="md"
             fullWidth
+            sx={{
+                display: 'flex',
+                overflow: 'hidden'
+            }}
+            slotProps={{
+                paper: {
+                    sx: {
+                        display: 'flex', 
+                        overflowY: 'hidden'
+                    }
+                }
+            }}
         >
             <DialogTitle>Task Details</DialogTitle>
             <DialogContent sx={{
+                display: 'flex', 
                 overflowY: 'hidden'
             }}>
-                <Box sx={{ display: 'flex', gap: 2 }}>
+                <Box sx={{ display: 'flex', overflow: 'hidden', gap: 2 }}>
                     <TaskListPanel 
                         projectTasks={projectTasks}
                         selectedTask={selectedTask}

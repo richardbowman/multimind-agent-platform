@@ -17,15 +17,7 @@ import { ModelType } from "src/llm/types/ModelType";
 import { Artifact } from 'src/tools/artifact';
 import { ContentType } from 'src/llm/promptBuilder';
 import { UUID } from 'src/types/uuid';
-
-export class ConsoleError extends Error {
-    public consoleOutput?: string;
-
-    constructor(message?: string, consoleOutput?: string) {
-        super(message);
-        this.consoleOutput = consoleOutput;
-    }
-}
+import { ConsoleError } from './ConsoleError';
 
 export interface ArtifactInfo {
     title: string;

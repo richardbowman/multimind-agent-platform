@@ -10,6 +10,7 @@ import { useFilteredTasks } from '../contexts/FilteredTaskContext';
 import { TaskType } from '../../../../tools/taskManager';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
 import { CustomScrollbarStyles } from '../styles/styles';
+import { ScrollView } from './shared/ScrollView';
 
 interface WelcomePanelProps {
     onStartTask: (taskId: string) => void;
@@ -37,14 +38,11 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
     const goals = tasks.filter(t => t.type === TaskType.Goal);
 
     return (
-        <Box sx={{
+        <ScrollView sx={{
             display: 'flex',
             flexDirection: 'column',
-            height: 'calc(100vh - 64px)',
-            width: '100%',
-            overflowY: 'auto',
-            p: 4,
-            ...CustomScrollbarStyles
+            flex: 1,
+            p: 4
         }}>
             <Box sx={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -75,12 +73,13 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                             borderColor: 'divider',
                             borderRadius: 2,
                             maxHeight: 200,
-                            overflowY: 'auto',
-                            ...CustomScrollbarStyles
+                            overflowY: 'hidden'
                         }}>
+                            <ScrollView>
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {welcomeMessage}
                             </ReactMarkdown>
+                            </ScrollView>
                         </Paper>
                     )}
                 </Box>
@@ -150,6 +149,6 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                     - Walt Disney
                 </Typography>
             </Box> */}
-        </Box>
+        </ScrollView>
     );
 };

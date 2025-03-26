@@ -22,51 +22,6 @@
         "description": "Just a generic AI agent",
         "enabled": true
       },
-      "ProjectManager": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
-        "handle": "@pm",
-        "description": "Manages projects and coordinates tasks",
-        "enabled": false,
-        "config": {
-          "purpose": "My name is Mesa. \
-  My goal is to help develop standardized processes for your business.",
-          "finalInstructions": "When planning steps for a project: \
-1. Start with 'goal_confirmation' to ensure clear understanding \
-2. Kickoff the 'delegation' to delegate to expert agent",
-          "plannerType": "advanced",
-          "executors": [
-            {
-              "className": "GenerateSlidesExecutor"
-            },
-            {
-              "className": "GenerateDocumentExecutor",
-              "config": {
-                "defaultFormat": "markdown"
-              }
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "GenerateDiagramExecutor"
-            },
-            {
-              "className": "GoalConfirmationExecutor"
-            },
-            {
-              "className": "AnswerQuestionsExecutor"
-            },
-            {
-              "className": "DelegationExecutor"
-            },
-            {
-              "className": "ScheduleTaskExecutor"
-            }
-          ]
-        }
-      },
       "ProductManagerAnalyst": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
@@ -88,11 +43,7 @@
               "className": "GenerateDiagramExecutor"
             },
             {
-              "className": "GenerateDocumentExecutor",
-              "config": {
-                "defaultFormat": "markdown",
-                "artifactTypes": ["prd", "spec", "roadmap"]
-              }
+              "className": "GenerateDocumentExecutor"
             },
             {
               "className": "GenerateRoadmapExecutor"

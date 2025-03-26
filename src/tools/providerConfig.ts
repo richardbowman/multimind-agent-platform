@@ -17,7 +17,8 @@ export class ProviderConfig {
         label: 'API Key',
         category: 'API Keys',
         type: 'string',
-        sensitive: true
+        sensitive: true,
+        visibleWhen: (config) => ![LLMProvider.LLAMA_CPP, LLMProvider.LMSTUDIO].includes(config.type)
     })
     key: string = "";
 
@@ -59,7 +60,8 @@ export class ProviderConfig {
         category: 'LLM Settings',
         type: 'select',
         options: ['Auto', 'CPU-only'],
-        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)'
+        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)',
+        visibleWhen: (config) => config.type === LLMProvider.LLAMA_CPP
     })
     llama_cpp_execution_mode: 'Auto'|'CPU-only' = 'Auto';
 

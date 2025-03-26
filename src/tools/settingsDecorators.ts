@@ -19,7 +19,7 @@ export function ClientSettings(metadata: {
         modelTypeField: string;
     }
     required?: boolean;
-    visibleWhen?: (settings: Settings) => boolean;
+    visibleWhen?: (settings: any) => boolean;
 }) {
     return function (target: any, propertyKey: string) {
         Reflect.defineMetadata('clientSettings', metadata, target, propertyKey);

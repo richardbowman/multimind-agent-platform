@@ -10,7 +10,7 @@ import { TaskStatus } from 'src/schemas/TaskStatus';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
-import { AgentConfig } from 'src/tools/settings';
+import { AgentConfig } from 'src/tools/AgentConfig';
 import { ReplanType, StepResponse, StepResult, StepResultType } from './interfaces/StepResult';
 import { StepExecutor } from './interfaces/StepExecutor';
 import { ExecuteContext, ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';

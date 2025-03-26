@@ -32,7 +32,8 @@ export const TaskDetailsPanel: React.FC<TaskDetailsPanelProps> = ({
     return (
         <Box sx={{ 
             width: '70%',
-            height: '70vh',
+            overflow: 'hidden',
+            display: 'flex',
             pl: 2
         }}>
             <ScrollView>

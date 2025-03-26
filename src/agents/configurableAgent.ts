@@ -5,7 +5,7 @@ import { MultiStepPlanner } from "./planners/multiStepPlanner";
 import { ModelType } from "src/llm/types/ModelType";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
 import { ExecutorConstructorParams } from "./interfaces/ExecutorConstructorParams";
-import { AgentConfig } from 'src/tools/settings';
+import { AgentConfig } from 'src/tools/AgentConfig';
 
 export class ConfigurableAgent extends StepBasedAgent {
     protected agentName: string | undefined;

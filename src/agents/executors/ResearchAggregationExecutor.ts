@@ -15,6 +15,7 @@ import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { FilterCriteria } from 'src/types/FilterCriteria';
 
 /**
  * Executor that combines and synthesizes research findings into comprehensive reports.
@@ -109,7 +110,7 @@ And put the report inside of \`\`\`markdown tags.`;
         Logger.info(`Aggregating results for ${projectId}`);
 
         const queryTexts = [goal];
-        const where: any = {
+        const where: FilterCriteria = {
             "$and": [
                 { "type": { "$eq": ArtifactType.Document } },
                 { "subtype": { "$eq": DocumentSubtype.WebpageSummary }},

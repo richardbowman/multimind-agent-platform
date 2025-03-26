@@ -62,7 +62,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           ref={editorRef}
           markdown={initialContent}
           readOnly={readOnly}
-          darkMode={theme.palette.mode === 'dark'}
+          className={theme.palette.mode === 'dark' ? "dark-theme dark-editor" : ""}
           contentEditableClassName="prose"
           onError={({ error, source }) => {
             console.error(error, source);

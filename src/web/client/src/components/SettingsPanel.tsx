@@ -177,14 +177,10 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const categoryOrder = [
         'Providers',
         'Models',
-        'API Keys',
-        'LLM Settings',
         'Embeddings',
         'Search Settings',
-        'Agents',
-        'Vector DB',
-        'Rate Limiting',
-        'Server Settings',
+        'Text-to-Speech',
+        'Indexing',
         'UI Settings',
     ];
 

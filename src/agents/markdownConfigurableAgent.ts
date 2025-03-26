@@ -7,7 +7,8 @@ import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { createChatHandle, isChatHandle } from 'src/types/chatHandle';
 import path from 'path';
-import { ExecutorConfig } from 'src/tools/settings';
+import { ExecutorConfig } from 'src/tools/AgentConfig';
+import { StringUtils } from 'src/utils/StringUtils';
 
 export interface MarkdownAgentConstructorParams extends AgentConstructorParams {
     configArtifact: ArtifactItem;
@@ -109,8 +110,12 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                                 config[currentSection][key] = value;
                             }
                         } else {
-                            // Add simple checklist items to array
-                            config[currentSection].push(itemText);
+                            if (StringUtils.isString(config[currentSection])) {
+                                config[currentSection] += "\n - " + itemText;
+                            } else {
+                                // Add simple checklist items to array
+                                config[currentSection].push(itemText);
+                            }
                         }
                     } else {
                         // Handle regular list items
@@ -135,8 +140,12 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                                 config[currentSection][key] = value;
                             }
                         } else {
-                            // Add simple list items to array
-                            config[currentSection].push(text);
+                            if (StringUtils.isString(config[currentSection])) {
+                                config[currentSection] += "\n - " + text;
+                            } else {
+                                // Add simple checklist items to array
+                                config[currentSection].push(text);
+                            }
                         }
                     }
                 }

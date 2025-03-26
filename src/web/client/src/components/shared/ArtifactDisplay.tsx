@@ -21,7 +21,7 @@ interface ArtifactDisplayProps {
 }
 
 export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
-    artifact,
+    artifact: providedArtifact,
     showMetadata = true,
     onDelete,
     onEdit,
@@ -30,12 +30,14 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
 }) => {
     const theme = useTheme();
     const isMetadataExpanded = useRef(false);
-    const artifactRef = useRef(artifact);
+    const artifactRef = useRef(providedArtifact);
     const { actions: toolbarActions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
-    artifactRef.current = artifact;
+    artifactRef.current = providedArtifact;
 
     const handleExport = () => {
+        const artifact = artifactRef.current;
+
         let fileContent = '';
         // Clean the filename by removing any existing extensions
         let fileName = (artifact.metadata?.title || 'artifact').replace(/\.[^/.]+$/, "");
@@ -203,7 +205,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                                 color: 'text.primary'
                             }}
                         >
-                            {artifact?.metadata?.title || artifact?.id}
+                            {artifactRef.current?.metadata?.title || artifactRef.current?.id}
                         </Box>
                     </Box>
 
@@ -215,7 +217,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     flex: 1
                 }}
             >
-                {showMetadata && artifact.metadata && isMetadataExpanded.current && (
+                {showMetadata && artifactRef.current.metadata && isMetadataExpanded.current && (
                     <Box 
                         sx={{ 
                             mb: 2,
@@ -235,9 +237,9 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                         >
                             <Box component="tbody">
                                 {[
-                                    ['Type', artifact.type],
-                                    ['ID', artifact.id],
-                                    ...Object.entries(artifact.metadata || {})
+                                    ['Type', artifactRef.current.type],
+                                    ['ID', artifactRef.current.id],
+                                    ...Object.entries(artifactRef.current.metadata || {})
                                 ]
                                 .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
                                 .map(([key, value]) => (
@@ -297,10 +299,10 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     </Box>
                 )}
                 <ContentRenderer 
-                    artifact={artifact}
-                    content={artifact.content}
-                    type={artifact.type}
-                    metadata={artifact.metadata}
+                    artifact={artifactRef.current}
+                    content={artifactRef.current.content}
+                    type={artifactRef.current.type}
+                    metadata={artifactRef.current.metadata}
                 />
             </Box>
         </Box>

@@ -124,10 +124,7 @@ class ClientMethodsImplementation implements ClientMethods {
 
                                 const audio = new Audio();
                                 audio.src = URL.createObjectURL(wav);
-                                await new Promise<void>((resolve) => {
-                                    audio.onended = () => resolve();
-                                    return audio.play();
-                                });
+                                await audio.play();
                             } else if (segment.type === 'tag') {
                                 // Handle SSML tags
                                 const tagMatch = segment.content.match(/break\s+time="(\d+)(ms|s)"/);
@@ -196,8 +193,8 @@ class ClientMethodsImplementation implements ClientMethods {
                     const newMessage = messages.find(m => m.id === prevMessage.id);
                     if (newMessage) {
                         // Only update if the new message is more recent
-                        if (!prevMessage.update_at || 
-                            (newMessage.update_at && newMessage.update_at > prevMessage.update_at)) {
+                        if (!prevMessage.props?.update_at || 
+                            (newMessage.props?.update_at && newMessage.props?.update_at > prevMessage.props?.update_at)) {
                             return newMessage;
                         }
                     }

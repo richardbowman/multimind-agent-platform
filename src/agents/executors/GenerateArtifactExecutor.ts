@@ -86,7 +86,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
 text to find and replace
 =======
 new replacement text
->>>>>>> REPLACE)\n` :
+>>>>>>> REPLACE\n` :
                 operation === "replace" ? `Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...").` :
                     operation === "append" ? "Append to the end of an EXISTING document. Provide ONLY the new content." : "";
     }
@@ -134,11 +134,12 @@ new replacement text
         const maxRetries = 1; // Only retry once after getting full content
 
         let artifactIndex = -1, existingArtifact: Artifact | null = null;
-
+        
         return withRetry<StepResult<ArtifactGenerationStepResponse>>(async () => {
             const conversation = await this.createBasePrompt(params);
             const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
             const tag = `artifact_${this.getSupportedFormat()}`;
+            const statusMessages : string[] = [];
 
             // Add content formatting rules
             if (this.addContentFormattingRules) this.addContentFormattingRules(conversation);
@@ -245,18 +246,17 @@ new replacement text
 
                                 // Parse the edit content looking for conflict markers
                                 const conflictRegex = /<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> REPLACE/g;
-                                let finalContent = existingContent;
-                                let match;
+                                let finalContent = existingContent.toString();
+                                let match, replaceBlocks = 0, unmatchedBlocks=0;
 
                                 while ((match = conflictRegex.exec(editContent)) !== null) {
+                                    replaceBlocks++;
                                     const [fullMatch, searchText, replacementText] = match;
-                                    // Replace the search text with replacement text in the existing content
-                                    finalContent = finalContent.toString().replace(searchText, replacementText);
-                                }
-
-                                // If no conflict markers were found, append the edit content
-                                if (!match) {
-                                    finalContent = `${existingContent}\n${editContent}`;
+                                    if (finalContent.includes(searchText)) {
+                                        finalContent = finalContent.replace(searchText, replacementText);
+                                    } else {
+                                        statusMessages.push('The search text "${searchText}" was not found. Please sure you provide the exact text from the document.');
+                                    }
                                 }
 
                                 artifactUpdate.content = finalContent;
@@ -284,7 +284,7 @@ new replacement text
                     replan: ReplanType.Allow,
                     response: {
                         type: StepResponseType.GeneratedArtifact,
-                        status: result.message,
+                        status: `${result.message}${statusMessages.length >0 ? "\n\n" + statusMessages.join(`\n`) : ""}`,
                         data: {
                             generatedArtifactId: artifact?.id,
                             requestFullContext: this.requestFullContext()
@@ -334,7 +334,7 @@ new replacement text
     protected stripCodeBlockFormatting(content: string): string {
         // Only remove outer formatting tags if the entire content is wrapped in them
         const outerFormatRegex = /^```[a-zA-Z]*\n([\s\S]*)\n```$/;
-        const match = content.match(outerFormatRegex);
+        const match = content?.match(outerFormatRegex);
         return match ? match[1].trim() : content;
     }
 

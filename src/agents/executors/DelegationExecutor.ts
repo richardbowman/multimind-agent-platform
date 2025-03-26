@@ -207,8 +207,11 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
                 finished: false,
                 async: true,
                 response: {
-                    status: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
-                        taskDetails.join('\n')
+                    status: responseMessage,
+                    data: {
+                        projectName,
+                        projectId: project.id
+                    }
                 }
             };
 

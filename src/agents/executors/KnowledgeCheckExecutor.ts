@@ -72,7 +72,7 @@ export class KnowledgeCheckExecutor extends BaseStepExecutor<StepResponse> {
                 try {
                     const results = await this.vectorDB.query(
                         [query], 
-                        undefined, 
+                        {}, 
                         5
                     );
                     

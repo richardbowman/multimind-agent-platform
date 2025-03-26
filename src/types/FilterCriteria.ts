@@ -17,11 +17,10 @@ export type FilterValue =
     | Date 
     | null 
     | string[] 
-    | number[]
-    | { [key: string]: string | number }; // Allow enum-like objects
+    | number[];
 
 export type FilterCriteria = {
-    [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria | undefined;
+    [key: string]: FilterValue | { [operator in FilterOperator]?: FilterValue } | FilterCriteria | FilterCriteria[] | undefined;
 } & {
     $and?: FilterCriteria[];
     $or?: FilterCriteria[];

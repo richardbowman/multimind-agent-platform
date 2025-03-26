@@ -1,9 +1,9 @@
 import React, { useRef, useState, useEffect, useCallback, forwardRef } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
-import { CustomScrollbarStyles } from '../../styles/styles';
-
+import { alpha } from '@mui/system';       
 import { SxProps, Theme } from '@mui/material/styles';
+import { CustomScrollbarStyles } from '../../styles/styles';
 
 interface ScrollViewProps {
   children: React.ReactNode;
@@ -73,25 +73,25 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
   }, [checkScrollPosition]);
 
   return (
-    <Box 
+    <Box
+      className={`scroll-view ${className}`}
       sx={{
-        position: 'relative',
-        height: '100%',
         overflow: 'hidden',
-        ...(className ? { [className]: true } : {})
+        ...sx
       }}
     >
       {showTopGradient && (
         <Box
           sx={{
-            position: 'absolute',
+            position: 'relative',
             left: 0,
             right: 0,
             height: '20px',
             pointerEvents: 'none',
+            marginBottom: '-20px',
             zIndex: 1,
             top: 0,
-            background: `linear-gradient(to bottom, ${theme.palette.background.paper} 0%, rgba(255,255,255,0) 100%)`
+            background: `linear-gradient(to bottom, ${theme.palette.background.paper} 0%, ${alpha(theme.palette.background.paper,0)} 100%)`
           }}
         />
       )}
@@ -120,10 +120,11 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
       {showBottomGradient && (
         <Box
           sx={{
-            position: 'absolute',
+            position: 'relative',
             left: 0,
             right: 0,
             height: '20px',
+            marginTop: '-20px',
             pointerEvents: 'none',
             zIndex: 1,
             bottom: 0,

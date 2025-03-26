@@ -37,13 +37,6 @@ export class Settings {
     tts: TTSSettings = new TTSSettings();
 
     @ClientSettings({
-        label: 'Agents',
-        category: 'Agents',
-        type: 'section'
-    })
-    agents: Record<string, AgentBuilderConfig> = {};
-
-    @ClientSettings({
         label: 'Search Provider',
         category: 'Search Settings',
         type: 'select',
