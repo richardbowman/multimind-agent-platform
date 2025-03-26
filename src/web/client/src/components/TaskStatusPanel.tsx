@@ -72,7 +72,7 @@ export const TaskStatusPanel: React.FC = () => {
     const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [taskTypes, setTaskTypes] = useState<TaskType[]>([]);
+    const [taskTypes, setTaskTypes] = useState<TaskType[]>([TaskType.Step, TaskType.Recurring, TaskType.Standard]);
     
     // Track task positions for animation
     useEffect(() => {
