@@ -1,5 +1,5 @@
 ---
-agent: MultiMind
+agent: "Onboarding Consultant"
 title: "About MultiMind"
 ---
 
