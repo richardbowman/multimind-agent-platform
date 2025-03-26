@@ -148,7 +148,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                                 display: 'flex',
                                 gap: 0.5,
                                 alignItems: 'center',
-                                color: task.complete ? 'text.disabled' : 'text.secondary',
+                                color: task.complete 
+                                    ? 'text.disabled' 
+                                    : task.inProgress
+                                        ? task.props?.result?.async
+                                            ? 'warning.main'
+                                            : 'primary.main'
+                                        : 'text.secondary',
                                 textDecoration: task.complete ? 'line-through' : 'none',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
