@@ -360,18 +360,27 @@ export const MicrophoneButton: React.FC = () => {
     };
 
     return (
-        <IconButton
+        <Box
+            component="button"
             onClick={handleRecording}
             sx={{
-                backgroundColor: isRecording ? 'error.main' : 'action.selected',
-                color: isRecording ? 'error.contrastText' : 'text.primary',
+                cursor: 'pointer',
+                padding: '6px 8px',
+                border: 'none',
+                borderRadius: '4px',
+                backgroundColor: isRecording ? 'error.main' : 'transparent',
+                color: isRecording ? 'error.contrastText' : 'text.secondary',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
                 '&:hover': {
                     backgroundColor: isRecording ? 'error.dark' : 'action.hover'
                 }
             }}
         >
-            {isRecording ? <Stop /> : <Mic />}
-        </IconButton>
+            {isRecording ? <Stop fontSize="small" /> : <Mic fontSize="small" />}
+        </Box>
     );
 };
 

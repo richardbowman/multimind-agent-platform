@@ -346,20 +346,31 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                 )}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ position: 'relative' }}>
-                    <IconButton
+                    <Box
+                        component="button"
                         ref={attachmentButtonRef}
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowAttachmentMenu(prev => !prev);
                         }}
                         sx={{
+                            cursor: 'pointer',
+                            padding: '6px 8px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            backgroundColor: 'transparent',
+                            color: 'text.secondary',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease',
                             position: 'relative',
                             '&:hover': {
                                 backgroundColor: 'action.hover'
                             }
                         }}
                     >
-                        <Attachment />
+                        <Attachment fontSize="small" />
                         {(pendingArtifacts.length > 0 || pendingFiles.length > 0) && (
                             <Box
                                 sx={{
@@ -381,7 +392,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                                 {pendingArtifacts.length + pendingFiles.length}
                             </Box>
                         )}
-                    </IconButton>
+                    </Box>
                     <Menu
                         open={showAttachmentMenu}
                         onClose={() => setShowAttachmentMenu(false)}
