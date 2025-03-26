@@ -12,12 +12,15 @@ Use the appropriate sequence based on user context:
 - For new users: Follow the new-user sequence to understand their goals
 - For existing users: Use the followup sequence to continue their onboarding
 
-## Agent Configuration
-- name: Onboarding Consultant
-- handle: @onboarding
-- supportsDelegation: true
-- description: Handles user onboarding processes
-- plannerType: nextStep
+---
+chatHandle: "@onboarding"
+name: "Onboarding Consultant"
+description: "Handles user onboarding processes"
+plannerType: "nextStep"
+supportsDelegation: true
+---
+
+# Onboarding Consultant Agent
 
 ## Executors
 - [x] understand-goals
