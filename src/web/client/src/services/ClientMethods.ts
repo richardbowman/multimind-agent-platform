@@ -16,13 +16,14 @@ import { TaskEventType } from "../../../../shared/TaskEventType";
 import { TaskContextType } from '../contexts/TaskContext';
 import { UUID } from '../../../../types/uuid';
 import { LLMLogEntry } from '../../../../llm/LLMLogModel';
-
+import { AsyncQueue } from '../../../../helpers/asyncQueue';
 
 // Initialize TTS system
 let ttsSession : tts.TtsSession|null = null;
 
 
 class ClientMethodsImplementation implements ClientMethods {
+    private queue = new AsyncQueue();
 
     constructor(private ipcService: BaseRPCService, 
         private snackbarContext: SnackbarContextType, 
@@ -43,157 +44,159 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     async onMessage(messages: ClientMessage[]) {
-        console.debug('Messages received from backend', messages);
+        await this.queue.enqueue(async () => {
+            console.debug('Messages received from backend', messages);
 
-        // Check for messages with verbal conversation flag
-        const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');
-        for (const message of messages) {
-            const rootPost = this.messageContext.messages.find(m => message.props?.["root-id"] === m.id)
+            // Check for messages with verbal conversation flag
+            const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');
+            for (const message of messages) {
+                const rootPost = this.messageContext.messages.find(m => message.props?.["root-id"] === m.id)
 
-            if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
-                try {
-                    // Parse SSML and split into segments
-                    const ssmlRegex = /<speak>(.*?)<\/speak>/s;
-                    const ssmlMatch = message.message.match(ssmlRegex);
-                    let textContent = ssmlMatch ? ssmlMatch[1] : message.message;
-                    
-                    // Strip markdown formatting
-                    textContent = textContent
-                        .replace(/(\*\*|__)(.*?)\1/g, '$2') // bold
-                        .replace(/(\*|_)(.*?)\1/g, '$2')     // italic
-                        .replace(/~~(.*?)~~/g, '$1')         // strikethrough
-                        .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // inline code
-                        .replace(/\[(.*?)\]\(.*?\)/g, '$1')  // links
-                        .replace(/^#+\s+(.*)/gm, '$1')       // headers
-                        .replace(/\n\s*\n/g, '\n')           // extra newlines
-                        .replace(/!\[.*?\]\(.*?\)/g, '');    // images
-                    
-                    // Remove emojis
-                    textContent = textContent.replace(
-                        /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, 
-                        ''
-                    );
+                if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
+                    try {
+                        // Parse SSML and split into segments
+                        const ssmlRegex = /<speak>(.*?)<\/speak>/s;
+                        const ssmlMatch = message.message.match(ssmlRegex);
+                        let textContent = ssmlMatch ? ssmlMatch[1] : message.message;
+                        
+                        // Strip markdown formatting
+                        textContent = textContent
+                            .replace(/(\*\*|__)(.*?)\1/g, '$2') // bold
+                            .replace(/(\*|_)(.*?)\1/g, '$2')     // italic
+                            .replace(/~~(.*?)~~/g, '$1')         // strikethrough
+                            .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // inline code
+                            .replace(/\[(.*?)\]\(.*?\)/g, '$1')  // links
+                            .replace(/^#+\s+(.*)/gm, '$1')       // headers
+                            .replace(/\n\s*\n/g, '\n')           // extra newlines
+                            .replace(/!\[.*?\]\(.*?\)/g, '');    // images
+                        
+                        // Remove emojis
+                        textContent = textContent.replace(
+                            /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, 
+                            ''
+                        );
 
-                    // Split into segments based on SSML tags or punctuation
-                    const segments = [];
-                    let currentText = '';
-                    let inTag = false;
-                    let tagContent = '';
-                    
-                    for (let i = 0; i < textContent.length; i++) {
-                        const char = textContent[i];
-                        if (char === '<') {
-                            inTag = true;
-                            if (currentText.trim()) {
-                                segments.push({type: 'text', content: currentText.trim()});
-                                currentText = '';
+                        // Split into segments based on SSML tags or punctuation
+                        const segments = [];
+                        let currentText = '';
+                        let inTag = false;
+                        let tagContent = '';
+                        
+                        for (let i = 0; i < textContent.length; i++) {
+                            const char = textContent[i];
+                            if (char === '<') {
+                                inTag = true;
+                                if (currentText.trim()) {
+                                    segments.push({type: 'text', content: currentText.trim()});
+                                    currentText = '';
+                                }
+                                continue;
                             }
-                            continue;
-                        }
-                        if (char === '>') {
-                            inTag = false;
-                            segments.push({type: 'tag', content: tagContent});
-                            tagContent = '';
-                            continue;
-                        }
-                        if (inTag) {
-                            tagContent += char;
-                        } else {
-                            currentText += char;
-                        }
-                    }
-                    if (currentText.trim()) {
-                        segments.push({type: 'text', content: currentText.trim()});
-                    }
-
-                    // Process each segment
-                    for (const segment of segments) {
-                        if (segment.type === 'text') {
-                            // Create audio context and stream
-                            const audioContext = new AudioContext();
-                            const mediaStreamDestination = audioContext.createMediaStreamDestination();
-                            const audioElement = new Audio();
-                            audioElement.srcObject = mediaStreamDestination.stream;
-                            
-                            const wav = await tts.predict({
-                                voiceId: 'en_US-ryan-high',
-                                text: segment.content
-                            });
-
-                            const audio = new Audio();
-                            audio.src = URL.createObjectURL(wav);
-                            await new Promise<void>((resolve) => {
-                                audio.onended = () => resolve();
-                                audio.play();
-                            });
-                        } else if (segment.type === 'tag') {
-                            // Handle SSML tags
-                            const tagMatch = segment.content.match(/break\s+time="(\d+)(ms|s)"/);
-                            if (tagMatch) {
-                                const duration = parseInt(tagMatch[1]);
-                                const unit = tagMatch[2];
-                                const pauseDuration = unit === 's' ? duration * 1000 : duration;
-                                await new Promise(resolve => setTimeout(resolve, pauseDuration));
+                            if (char === '>') {
+                                inTag = false;
+                                segments.push({type: 'tag', content: tagContent});
+                                tagContent = '';
+                                continue;
+                            }
+                            if (inTag) {
+                                tagContent += char;
+                            } else {
+                                currentText += char;
                             }
                         }
+                        if (currentText.trim()) {
+                            segments.push({type: 'text', content: currentText.trim()});
+                        }
+
+                        // Process each segment
+                        for (const segment of segments) {
+                            if (segment.type === 'text') {
+                                // Create audio context and stream
+                                const audioContext = new AudioContext();
+                                const mediaStreamDestination = audioContext.createMediaStreamDestination();
+                                const audioElement = new Audio();
+                                audioElement.srcObject = mediaStreamDestination.stream;
+                                
+                                const wav = await tts.predict({
+                                    voiceId: 'en_US-ryan-high',
+                                    text: segment.content
+                                });
+
+                                const audio = new Audio();
+                                audio.src = URL.createObjectURL(wav);
+                                await new Promise<void>((resolve) => {
+                                    audio.onended = () => resolve();
+                                    return audio.play();
+                                });
+                            } else if (segment.type === 'tag') {
+                                // Handle SSML tags
+                                const tagMatch = segment.content.match(/break\s+time="(\d+)(ms|s)"/);
+                                if (tagMatch) {
+                                    const duration = parseInt(tagMatch[1]);
+                                    const unit = tagMatch[2];
+                                    const pauseDuration = unit === 's' ? duration * 1000 : duration;
+                                    await new Promise(resolve => setTimeout(resolve, pauseDuration));
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error playing TTS:', error);
                     }
-                } catch (error) {
-                    console.error('Error playing TTS:', error);
                 }
             }
-        }
 
-        // Find the latest message from a different channel/thread or not the current thread root
-        const latestMessage = messages
-            .filter(message =>
-                message.channel_id !== this.messageContext.currentChannelId ||
-                (message.channel_id === this.messageContext.currentChannelId &&
-                    message.thread_id !== this.messageContext.currentThreadId &&
-                    message.id !== this.messageContext.currentThreadId)
-            )
-            .sort((a, b) => b.create_at - a.create_at)[0];
+            // Find the latest message from a different channel/thread or not the current thread root
+            const latestMessage = messages
+                .filter(message =>
+                    message.channel_id !== this.messageContext.currentChannelId ||
+                    (message.channel_id === this.messageContext.currentChannelId &&
+                        message.thread_id !== this.messageContext.currentThreadId &&
+                        message.id !== this.messageContext.currentThreadId)
+                )
+                .sort((a, b) => b.create_at - a.create_at)[0];
 
-        if (latestMessage) {
-            const channelName = this.channelContext.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
-            this.snackbarContext.showSnackbar({
-                message: `New message in ${channelName}`,
-                severity: 'info',
-                persist: true,
-                onClick: () => {
-                    this.messageContext.setCurrentChannelId(latestMessage.channel_id);
-                    this.messageContext.setCurrentThreadId(latestMessage.thread_id || null);
-                    this.messageContext.markMessageRead(latestMessage.props?.["root-id"]);
+            if (latestMessage) {
+                const channelName = this.channelContext.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
+                this.snackbarContext.showSnackbar({
+                    message: `New message in ${channelName}`,
+                    severity: 'info',
+                    persist: true,
+                    onClick: () => {
+                        this.messageContext.setCurrentChannelId(latestMessage.channel_id);
+                        this.messageContext.setCurrentThreadId(latestMessage.thread_id || null);
+                        this.messageContext.markMessageRead(latestMessage.props?.["root-id"]);
+                    }
+                });
+                
+            };
+
+            // Track unread messages
+            for (const message of messages) {
+                if (message.channel_id !== this.messageContext.currentChannelId ||
+                    (message.thread_id && message.thread_id !== this.messageContext.currentThreadId)) {
+                    if (latestMessage.props?.["root-id"])        {
+                        this.messageContext.setUnreadChildren((prev) => (new Set([
+                            ...prev||[],
+                            latestMessage.props!["root-id"]
+                        ])));
+                    }
                 }
+            }
+
+            // Get all unique artifact IDs from messages
+            const artifactIds : UUID[] = messages.flatMap(m => m.props?.artifactIds || []).filter(a => !!a);
+                
+            if (artifactIds.length > 0) {
+                this.artifactProvider.updateSpecificArtifacts(artifactIds);
+            }
+
+            // Update messages directly in context
+            this.messageContext.setMessages(prev => {
+                const filteredPrev = prev.filter(prevMessage =>
+                    !messages.some(newMessage => newMessage.id === prevMessage.id)
+                );
+                return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
             });
-            
-        };
-
-        // Track unread messages
-        for (const message of messages) {
-            if (message.channel_id !== this.messageContext.currentChannelId ||
-                (message.thread_id && message.thread_id !== this.messageContext.currentThreadId)) {
-                if (latestMessage.props?.["root-id"])        {
-                    this.messageContext.setUnreadChildren((prev) => (new Set([
-                        ...prev||[],
-                        latestMessage.props!["root-id"]
-                    ])));
-                }
-            }
-        }
-
-        // Get all unique artifact IDs from messages
-        const artifactIds : UUID[] = messages.flatMap(m => m.props?.artifactIds || []).filter(a => !!a);
-            
-        if (artifactIds.length > 0) {
-            this.artifactProvider.updateSpecificArtifacts(artifactIds);
-        }
-
-        // Update messages directly in context
-        this.messageContext.setMessages(prev => {
-            const filteredPrev = prev.filter(prevMessage =>
-                !messages.some(newMessage => newMessage.id === prevMessage.id)
-            );
-            return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
         });
     }
 
@@ -233,7 +236,15 @@ class ClientMethodsImplementation implements ClientMethods {
     
         if (settings.tts.enabled) {
             try {
-                await tts.download(settings.tts.voiceId);
+                const stored = await tts.stored();
+                if (!stored.includes(settings.tts.voiceId)) {
+                    await tts.download(settings.tts.voiceId, (progress) => {
+                        snackBar.showSnackbar({
+                            message: `Downloading ${progress.url} - ${Math.round(progress.loaded * 100 / progress.total)}%`,
+                            percentComplete: progress.loaded * 100 / progress.total
+                        });
+                    });
+                }
             } catch (error) {
                 throw error;
             }
