@@ -8,7 +8,7 @@ import Attachment from '@mui/icons-material/Attachment';
 import { MicrophoneButton } from './MicrophoneButton';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
-import { Box, Menu, MenuItem } from '@mui/material';
+import { Box, Menu, MenuItem, IconButton } from '@mui/material';
 import { AttachmentCard } from './shared/AttachmentCard';
 import { UUID } from '../../../../types/uuid';
 import { useArtifacts } from '../contexts/ArtifactContext';
@@ -346,53 +346,42 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                 )}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ position: 'relative' }}>
-                    <button
+                    <IconButton
                         ref={attachmentButtonRef}
-                        style={{
-                            cursor: 'pointer',
-                            padding: '8px 12px',
-                            borderRadius: '6px',
-                            backgroundColor: '#444',
-                            border: 'none',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#fff',
-                            transition: 'all 0.2s ease',
-                            position: 'relative'
-                        }}
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowAttachmentMenu(prev => !prev);
                         }}
-                        onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.backgroundColor = '#555';
-                        }}
-                        onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.backgroundColor = '#444';
+                        sx={{
+                            position: 'relative',
+                            '&:hover': {
+                                backgroundColor: 'action.hover'
+                            }
                         }}
                     >
                         <Attachment />
-                        {pendingArtifacts.length > 0 || pendingFiles.length > 0 && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '-4px',
-                                right: '-4px',
-                                backgroundColor: '#646cff',
-                                color: '#fff',
-                                borderRadius: '50%',
-                                width: '16px',
-                                height: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '10px',
-                                fontWeight: 'bold'
-                            }}>
+                        {(pendingArtifacts.length > 0 || pendingFiles.length > 0) && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    right: 0,
+                                    backgroundColor: 'primary.main',
+                                    color: 'primary.contrastText',
+                                    borderRadius: '50%',
+                                    width: 16,
+                                    height: 16,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.625rem',
+                                    fontWeight: 'bold'
+                                }}
+                            >
                                 {pendingArtifacts.length + pendingFiles.length}
-                            </div>
+                            </Box>
                         )}
-                    </button>
+                    </IconButton>
                     <Menu
                         open={showAttachmentMenu}
                         onClose={() => setShowAttachmentMenu(false)}
