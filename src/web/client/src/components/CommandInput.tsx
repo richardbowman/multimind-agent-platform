@@ -49,6 +49,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     const [lastMessage, setLastMessage] = useState<{ message: string, artifactIds?: UUID[] } | null>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const attachmentButtonRef = useRef<HTMLButtonElement>(null);
     
     const { channels } = useChannels();    
     const { filteredTasks: tasks } = useFilteredTasks();    
@@ -346,6 +347,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ position: 'relative' }}>
                     <button
+                        ref={attachmentButtonRef}
                         style={{
                             cursor: 'pointer',
                             padding: '8px 12px',
@@ -394,7 +396,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                     <Menu
                         open={showAttachmentMenu}
                         onClose={() => setShowAttachmentMenu(false)}
-                        anchorEl={inputRef.current}
+                        anchorEl={attachmentButtonRef.current}
                         anchorOrigin={{
                             vertical: 'top',
                             horizontal: 'left',
