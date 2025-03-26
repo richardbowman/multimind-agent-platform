@@ -49,6 +49,20 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
 
     private async parseMarkdownConfig(content: string): Promise<Record<string, any>> {
         const config: Record<string, any> = {};
+        
+        // First try to parse YAML frontmatter
+        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
+        if (frontmatterMatch) {
+            try {
+                const yaml = await import('yaml');
+                const frontmatter = yaml.parse(frontmatterMatch[1]);
+                Object.assign(config, frontmatter);
+            } catch (error) {
+                Logger.error('Failed to parse YAML frontmatter:', error);
+            }
+        }
+
+        // Parse the rest of the markdown content
         const { marked } = await import('marked');
         const tokens = marked.lexer(content);
 
@@ -156,17 +170,19 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
     }
 
     private async applyMarkdownConfig(config: Record<string, any>) {
-        // Apply basic agent configuration
-        if (config.agent_configuration) {
-            this.agentName = config.agent_configuration.name;
-            this.description = config.agent_configuration.description;
+        // Apply basic agent configuration from frontmatter
+        if (config.name) {
+            this.agentName = config.name;
+        }
+        if (config.description) {
+            this.description = config.description;
         }
 
         if (!config.purpose) {
             Logger.warn(`Agent ${this.agentName} missing purpose`);
         }
 
-        // Map executors action types back to class names for ConfigurableAgent to load
+        // Map executors from frontmatter
         if (config.executors) {
             let executors: string[] = [];
             // Handle both list and object formats
@@ -188,9 +204,9 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         // Apply any additional configuration from the markdown
         this.agentConfig = {
             ...this.agentConfig,
-            plannerType: config.agent_configuration?.plannerType,
-            supportsDelegation: config.agent_configuration?.supportsDelegation,
-            description: config.agent_configuration?.description,
+            plannerType: config.plannerType,
+            supportsDelegation: config.supportsDelegation,
+            description: config.description,
             ...config
         };
     }

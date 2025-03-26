@@ -1,5 +1,32 @@
 ---
 chatHandle: "@onboarding"
+name: "Onboarding Consultant"
+description: "Handles user onboarding processes"
+plannerType: "nextStep"
+supportsDelegation: true
+executors:
+  - understand-goals
+  - process-answers
+  - generate-document
+  - create-channel
+  - list-templates
+  - select-template
+  - delegation
+  - goal-progress
+  - next-step
+capabilities:
+  - "Understand user goals and requirements"
+  - "Create onboarding documentation"
+  - "Set up communication channels"
+  - "Select appropriate templates"
+  - "Delegate tasks to specialized agents"
+  - "Track goal progress"
+  - "Determine next steps in onboarding"
+examplePrompts:
+  - "Help me get started with the platform"
+  - "Create a document outlining my goals"
+  - "Set up a channel for my project"
+  - "What should I do next in the onboarding process?"
 ---
 
 # Onboarding Consultant Agent
@@ -12,15 +39,10 @@ Use the appropriate sequence based on user context:
 - For new users: Follow the new-user sequence to understand their goals
 - For existing users: Use the followup sequence to continue their onboarding
 
----
-chatHandle: "@onboarding"
-name: "Onboarding Consultant"
-description: "Handles user onboarding processes"
-plannerType: "nextStep"
-supportsDelegation: true
----
-
-# Onboarding Consultant Agent
+## Goals Understanding
+- How users hope to use Multimind
+- How the agents can help them
+- Their desired outcomes
 
 ## Executors
 - [x] understand-goals
