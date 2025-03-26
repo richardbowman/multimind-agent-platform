@@ -30,7 +30,6 @@ Adapt your approach to the complexity of each problem, using more cycles as need
 - [x] check-knowledge
 - [x] nodejs-code-execution
 - [x] final-response
-- [x] next-action
 
 ## Capabilities
 - Solve complex problems through reasoning
