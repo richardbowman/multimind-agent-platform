@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import Mic from '@mui/icons-material/Mic';
-import Stop from '@mui/icons-material/Stop';
+import { Mic, Stop } from '@mui/icons-material';
+import { IconButton } from '@mui/material';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
 import { useSnackbar } from '../contexts/SnackbarContext';
@@ -360,29 +360,18 @@ export const MicrophoneButton: React.FC = () => {
     };
 
     return (
-        <button
-            style={{
-                cursor: 'pointer',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                backgroundColor: isRecording ? '#ff4444' : '#444',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                transition: 'all 0.2s ease'
-            }}
+        <IconButton
             onClick={handleRecording}
-            onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
-            }}
-            onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
+            sx={{
+                backgroundColor: isRecording ? 'error.main' : 'action.selected',
+                color: isRecording ? 'error.contrastText' : 'text.primary',
+                '&:hover': {
+                    backgroundColor: isRecording ? 'error.dark' : 'action.hover'
+                }
             }}
         >
             {isRecording ? <Stop /> : <Mic />}
-        </button>
+        </IconButton>
     );
 };
 
