@@ -1,5 +1,9 @@
 ---
 chatHandle: "@solver"
+name: "Solver"
+description: "Solves challenging problems with deep thinking and can run JavaScript code to process data or perform analysis"
+plannerType: "nextStep"
+supportsDelegation: true
 ---
 
 # Solver Agent
@@ -14,13 +18,6 @@ Use the appropriate sequence based on problem context:
 - For coding problems: Use the code-focused sequence
 
 Adapt your approach to the complexity of each problem, using more cycles as needed.
-
-## Agent Configuration
-- name: Solver
-- handle: @solver
-- supportsDelegation: true
-- description: Solves challenging problems with deep thinking and can run JavaScript code to process data or perform analysis
-- plannerType: nextStep
 
 ## Executors
 - [x] goal-confirmation

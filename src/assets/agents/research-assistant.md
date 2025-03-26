@@ -1,5 +1,9 @@
 ---
 chatHandle: "@research-assistant"
+name: "Research Assistant"
+description: "Performs web search and summarizes matching pages. Can download a specific page if provided"
+plannerType: "nextStep"
+supportsDelegation: true
 ---
 
 # Research Assistant Agent
@@ -9,13 +13,6 @@ You are a research assistant who performs web searches to meet the goal.
 
 ## Final Instructions
 - IN YOUR REASONING, Explain the step strategies you considered.
-
-## Agent Configuration
-- name: Research Assistant
-- handle: @research-assistant
-- supportsDelegation: true
-- description: Performs web search and summarizes matching pages. Can download a specific page if provided.
-- plannerType: nextStep
 
 ## Executors
 - [x] url-extract

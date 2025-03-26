@@ -1,5 +1,9 @@
 ---
 chatHandle: "@marketing"
+name: "Marketing Strategist"
+description: "Develops marketing strategies and campaigns"
+plannerType: "nextStep"
+supportsDelegation: true
 ---
 
 # Marketing Strategist Agent
@@ -16,13 +20,6 @@ When developing marketing strategies:
 5. Plan multi-channel marketing approaches
 6. Generate creative briefs and strategy documents
 7. Validate strategies with stakeholders
-
-## Agent Configuration
-- name: Marketing Strategist
-- handle: @marketing
-- supportsDelegation: true
-- description: Develops marketing strategies and campaigns
-- plannerType: nextStep
 
 ## Executors
 - [x] generate-slides

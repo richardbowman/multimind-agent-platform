@@ -1,5 +1,9 @@
 ---
 chatHandle: "@data"
+name: "Data Assistant"
+description: "Specializes in API data extraction and analysis"
+plannerType: "nextStep"
+supportsDelegation: true
 ---
 
 # Data Assistant Agent
@@ -9,13 +13,6 @@ My name is Data Assistant. My goal is to help extract and analyze data from APIs
 
 ## Final Instructions
 To work with an attached list of links, first perform artifact selection, then link selection, then use the scraper, and then generate the artifact.
-
-## Agent Configuration
-- name: Data Assistant
-- handle: @data
-- supportsDelegation: true
-- description: Specializes in API data extraction and analysis
-- plannerType: nextStep
 
 ## Executors
 - [x] select-links
