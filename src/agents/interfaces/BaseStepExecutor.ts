@@ -98,40 +98,28 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         if (!threadPosts?.length) return [];
 
         const messages: Array<{role: string, content: string}> = [];
-        const stepsByPost = new Map<string, StepResult<any>[]>();
-
-        // Group steps by their parent post
-        threadPosts.forEach(post => {
-            if (post.props?.result) {
-                const parentPostId = post.props.userPostId || post.thread_id || post.id;
-                const steps = stepsByPost.get(parentPostId) || [];
-                steps.push(post.props.result);
-                stepsByPost.set(parentPostId, steps);
-            }
-        });
-
-        // Create a message for each post and its steps
+        
+        // Process posts in chronological order
         for (const post of threadPosts) {
-            if (!post.props?.partial) { // Skip partial/transient posts
-                const steps = stepsByPost.get(post.id) || [];
-                if (steps.length > 0) {
-                    // Add user message
-                    messages.push({
-                        role: 'user',
-                        content: `${handles?.[post.user_id] || 'User'}: ${post.message}`
-                    });
+            if (post.props?.partial) continue; // Skip partial/transient posts
 
-                    // Add step responses as assistant messages
-                    for (const step of steps) {
-                        if (step.response.message || step.response.reasoning) {
-                            messages.push({
-                                role: 'assistant',
-                                content: [
-                                    step.response.message,
-                                    step.response.reasoning
-                                ].filter(Boolean).join('\n\n')
-                            });
-                        }
+            // Add the user's original message
+            messages.push({
+                role: 'user',
+                content: `${handles?.[post.user_id] || 'User'}: ${post.message}`
+            });
+
+            // Add any step responses from this post
+            if (post.props?.steps?.length) {
+                for (const step of post.props.steps) {
+                    if (step.response?.message || step.response?.reasoning) {
+                        messages.push({
+                            role: 'assistant',
+                            content: [
+                                step.response.message,
+                                step.response.reasoning
+                            ].filter(Boolean).join('\n\n')
+                        });
                     }
                 }
             }
