@@ -1,5 +1,5 @@
 import { LLMContext } from 'src/llm/ILLMService';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputInstructionsParams } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { Project } from 'src/tools/taskManager';
 import { FilterCriteria } from 'src/types/FilterCriteria';
@@ -57,7 +57,7 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
         return this.createModelConversation(prompt, params, methodName);
     }
 
-    private createModelConversation<R extends StepResponse>(prompt: any, params: Partial<ExecuteParams>, methodName?: string): ModelConversation<R> {
+    private createModelConversation(prompt: any, params: Partial<ExecuteParams>, methodName?: string): ModelConversation<R> {
         return new ModelConversationImpl<R>(this, prompt, params, methodName);
     }
 }
@@ -85,12 +85,12 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         return this;
     }
 
-    getInstructions(): string[] {
+    getInstructions(): string|Promise<string> {
         return this.prompt.getInstructions();
     }
 
-    addOutputInstructions(instructions: string): this {
-        this.prompt.addOutputInstructions(instructions);
+    addOutputInstructions(params: OutputInstructionsParams): this {
+        this.prompt.addOutputInstructions(params);
         return this;
     }
 
