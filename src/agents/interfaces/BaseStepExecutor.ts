@@ -1,5 +1,5 @@
 import { LLMContext } from 'src/llm/ILLMService';
-import { ContentType, OutputInstructionsParams } from 'src/llm/promptBuilder';
+import { ContentType, OutputInstructionsParams, PromptBuilder } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { Project } from 'src/tools/taskManager';
 import { FilterCriteria } from 'src/types/FilterCriteria';
@@ -65,7 +65,7 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
 class ModelConversationImpl<R extends StepResponse> implements ModelConversation<R> {
     constructor(
         private readonly stepExecutor: BaseStepExecutor<R>,
-        private readonly prompt: any,
+        private readonly prompt: PromptBuilder,
         private readonly params: Partial<ExecuteParams>,
         private readonly methodName?: string
     ) {}
@@ -107,7 +107,7 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                 posts: this.params.context.threadPosts,
                 handles: input.context?.handles
             };
-            stepHistory = await this.prompt.registry.renderSteps(stepsContent);
+            stepHistory = await this.prompt.renderSteps(stepsContent);
         }
 
         // Construct messages array with step history first
