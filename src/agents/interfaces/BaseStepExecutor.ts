@@ -96,6 +96,29 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
 
     async generate(input: Partial<GenerateInputParams>): Promise<ModelConversationResponse> {
         const traceId = createUUID();
+        
+        // Get step history separately
+        let stepHistory = '';
+        if (this.params.context?.threadPosts) {
+            const stepsContent = {
+                steps: this.params.context.threadPosts
+                    .filter(p => p.props?.result)
+                    .map(p => ({ props: p.props }) as Array<{ props: { result?: StepResult<any> } }>,
+                posts: this.params.context.threadPosts,
+                handles: input.context?.handles
+            };
+            stepHistory = await this.prompt.registry.renderSteps(stepsContent);
+        }
+
+        // Construct messages array with step history first
+        const messages = [];
+        if (stepHistory) {
+            messages.push({
+                role: 'system',
+                content: `## STEP HISTORY\n${stepHistory}`
+            });
+        }
+
         const tracedinput: GenerateInputParams = {
             instructions: this.prompt,
             threadPosts: this.params.context?.threadPosts,
@@ -107,8 +130,10 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                 stepGoal: this.params.stepGoal,
                 stepType: this.methodName ? `${this.params.step}:${this.methodName}` : this.params.step,
                 traceId: traceId
-            }
+            },
+            messages // Include the constructed messages array
         };
+
         const response = await this.stepExecutor.params.modelHelpers.generate(tracedinput, this.stepExecutor.params.llmServices);
         return {
             ...response,
