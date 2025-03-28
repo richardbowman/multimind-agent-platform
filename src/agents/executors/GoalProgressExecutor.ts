@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from "../../helpers/schemaUtils";

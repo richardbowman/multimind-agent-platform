@@ -1,5 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
+import { TaskNotification } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { TaskEventType } from "../../shared/TaskEventType";

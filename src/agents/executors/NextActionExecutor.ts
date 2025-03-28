@@ -9,7 +9,8 @@ import { EXECUTOR_METADATA_KEY, StepExecutorDecorator } from '../decorators/exec
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { ModelType } from "src/llm/types/ModelType";
-import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';

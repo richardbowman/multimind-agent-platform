@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from '../../tools/taskManager';

@@ -1,5 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

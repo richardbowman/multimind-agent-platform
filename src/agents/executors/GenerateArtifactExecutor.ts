@@ -1,5 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, ModelConversation, StepExecutor } from '../interfaces/StepExecutor';
+import { ModelConversation, StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';

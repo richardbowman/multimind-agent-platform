@@ -4,7 +4,7 @@ import { SearchQueryResponse } from "src/schemas/SearchQueryResponse";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
-import { BaseStepExecutor } from "../interfaces/StepExecutor";
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";

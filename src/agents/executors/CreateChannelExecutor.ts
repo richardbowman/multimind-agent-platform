@@ -1,4 +1,4 @@
-import { BaseStepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
