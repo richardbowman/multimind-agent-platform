@@ -94,30 +94,60 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         return this;
     }
 
+    private async buildStepHistoryMessages(threadPosts: ChatPost[] = [], handles?: Record<string, string>): Promise<Array<{role: string, content: string}>> {
+        if (!threadPosts?.length) return [];
+
+        const messages: Array<{role: string, content: string}> = [];
+        const stepsByPost = new Map<string, StepResult<any>[]>();
+
+        // Group steps by their parent post
+        threadPosts.forEach(post => {
+            if (post.props?.result) {
+                const parentPostId = post.props.userPostId || post.thread_id || post.id;
+                const steps = stepsByPost.get(parentPostId) || [];
+                steps.push(post.props.result);
+                stepsByPost.set(parentPostId, steps);
+            }
+        });
+
+        // Create a message for each post and its steps
+        for (const post of threadPosts) {
+            if (!post.props?.partial) { // Skip partial/transient posts
+                const steps = stepsByPost.get(post.id) || [];
+                if (steps.length > 0) {
+                    // Add user message
+                    messages.push({
+                        role: 'user',
+                        content: `${handles?.[post.user_id] || 'User'}: ${post.message}`
+                    });
+
+                    // Add step responses as assistant messages
+                    for (const step of steps) {
+                        if (step.response.message || step.response.reasoning) {
+                            messages.push({
+                                role: 'assistant',
+                                content: [
+                                    step.response.message,
+                                    step.response.reasoning
+                                ].filter(Boolean).join('\n\n')
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        return messages;
+    }
+
     async generate(input: Partial<GenerateInputParams>): Promise<ModelConversationResponse> {
         const traceId = createUUID();
         
-        // Get step history separately
-        let stepHistory = '';
-        if (this.params.context?.threadPosts) {
-            const stepsContent = {
-                steps: this.params.context.threadPosts
-                    .filter(p => p.props?.result)
-                    .map(p => ({ props: p.props }) as Array<{ props: { result?: StepResult<any> } }>,
-                posts: this.params.context.threadPosts,
-                handles: input.context?.handles
-            };
-            stepHistory = await this.prompt.renderSteps(stepsContent);
-        }
-
-        // Construct messages array with step history first
-        const messages = [];
-        if (stepHistory) {
-            messages.push({
-                role: 'system',
-                content: `## STEP HISTORY\n${stepHistory}`
-            });
-        }
+        // Build step history messages
+        const stepMessages = await this.buildStepHistoryMessages(
+            this.params.context?.threadPosts,
+            input.context?.handles
+        );
 
         const tracedinput: GenerateInputParams = {
             instructions: this.prompt,
@@ -131,7 +161,7 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                 stepType: this.methodName ? `${this.params.step}:${this.methodName}` : this.params.step,
                 traceId: traceId
             },
-            messages // Include the constructed messages array
+            messages: stepMessages // Include the step history messages
         };
 
         const response = await this.stepExecutor.params.modelHelpers.generate(tracedinput, this.stepExecutor.params.llmServices);
