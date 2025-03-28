@@ -1,6 +1,6 @@
 import { ConfigurableAgent } from './configurableAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
-import { ArtifactItem, ArtifactType } from "src/tools/artifact";
+import { ArtifactItem, ArtifactMetadata, ArtifactType } from "src/tools/artifact";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import { TaskManager } from 'src/tools/taskManager';
@@ -18,7 +18,7 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
     private configArtifact?: ArtifactItem;
     private taskManager: TaskManager;
 
-    constructor(params: MarkdownAgentConstructorParams) { 
+    constructor(params: MarkdownAgentConstructorParams) {
         if (isChatHandle(params.configArtifact.metadata?.chatHandle)) {
             params.messagingHandle = createChatHandle(params.configArtifact.metadata?.chatHandle);
         } else {
@@ -41,7 +41,7 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         }
 
         const markdownConfig = await this.parseMarkdownConfig(artifact.content.toString());
-        await this.applyMarkdownConfig(markdownConfig);
+        await this.applyMarkdownConfig(artifact.metadata, markdownConfig);
 
         // Continue with normal initialization
         await super.initialize();
@@ -49,18 +49,6 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
 
     private async parseMarkdownConfig(content: string): Promise<Record<string, any>> {
         const config: Record<string, any> = {};
-        
-        // First try to parse YAML frontmatter
-        const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-        if (frontmatterMatch) {
-            try {
-                const yaml = await import('yaml');
-                const frontmatter = yaml.parse(frontmatterMatch[1]);
-                Object.assign(config, frontmatter);
-            } catch (error) {
-                Logger.error('Failed to parse YAML frontmatter:', error);
-            }
-        }
 
         // Parse the rest of the markdown content
         const { marked } = await import('marked');
@@ -69,89 +57,68 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         let currentSection: string | null = null;
 
         for (const token of tokens) {
-            if (token.type === 'heading') {
-                // Convert heading text to section key
-                currentSection = token.text.toLowerCase().replace(/\s+/g, '_');
-                continue;
-            }
-
-            if (token.type === 'paragraph' && currentSection) {
-                // Handle plain text sections
-                if (!config[currentSection]) {
-                    config[currentSection] = '';
-                }
-                config[currentSection] += token.text.trim() + '\n';
-            }
-            else if (token.type === 'list' && currentSection) {
-                // Initialize section as array if it's a list
-                if (!config[currentSection]) {
-                    config[currentSection] = [];
+            try {
+                if (token.type === 'heading') {
+                    // Convert heading text to section key
+                    currentSection = token.text.toLowerCase().replace(/\s+/g, '_');
+                    continue;
                 }
 
-                for (const item of token.items) {
-                    const text = item.text.trim();
-                    
-                    // Handle checklist items (starts with [ ] or [x])
-                    const checklistMatch = text.match(/^\[(x|\s)\]\s*(.+)/);
-                    if (checklistMatch) {
-                        const isChecked = checklistMatch[1] === 'x';
-                        const itemText = checklistMatch[2].trim();
-                        
-                        // For executors section, only include checked items
-                        if (currentSection === 'executors' && !isChecked) {
-                            continue;
-                        }
-                        
-                        // Handle key-value pairs in checklist items
-                        const kvMatch = itemText.match(/^(.+?):\s*(.+)/);
-                        if (kvMatch) {
-                            const key = kvMatch[1].trim();
-                            const value = kvMatch[2].trim();
-                            
-                            // Convert section to object if we find key-value pairs
-                            if (Array.isArray(config[currentSection])) {
-                                config[currentSection] = {};
+                if (token.type === 'paragraph' && currentSection) {
+                    // Handle plain text sections
+                    if (!config[currentSection]) {
+                        config[currentSection] = '';
+                    }
+                    config[currentSection] += token.text.trim() + '\n';
+                }
+                else if (token.type === 'list' && currentSection) {
+                    // Initialize section as array if it's a list
+                    if (!config[currentSection]) {
+                        config[currentSection] = [];
+                    }
+
+                    for (const item of token.items) {
+                        const text = item.text.trim();
+
+                        // Handle checklist items (starts with [ ] or [x])
+                        const checklistMatch = text.match(/^\[(x|\s)\]\s*(.+)/);
+                        if (checklistMatch) {
+                            const isChecked = checklistMatch[1] === 'x';
+                            const itemText = checklistMatch[2].trim();
+
+                            // For executors section, only include checked items
+                            if (currentSection === 'executors' && !isChecked) {
+                                continue;
                             }
 
-                            // Try to parse numbers/booleans
-                            if (/^\d+$/.test(value)) {
-                                config[currentSection][key] = parseInt(value, 10);
-                            } else if (/^\d+\.\d+$/.test(value)) {
-                                config[currentSection][key] = parseFloat(value);
-                            } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
-                                config[currentSection][key] = value.toLowerCase() === 'true';
-                            } else {
-                                config[currentSection][key] = value;
-                            }
-                        } else {
-                            if (StringUtils.isString(config[currentSection])) {
-                                config[currentSection] += "\n - " + itemText;
-                            } else {
-                                // Add simple checklist items to array
-                                config[currentSection].push(itemText);
-                            }
-                        }
-                    } else {
-                        // Handle regular list items
-                        const kvMatch = text.match(/^(.+?):\s*(.+)/);
-                        if (kvMatch) {
-                            const key = kvMatch[1].trim();
-                            const value = kvMatch[2].trim();
-                            
-                            // Convert section to object if we find key-value pairs
-                            if (Array.isArray(config[currentSection])) {
-                                config[currentSection] = {};
-                            }
+                            // Handle key-value pairs in checklist items
+                            const kvMatch = itemText.match(/^(.+?):\s*(.+)/);
+                            if (kvMatch) {
+                                const key = kvMatch[1].trim();
+                                const value = kvMatch[2].trim();
 
-                            // Try to parse numbers/booleans
-                            if (/^\d+$/.test(value)) {
-                                config[currentSection][key] = parseInt(value, 10);
-                            } else if (/^\d+\.\d+$/.test(value)) {
-                                config[currentSection][key] = parseFloat(value);
-                            } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
-                                config[currentSection][key] = value.toLowerCase() === 'true';
+                                // Convert section to object if we find key-value pairs
+                                if (Array.isArray(config[currentSection])) {
+                                    config[currentSection] = {};
+                                }
+
+                                // Try to parse numbers/booleans
+                                if (/^\d+$/.test(value)) {
+                                    config[currentSection][key] = parseInt(value, 10);
+                                } else if (/^\d+\.\d+$/.test(value)) {
+                                    config[currentSection][key] = parseFloat(value);
+                                } else if (value.toLowerCase() === 'true' || value.toLowerCase() === 'false') {
+                                    config[currentSection][key] = value.toLowerCase() === 'true';
+                                } else {
+                                    config[currentSection][key] = value;
+                                }
                             } else {
-                                config[currentSection][key] = value;
+                                if (StringUtils.isString(config[currentSection])) {
+                                    config[currentSection] += "\n - " + itemText;
+                                } else {
+                                    // Add simple checklist items to array
+                                    config[currentSection].push(itemText);
+                                }
                             }
                         } else {
                             if (StringUtils.isString(config[currentSection])) {
@@ -163,19 +130,22 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
                         }
                     }
                 }
+            } catch (error) {
+                Logger.error(error);
             }
         }
 
         return config;
     }
 
-    private async applyMarkdownConfig(config: Record<string, any>) {
+
+    private async applyMarkdownConfig(metadata: ArtifactMetadata, config: Record<string, any>) {
         // Apply basic agent configuration from frontmatter
-        if (config.name) {
-            this.agentName = config.name;
+        if (metadata.name) {
+            this.agentName = metadata.name;
         }
-        if (config.description) {
-            this.description = config.description;
+        if (metadata.description) {
+            this.description = metadata.description;
         }
 
         if (!config.purpose) {
@@ -202,26 +172,27 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         }
 
         // Apply any additional configuration from the markdown
+        this.setPurpose(config.purpose, config.finalInstructions);
         this.agentConfig = {
             ...this.agentConfig,
-            plannerType: config.plannerType,
-            supportsDelegation: config.supportsDelegation,
-            description: config.description,
-            ...config
+            purpose: config.purpose,
+            plannerType: metadata.plannerType,
+            supportsDelegation: metadata.supportsDelegation,
+            executors: config.executors
         };
     }
 
     private async loadExecutorClass(executorKey: string): Promise<ExecutorConfig> {
         // Create require context for executors directory
         const executorContext = (require as any).context('./executors', true, /\.ts$/);
-        
+
         // Search through all executors for a match
         for (const modulePath of executorContext.keys()) {
             const module = executorContext(modulePath);
             const executorClass = module.default || Object.values(module).find(
                 (exp: any) => typeof exp === 'function'
             );
-            
+
             if (executorClass) {
                 const metadata = getExecutorMetadata(executorClass);
                 if (metadata && metadata.key === executorKey) {

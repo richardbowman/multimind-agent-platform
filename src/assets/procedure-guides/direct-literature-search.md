@@ -1,6 +1,6 @@
 ---
 title: "Systematic literature search"
-agent: ResearchManager
+agent: Research Manager
 ---
 ## Overview
 Guide the team to finding the available research papers on a topic. Try to find at least 20 papers (or whatever is specified in goal)

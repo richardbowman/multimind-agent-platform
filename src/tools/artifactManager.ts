@@ -569,7 +569,7 @@ export class ArtifactManager {
       // Search the vector database
       let results : SearchResult[];
       try {
-        results = [...new Set((await vectorDb.query([query], vectorWhere, limit))
+        results = [...new Set((await vectorDb.query([query], vectorWhere, Object.keys(postVectorWhere).length > 0 ? limit * 2: limit))
           .filter(r => r.score > minScore)
           .sort((a, b) => b.score - a.score))];
       } catch (e) {
@@ -583,7 +583,7 @@ export class ArtifactManager {
         score
       })))).filter(r => !!r.artifact);
       
-      const resultsFiltered = ArrayUtils.filter(artifactResults, postVectorWhere, a => a.artifact);
+      const resultsFiltered = ArrayUtils.filter(artifactResults, postVectorWhere, a => a.artifact).slice(0, limit);
 
       return resultsFiltered;
     } catch (error) {

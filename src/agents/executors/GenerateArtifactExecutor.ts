@@ -169,7 +169,7 @@ new replacement text
 
                 if (!documentContent || documentContent?.length == 0) {
                     Logger.error(`No document block found in the response: ${unstructuredResult.message}`);
-                    throw new Error(`No document block found in the response: ${unstructuredResult.message}`);
+                    throw new RetryError(`Your response must include the required <${tag}> with the document contents.`);
                 } else {
                     result.content = documentContent;
 

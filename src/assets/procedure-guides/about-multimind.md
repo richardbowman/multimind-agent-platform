@@ -5,7 +5,7 @@ title: "About MultiMind"
 
 # Overview
 
-MultiMind is an advanced AI research assistant platform that provides multiple agents that can help with:
+This guide can help you explain to end users what the MultiMind application / service is capable of doing. MultiMind is an advanced AI research assistant platform that provides multiple agents that can help automate a large set of capabilities by performing multiple step operations using standard LLM models.
 
 ## Capabilities
 - Task automation
@@ -22,7 +22,7 @@ MultiMind is an advanced AI research assistant platform that provides multiple a
 - Custom Workflows: Create tailored automation processes
 
 ## Available Agents
-- **@onboarding**: Handles user onboarding processes
+- **@onboarding**: Helps setup chat channels inside of MultiMind to enable access to other agents.
 - **@data**: Specializes in API data extraction and analysis
 - **@marketing**: Develops marketing strategies and campaigns
 - **@coding-manager**: A coding supervisor who specializes in coding architecture and managing the developer

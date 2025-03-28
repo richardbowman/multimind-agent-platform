@@ -118,7 +118,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                                     onStartTask(task.id);
                                     sendMessage({
                                         channel_id: currentChannelId,
-                                        message: `I'd like to get started on task: ${task.description}`,
+                                        message: `The user has requested to initiate the following channel goal: ${task.description}`,
                                         user_id: 'system', // Or use actual user ID
                                         create_at: Date.now()
                                     });
@@ -126,7 +126,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                                 disabled={task.status !== TaskStatus.Pending}
                             >
                                 {task.status === TaskStatus.InProgress && 'In Progress...'}
-                                {task.status === TaskStatus.Pending && 'Start Task'}
+                                {task.status === TaskStatus.Pending && 'Start Goal'}
                                 {task.status === TaskStatus.Completed && 'Completed'}
                                 {task.status === TaskStatus.Cancelled && 'Cancelled'}
                             </Button>
@@ -134,21 +134,6 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                     </Card>
                 ))}
             </Box>
-
-            {/* <Box sx={{
-                mt: 4,
-                p: 3,
-                bgcolor: 'background.paper',
-                borderRadius: 2,
-                textAlign: 'center'
-            }}>
-                <Typography variant="h6" sx={{ fontStyle: 'italic' }}>
-                    "The way to get started is to quit talking and begin doing."
-                </Typography>
-                <Typography variant="subtitle2" sx={{ mt: 1 }}>
-                    - Walt Disney
-                </Typography>
-            </Box> */}
         </ScrollView>
     );
 };

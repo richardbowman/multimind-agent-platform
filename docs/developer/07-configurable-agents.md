@@ -4,17 +4,16 @@ The platform provides a flexible system for creating and configuring agents to h
 
 ## Predefined Agents
 
-The system comes with several preconfigured agents defined in `agents.json`:
+The system comes with several preconfigured agents:
 
 ### Core Agents
-- **RouterAgent**: Routes requests to appropriate specialized agents
-- **ResearchAssistant**: Conducts web research and information gathering
-- **ResearchManager**: Manages and coordinates research activities
-- **ContentManager**: Manages content creation and organization
-- **ContentWriter**: Writes and generates content
-- **ProjectManager**: Manages projects and coordinates tasks
-- **OnboardingConsultant**: Handles user onboarding processes
-- **SolverAgent**: Solves problems and provides solutions
+- **Research Assistant**: Conducts web research and information gathering
+- **Research Manager**: Manages and coordinates research activities
+- **Content Manager**: Manages content creation and organization
+- **Content Writer**: Writes and generates content
+- **Project Manager**: Manages projects and coordinates tasks
+- **Onboarding Consultant**: Handles user onboarding processes
+- **Solver Agent**: Solves problems and provides solutions
 
 ## Agent Configuration
 

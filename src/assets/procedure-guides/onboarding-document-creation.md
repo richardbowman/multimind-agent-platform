@@ -1,5 +1,5 @@
 ---
-agent: OnboardingConsultant
+agent: Onboarding Consultant
 title: "Onboarding Document Creation Flow"
 ---
 

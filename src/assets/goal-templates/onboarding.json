@@ -6,7 +6,7 @@
     "defaultResponder": "@onboarding",
     "initialTasks": [
         {
-            "description": "Select an on-boarding template based on high-level goal",
+            "description": "Find an on-boarding template based on my high-level goal",
             "type": "onboarding",
             "metadata": {
                 "agent": "@onboarding"

@@ -69,8 +69,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             const project = await this.projects.getProject(params.projectId);
             const prompt = this.startModel(params);
 
-            prompt.addContext(ContentType.PURPOSE);
-            prompt.addContext({ contentType: ContentType.INTENT, params })
+            prompt.addContext({ contentType: ContentType.PURPOSE });
+            // prompt.addContext({ contentType: ContentType.INTENT, params })
             prompt.addContext({ contentType: ContentType.AGENT_HANDLES, agents: agentList || [] });
             prompt.addContext({ contentType: ContentType.GOALS_FULL, params })
 
@@ -91,14 +91,13 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
             prompt.addInstruction(`
     IN <thinking>, describe this process:
-    - Review the STEP HISTORY to see what you've already done.
+    - Review the STEP HISTORY BY POST to see what you've already done, particularly make sure to review the COMPLETED STEPS for THIS POST to see steps you've taken already to solve this user's request.
     - Consider the best Action Type from the AVAILABLE ACTION TYPES to achieve the goal.
     - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
     - Explain each step and why it would or would not make sense to be the next action.
     - Consider Procedure Guides for help on step order required to be successful. 
     THEN:
-    - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
-    - Provide a response message to the user outside of <thinking> and the code block. Respond in a friendly and concise chat message.
+    - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}. Provide a response message to the user outside of <thinking> and the code block. Respond in a friendly and concise chat message. The user cannot see <tool_result> information, you need to share it with them.
     - If you need to continue working, set the next Action Type to one of the other tools. When generating the associated 'taskDescription' make sure it is stand-alone, repeating all necessary information the step needs including the details of the user's message.
     - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.`);
 
@@ -113,8 +112,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             const response: WithReasoning<Partial<NextActionResponse>> = await withRetry(
                 async ({ previousError, previousResult} ) => {
                     if (previousError) {
-                        prompt.setLastError(`YOU PROVIDED AN IMPROPER RESPONSE IN YOUR LAST ATTEMPT. MAKE SURE TO FOLLOW OUTPUT INSTRUCTIONS.
-                            Previous Response: ${previousError.modelResponse||JSON.stringify(previousResult)}
+                        prompt.setLastError(`YOU PROVIDED AN IMPROPER RESPONSE IN YOUR LAST ATTEMPT. MAKE SURE TO FOLLOW RESPONSE FORMAT.
+                            Previous Response: ${(previousError as ModelResponseError).modelResponse||JSON.stringify(previousResult)||"(unknown)"}
                             Previous Error: ${previousError.message} `);
                     }
 
@@ -132,7 +131,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
                     // Validate nextAction is one of the available types
                     if (!response.nextAction || !validActions.has(response.nextAction)) {
-                        throw new ModelResponseError(`Error: Invalid nextAction: ${response.nextAction||"None provided"}. Must be one of: ${Array.from(validActions).join(', ')}`, result);
+                        throw new ModelResponseError(`Error: Invalid nextAction: ${response.nextAction||"None provided"}. Must be one of: ${Array.from(validActions).join(', ')}`, result.message);
                     }
 
                     return response;

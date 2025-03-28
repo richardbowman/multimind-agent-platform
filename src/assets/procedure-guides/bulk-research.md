@@ -1,5 +1,5 @@
 ---
-agent: ResearchManager
+agent: Research Manager
 title: "Bulk Research Procedure"
 ---
 

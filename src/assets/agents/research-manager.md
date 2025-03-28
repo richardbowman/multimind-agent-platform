@@ -25,6 +25,7 @@ My name is Jarvis. I can help structure larger research projects that require mu
 - [x] csv-processor
 - [x] check-knowledge
 - [x] understand-goals
+- [x] retrieve-full-artifact
 
 ## Capabilities
 - Manage complex research projects

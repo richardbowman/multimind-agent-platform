@@ -1,5 +1,5 @@
 ---
-agent: ResearchManager
+agent: Research Manager
 title: Advanced Research Report Process
 ---
 

@@ -1,5 +1,5 @@
 ---
-agent: ResearchManager
+agent: Research Manager
 title: "CSV Processing and Delegation Rules"
 ---
 
