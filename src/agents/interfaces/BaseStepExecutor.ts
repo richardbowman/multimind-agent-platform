@@ -70,24 +70,28 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         private readonly methodName?: string
     ) {}
 
-    setLastError(error: string): void {
+    setLastError(error: string): this {
         this.prompt.setLastError(error);
+        return this;
     }
 
-    addContext(context: any): void {
+    addContext(context: any): this {
         this.prompt.addContext(context);
+        return this;
     }
 
-    addInstruction(instruction: string): void {
+    addInstruction(instruction: string): this {
         this.prompt.addInstruction(instruction);
+        return this;
     }
 
     getInstructions(): string[] {
         return this.prompt.getInstructions();
     }
 
-    addOutputInstructions(instructions: string): void {
+    addOutputInstructions(instructions: string): this {
         this.prompt.addOutputInstructions(instructions);
+        return this;
     }
 
     async generate(input: Partial<GenerateInputParams>): Promise<ModelConversationResponse> {
