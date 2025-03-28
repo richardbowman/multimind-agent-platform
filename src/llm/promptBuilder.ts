@@ -672,21 +672,23 @@ I've successfully created a spreadsheet to...
     async build(): Promise<string> {
         const sections: string[] = [];
 
-        // Add context
+        // Add context (excluding STEPS content type)
         if (this.context.length > 0) {
             sections.push("## Context\n" + (await Promise.all(this.context)).join('\n\n'));
         }
 
-        // Render and add content sections
+        // Render and add content sections (excluding STEPS)
         for (const [contentType, content] of this.contentSections) {
-            const renderer = this.registry.getRenderer(contentType);
-            if (renderer) {
-                const rendered = await renderer(content);
-                if (rendered) {
-                    sections.push(`## ${contentType[0].toUpperCase()}${contentType.slice(1)}\n` + rendered);
+            if (contentType !== ContentType.STEPS) { // Skip STEPS here since handled at message level
+                const renderer = this.registry.getRenderer(contentType);
+                if (renderer) {
+                    const rendered = await renderer(content);
+                    if (rendered) {
+                        sections.push(`## ${contentType[0].toUpperCase()}${contentType.slice(1)}\n` + rendered);
+                    }
+                } else {
+                    Logger.error(`PromptBuilder renderer for content type ${contentType} not found`);
                 }
-            } else {
-                Logger.error(`PromptBuilder renderer for content type ${contentType} not found`);
             }
         }
 
