@@ -98,26 +98,42 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         if (!threadPosts?.length) return [];
 
         const messages: Array<{role: string, content: string}> = [];
-        
+        const filteredSteps = threadPosts.filter(post => 
+            post.props?.result && 
+            (post.props.stepType !== ExecutorType.NEXT_STEP || 
+             post.props.result?.response.type === StepResponseType.CompletionMessage)
+        );
+
+        // Group steps by their userPostId
+        const stepsByPost = new Map<string, ChatPost[]>();
+        for (const step of filteredSteps) {
+            const postId = step.props.userPostId || step.thread_id || step.id;
+            const steps = stepsByPost.get(postId) || [];
+            steps.push(step);
+            stepsByPost.set(postId, steps);
+        }
+
         // Process posts in chronological order
         for (const post of threadPosts) {
             if (post.props?.partial) continue; // Skip partial/transient posts
 
-            // Add the user's original message
-            messages.push({
-                role: 'user',
-                content: `${handles?.[post.user_id] || 'User'}: ${post.message}`
-            });
+            const steps = stepsByPost.get(post.id) || [];
+            if (steps.length > 0) {
+                // Add user message
+                messages.push({
+                    role: 'user',
+                    content: `${handles?.[post.user_id] || 'User'}: ${post.message}`
+                });
 
-            // Add any step responses from this post
-            if (post.props?.steps?.length) {
-                for (const step of post.props.steps) {
-                    if (step.response?.message || step.response?.reasoning) {
+                // Add step responses
+                for (const step of steps) {
+                    const response = step.props.result?.response;
+                    if (response?.message || response?.reasoning) {
                         messages.push({
                             role: 'assistant',
                             content: [
-                                step.response.message,
-                                step.response.reasoning
+                                response.message,
+                                response.reasoning
                             ].filter(Boolean).join('\n\n')
                         });
                     }
