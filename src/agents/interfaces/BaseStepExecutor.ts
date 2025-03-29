@@ -98,45 +98,41 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         if (!threadPosts?.length) return [];
 
         const messages: Array<{role: string, content: string}> = [];
-        const filteredSteps = threadPosts.filter(post => 
-            post.props?.result && 
-            (post.props.stepType !== ExecutorType.NEXT_STEP || 
-             post.props.result?.response.type === StepResponseType.CompletionMessage)
-        );
+        
+        // Create steps array in format expected by renderSteps()
+        const steps = threadPosts
+            .filter(post => post.props?.result)
+            .map(post => ({
+                props: {
+                    result: post.props.result,
+                    stepType: post.props.stepType,
+                    userPostId: post.props.userPostId || post.thread_id || post.id
+                },
+                description: post.message
+            }));
 
-        // Group steps by their userPostId
-        const stepsByPost = new Map<string, ChatPost[]>();
-        for (const step of filteredSteps) {
-            const postId = step.props.userPostId || step.thread_id || step.id;
-            const steps = stepsByPost.get(postId) || [];
-            steps.push(step);
-            stepsByPost.set(postId, steps);
-        }
+        // Get rendered steps from prompt registry
+        const renderedSteps = await this.prompt.registry.renderSteps({
+            steps,
+            posts: threadPosts,
+            handles
+        });
 
-        // Process posts in chronological order
-        for (const post of threadPosts) {
-            if (post.props?.partial) continue; // Skip partial/transient posts
-
-            const steps = stepsByPost.get(post.id) || [];
-            if (steps.length > 0) {
-                // Add user message
-                messages.push({
-                    role: 'user',
-                    content: `${handles?.[post.user_id] || 'User'}: ${post.message}`
-                });
-
-                // Add step responses
-                for (const step of steps) {
-                    const response = step.props.result?.response;
-                    if (response?.message || response?.reasoning) {
-                        messages.push({
-                            role: 'assistant',
-                            content: [
-                                response.message,
-                                response.reasoning
-                            ].filter(Boolean).join('\n\n')
-                        });
-                    }
+        if (renderedSteps) {
+            // Split the rendered steps into individual messages
+            const sections = renderedSteps.split('\n\n## ');
+            for (const section of sections) {
+                if (section.includes('POST')) {
+                    const [header, ...content] = section.split('\n');
+                    messages.push({
+                        role: 'system',
+                        content: `## ${content.join('\n')}`
+                    });
+                } else if (section.includes('STEP')) {
+                    messages.push({
+                        role: 'assistant',
+                        content: `## ${section}`
+                    });
                 }
             }
         }
