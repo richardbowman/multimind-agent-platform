@@ -109,6 +109,13 @@ console.log(artifacts);`);
         return prompt;
     }
 
+    protected getInstructionByOperation(operation: OperationTypes | 'requestFullContent'): string {
+        if (operation === 'replace') {
+            return 'Replace operations are disabled for websites. Please use patch operations instead.';
+        }
+        return super.getInstructionByOperation(operation);
+    }
+
     protected addContentFormattingRules(prompt: ModelConversation<ArtifactGenerationStepResponse>) {
     }
 
