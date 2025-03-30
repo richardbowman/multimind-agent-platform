@@ -134,16 +134,26 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
             });
 
             // Process steps and group by post
-            await Promise.all(filteredSteps.map(async (step) => {
+            const allSteps = filteredSteps;
+            const totalSteps = allSteps.length;
+            
+            await Promise.all(allSteps.map(async (step, index) => {
                 const stepResult = step.props.result!;
-                let body = await this.prompt.registry.renderResult(stepResult, steps);
-
-                const stepInfo = `- STEP [${step.props.stepType}]:
+                const isRecentStep = index >= totalSteps - 2; // Last two steps get full details
+                
+                let stepInfo: string;
+                if (isRecentStep) {
+                    let body = await this.prompt.registry.renderResult(stepResult, steps);
+                    stepInfo = `- STEP [${step.props.stepType}]:
   Description: ${step.description}
 ${[body && `Result: <toolResult>${body}</toolResult>`,
-                    stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
-                    stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
-                    stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
+                        stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
+                        stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
+                        stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
+                } else {
+                    // Compress older steps to just type and description
+                    stepInfo = `- [${step.props.stepType}]: ${step.description}`;
+                }
 
                 // If step has a threadId, add to corresponding post
                 const messageId = step.props.userPostId || lastMessageId;
