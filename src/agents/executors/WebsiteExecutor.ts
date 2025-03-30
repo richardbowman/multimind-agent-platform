@@ -17,17 +17,13 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         super(params);
     }
 
+    protected getAvailableOperations(): OperationTypes[] {
+        // Exclude 'replace' operation for websites
+        return super.getAvailableOperations().filter(op => op !== 'replace');
+    }
+
     protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation<ArtifactGenerationStepResponse>> {
         const prompt = await super.createBasePrompt(params);
-        
-        // Remove the replace operation from instructions
-        const instructions = prompt.getInstructions();
-        const filteredInstructions = instructions.map(instruction => 
-            instruction.includes('# AVAILABLE ARTIFACT OPERATIONS') 
-                ? instruction.replace(/2\. replace:.*?\n/, '') 
-                : instruction
-        );
-        prompt.setInstructions(filteredInstructions);
         
         // Add website-specific instructions
         prompt.addInstruction(

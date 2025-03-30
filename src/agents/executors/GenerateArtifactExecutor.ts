@@ -92,18 +92,22 @@ new replacement text
                     operation === "append" ? "Append to the end of an EXISTING document. Provide ONLY the new content." : "";
     }
 
+    protected getAvailableOperations(): OperationTypes[] {
+        return ['create', 'replace', 'patch', 'append', 'requestFullContent'];
+    }
+
     protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation> {
         const promptBuilder = this.startModel(params);
 
         // Add core instructions
         promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
-        promptBuilder.addInstruction(`# AVAILABLE ARTIFACT OPERATIONS:
-1. create: ${this.getInstructionByOperation('create')}
-2. replace: ${this.getInstructionByOperation('replace')}
-3. patch: ${this.getInstructionByOperation('patch')}
-4. append: ${this.getInstructionByOperation('append')}
-5. requestFullContent: Request the full content of an existing artifact to determine the best edit operation
-`);
+        
+        // Build operations list dynamically
+        const operationsList = this.getAvailableOperations()
+            .map((op, i) => `${i+1}. ${op}: ${this.getInstructionByOperation(op)}`)
+            .join('\n');
+            
+        promptBuilder.addInstruction(`# AVAILABLE ARTIFACT OPERATIONS:\n${operationsList}`);
 
         promptBuilder.addContext({ contentType: ContentType.ABOUT })
         promptBuilder.addContext({ contentType: ContentType.GOALS_FULL, params });
