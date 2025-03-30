@@ -11,6 +11,11 @@ import { StepTask } from './ExecuteStepParams';
 import { ExecutorConstructorParams } from './ExecutorConstructorParams';
 import { StepExecutor, TaskNotification, ModelConversation, ModelConversationResponse } from './StepExecutor';
 import { StepResponse, StepResult, StepResponseType } from './StepResult';
+import { ContentInput, FullGoalsContent, StepsContent } from 'src/llm/ContentTypeDefinitions';
+import { ExecutorType } from './ExecutorType';
+import { Message } from 'src/chat/chatClient';
+import { isObject } from 'src/types/types';
+import { ChatMessage } from '@lmstudio/sdk';
 
 
 export abstract class BaseStepExecutor<R extends StepResponse> implements StepExecutor<R> {
@@ -68,15 +73,31 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         private readonly prompt: PromptBuilder,
         private readonly params: Partial<ExecuteParams>,
         private readonly methodName?: string
-    ) {}
+    ) { }
 
     setLastError(error: string): this {
         this.prompt.setLastError(error);
         return this;
     }
 
-    addContext(context: any): this {
-        this.prompt.addContext(context);
+    addContext(context?: ContentInput): this {
+        let skipContext = false;
+        let adjContext = context;
+        
+        if (isObject(context)) {
+            if (context?.contentType === ContentType.STEPS || context?.contentType === ContentType.STEP_RESPONSE) {       
+                skipContext = true;
+            }
+            if (context?.contentType === ContentType.GOALS_FULL && this.params.executionMode === 'task') {
+                adjContext = {
+                    ...(context as FullGoalsContent),
+                    skipStepGoal: true
+                } as FullGoalsContent
+            }
+        }
+        
+        if (!skipContext) this.prompt.addContext(adjContext);
+        
         return this;
     }
 
@@ -85,7 +106,7 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         return this;
     }
 
-    getInstructions(): string|Promise<string> {
+    getInstructions(): string | Promise<string> {
         return this.prompt.getInstructions();
     }
 
@@ -94,65 +115,85 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         return this;
     }
 
-    private async buildStepHistoryMessages(threadPosts: ChatPost[] = [], handles?: Record<string, string>): Promise<Array<{role: string, content: string}>> {
-        if (!threadPosts?.length) return [];
+    private async buildStepHistoryMessages({ steps, posts, handles, stepGoal }: StepsContent): Promise<Message[]> {
+        if (!posts?.length) {
+            posts = [{message: stepGoal||""}];
+        };
 
-        const messages: Array<{role: string, content: string}> = [];
-        
-        // Create steps array in format expected by renderSteps()
-        const steps = threadPosts
-            .filter(post => post.props?.result)
-            .map(post => ({
-                props: {
-                    result: post.props.result,
-                    stepType: post.props.stepType,
-                    userPostId: post.props.userPostId || post.thread_id || post.id
-                },
-                description: post.message
+        const filteredSteps = steps.filter(s => s.props.result && (s.props.stepType !== ExecutorType.NEXT_STEP || s.props.result?.response.type === StepResponseType.CompletionMessage));
+
+
+        // If we have posts, group steps by post
+        if (posts && posts.length > 0) {
+            const renderedSteps = new Map<string, string[]>();
+            const lastMessageId = posts[posts.length-1].id;
+
+            // Initialize map with posts
+            posts.forEach(post => {
+                renderedSteps.set(post.id, []);
+            });
+
+            // Process steps and group by post
+            await Promise.all(filteredSteps.map(async (step) => {
+                const stepResult = step.props.result!;
+                let body = await this.prompt.registry.renderResult(stepResult, steps);
+
+                const stepInfo = `- STEP [${step.props.stepType}]:
+  Description: ${step.description}
+${[body && `Result: <toolResult>${body}</toolResult>`,
+                    stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
+                    stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
+                    stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
+
+                // If step has a threadId, add to corresponding post
+                const messageId = step.props.userPostId || lastMessageId;
+                const existing = renderedSteps.get(messageId) || [];
+                existing.push(stepInfo);
+                renderedSteps.set(messageId, existing);
             }));
 
-        // Get rendered steps from prompt registry
-        const renderedSteps = await this.prompt.registry.renderSteps({
-            steps,
-            posts: threadPosts,
-            handles
-        });
 
-        if (renderedSteps) {
-            // Split the rendered steps into individual messages
-            const sections = renderedSteps.split('\n\n## ');
-            for (const section of sections) {
-                if (section.includes('POST')) {
-                    const [header, ...content] = section.split('\n');
-                    messages.push({
-                        role: 'system',
-                        content: `## ${content.join('\n')}`
-                    });
-                } else if (section.includes('STEP')) {
-                    messages.push({
-                        role: 'assistant',
-                        content: `## ${section}`
-                    });
+            return posts.map(p => {
+                if (renderedSteps.get(p.id)?.length||0 > 0) {
+                    return {
+                        ...p,
+                        message: p.message + `\n\n# 📝 STEPS COMPLETED FOR POST:\n${renderedSteps.get(p.id)?.join("\n\n")}`,
+                    }
+                } else {
+                    return p;
                 }
-            }
+            })
+        } else {
+            return posts;
         }
-
-        return messages;
     }
 
     async generate(input: Partial<GenerateInputParams>): Promise<ModelConversationResponse> {
         const traceId = createUUID();
-        
+
         // Build step history messages
-        const stepMessages = await this.buildStepHistoryMessages(
-            this.params.context?.threadPosts,
-            input.context?.handles
-        );
+        let stepMessages : Message[]|undefined;
+        if (this.params.steps) {
+            stepMessages = await this.buildStepHistoryMessages(
+                {
+                    contentType: ContentType.STEPS,
+                    steps: this.params.steps,
+                    posts: this.params.context?.threadPosts,
+                    stepGoal: this.params.stepGoal
+                }
+            );
+        } else {
+            stepMessages = this.params.context?.threadPosts;
+        }
+
+        const userPost = stepMessages?.find(m => m.id === this.params.userPost?.id);
+        const message = userPost?.message || stepMessages[stepMessages.length-1] || this.params.stepGoal ;
 
         const tracedinput: GenerateInputParams = {
             instructions: this.prompt,
-            threadPosts: this.params.context?.threadPosts,
-            userPost: this.params.userPost,
+            threadPosts: stepMessages,
+            userPost,
+            message,
             ...input,
             context: {
                 ...input.context,
@@ -160,11 +201,10 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                 stepGoal: this.params.stepGoal,
                 stepType: this.methodName ? `${this.params.step}:${this.methodName}` : this.params.step,
                 traceId: traceId
-            },
-            messages: stepMessages // Include the step history messages
+            }
         };
 
-        const response = await this.stepExecutor.params.modelHelpers.generate(tracedinput, this.stepExecutor.params.llmServices);
+        const response = await this.stepExecutor.params.modelHelpers.generate(tracedinput);
         return {
             ...response,
             metadata: {
@@ -177,8 +217,8 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
 
     async addProcedures(metadataFilter: FilterCriteria): Promise<Artifact[]> {
         // Get procedure guides already in use from previous responses
-        const pastGuideIds = this.params.previousResponses?.flatMap(response => 
-            response.data?.steps?.flatMap(step => 
+        const pastGuideIds = this.params.previousResponses?.flatMap(response =>
+            response.data?.steps?.flatMap(step =>
                 step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
             ) || []
         ) || [];
@@ -203,15 +243,15 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
 
         // Format searched guides for prompt
         const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
-        this.prompt.addContext({ 
-            contentType: ContentType.PROCEDURE_GUIDES, 
-            guideType: "searched", 
-            guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f) 
+        this.prompt.addContext({
+            contentType: ContentType.PROCEDURE_GUIDES,
+            guideType: "searched",
+            guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f)
         });
-        this.prompt.addContext({ 
-            contentType: ContentType.PROCEDURE_GUIDES, 
-            guideType: "in-use", 
-            guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f) 
+        this.prompt.addContext({
+            contentType: ContentType.PROCEDURE_GUIDES,
+            guideType: "in-use",
+            guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f)
         });
 
         return procedureGuides;
