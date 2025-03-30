@@ -20,6 +20,15 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
     protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation<ArtifactGenerationStepResponse>> {
         const prompt = await super.createBasePrompt(params);
         
+        // Remove the replace operation from instructions
+        const instructions = prompt.getInstructions();
+        const filteredInstructions = instructions.map(instruction => 
+            instruction.includes('# AVAILABLE ARTIFACT OPERATIONS') 
+                ? instruction.replace(/2\. replace:.*?\n/, '') 
+                : instruction
+        );
+        prompt.setInstructions(filteredInstructions);
+        
         // Add website-specific instructions
         prompt.addInstruction(
 `You are creating a website. Follow these guidelines:
