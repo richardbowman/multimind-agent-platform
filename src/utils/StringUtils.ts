@@ -204,6 +204,43 @@ export namespace StringUtils {
     }
 
     /**
+     * Extracts first XML block containing JSON and optionally parses it against a schema
+     * @param text Input text containing XML blocks with JSON
+     * @param tagName The XML tag to search for
+     * @param schema Optional JSON schema to validate against
+     * @returns Parsed JSON object from the XML block
+     * @throws Error if no matching XML block found or JSON parsing fails
+     */
+    export function extractAndParseXmlJsonBlock<T extends Object>(
+        text: string|ModelMessageResponse, 
+        tagName: string,
+        schema?: JSONSchema
+    ): T {
+        if (!text) throw new Error("No message provided");
+        
+        if (isObject(text) && text.message) {
+            text = text.message;
+        } else {
+            text = text.toString();
+        }
+
+        const xmlContent = extractXmlBlock(text, tagName);
+        if (!xmlContent) {
+            throw new Error(`No XML block found with tag: ${tagName}`);
+        }
+
+        try {
+            const json = JSON5.parse(xmlContent);
+            if (schema) {
+                validateJsonAgainstSchema(json, schema);
+            }
+            return json;
+        } catch (e) {
+            throw new Error(`Failed to parse JSON from XML block ${tagName}: ${e.message}`);
+        }
+    }
+
+    /**
      * Extracts text content that is not within code blocks
      * @param text Input text containing code blocks
      * @returns String with all content outside of code blocks
