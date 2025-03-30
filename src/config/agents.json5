@@ -29,45 +29,7 @@
         "handle": "@product",
         "description": "Helps create and document product specifications",
         "enabled": true,
-        "config": {
-          "plannerType": "nextStep",
-          "purpose": "My name is Product Analyst. \
-  My goal is to help you define, document and refine product specifications.",
-          "supportsDelegation": true,
-          "finalInstructions": "",
-          "executors": [
-            {
-              "className": "GenerateSlidesExecutor"
-            },
-            {
-              "className": "GenerateDiagramExecutor"
-            },
-            {
-              "className": "GenerateDocumentExecutor"
-            },
-            {
-              "className": "GenerateRoadmapExecutor"
-            },
-            {
-              "className": "GenerateSpreadsheetExecutor"
-            },
-            {
-              "className": "GenerateDiagramExecutor"
-            },
-            {
-              "className": "CSVProcessingExecutor"
-            },
-            {
-              "className": "DelegationExecutor"
-            },
-            {
-              "className": "RetrieveFullArtifactExecutor"
-            },
-            {
-              className: "UnderstandGoalsExecutor"
-            }
-          ]
-        }
+        "configPath": "assets/agents/product-manager.md"
       },
     }
   }
