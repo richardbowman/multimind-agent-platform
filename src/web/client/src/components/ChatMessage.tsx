@@ -406,7 +406,43 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                        a: CustomLink,
+                        a: ({node, href, children, ...props}) => {
+                            // Handle artifact links
+                            if (href?.startsWith('/artifact/')) {
+                                const artifactId = href.split('/artifact/')[1];
+                                return (
+                                    <Button
+                                        variant="text"
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            const artifact = allArtifacts.find(a => a.id === artifactId);
+                                            if (artifact) {
+                                                setSelectedArtifact({
+                                                    id: artifact.id,
+                                                    type: artifact.type,
+                                                    metadata: artifact.metadata,
+                                                    tokenCount: artifact.tokenCount
+                                                });
+                                            }
+                                        }}
+                                        sx={{
+                                            textTransform: 'none',
+                                            p: 0,
+                                            minWidth: 0,
+                                            color: 'primary.main',
+                                            '&:hover': {
+                                                textDecoration: 'underline'
+                                            }
+                                        }}
+                                    >
+                                        {children}
+                                    </Button>
+                                );
+                            }
+                            // Fall back to regular link handling
+                            return <CustomLink href={href} {...props}>{children}</CustomLink>;
+                        },
                         pre: ({node, children, className, ...props}) => {
                             // Check if this pre contains a code block
                             const hasCodeBlock = node.children?.some(
