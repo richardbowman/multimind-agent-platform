@@ -170,7 +170,7 @@ new replacement text
 
                 if (!documentContent || documentContent?.length == 0) {
                     Logger.error(`No document block found in the response: ${unstructuredResult.message}`);
-                    throw new RetryError(`Your response must include the required <${tag}> with the document contents.`);
+                    throw new RetryError(`Your response must include the required <${tag}> containing the document.`);
                 } else {
                     result.content = documentContent;
 
@@ -232,10 +232,9 @@ new replacement text
                         } else {
                             if (result.operation === 'append') {
                                 try {
-                                    const validatedContent = await this.validateAndPrepareAppendContent(result.content, existingArtifact?.content || "");
-                                    artifactUpdate.content = `${existingArtifact?.content || ""}\n${validatedContent}`;
+                                    artifactUpdate.content = await this.validateAndPrepareAppendContent(result.content, existingArtifact?.content || "");
                                 } catch (error) {
-                                    Logger.error('CSV append validation failed:', error);
+                                    Logger.error('Artifact append validation failed:', error);
                                     throw error;
                                 }
                             } else if (result.operation === 'replace') {
@@ -306,7 +305,11 @@ new replacement text
                     }
                 };
             }
-        }, () => true, { maxRetries: 1, timeoutMs: 180000 });
+        }, () => true, { maxAttempts: 2, timeoutMs: 180000 });
+    }
+
+    protected async validateAndPrepareAppendContent(newContent: string, existingContent: string): Promise<string> {
+        return `${existingContent || ""}\n${newContent}`;
     }
 
     requestFullContext() {
