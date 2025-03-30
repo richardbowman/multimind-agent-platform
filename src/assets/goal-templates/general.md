@@ -1,0 +1,15 @@
+# Chat Channel Template
+
+**ID**: `#general`
+
+## Description
+Template for setting up a chat channel with a simple AI assistant. This agent is the simplest and does not perform multi-step workflows. Good for testing models.
+
+## Supporting Agents
+- `@ai`
+
+## Default Responder
+`@ai`
+
+## Initial Tasks
+None
