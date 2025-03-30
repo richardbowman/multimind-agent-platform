@@ -229,8 +229,21 @@ export namespace StringUtils {
             throw new Error(`No XML block found with tag: ${tagName}`);
         }
 
+        let jsonContent = xmlContent;
+        // Check if content is wrapped in code blocks
+        const codeBlocks = extractCodeBlocks(xmlContent, 'json');
+        if (codeBlocks.length > 0) {
+            jsonContent = codeBlocks[0].code;
+        } else {
+            // Also check for javascript code blocks
+            const jsBlocks = extractCodeBlocks(xmlContent, 'javascript');
+            if (jsBlocks.length > 0) {
+                jsonContent = jsBlocks[0].code;
+            }
+        }
+
         try {
-            const json = JSON5.parse(xmlContent);
+            const json = JSON5.parse(jsonContent);
             if (schema) {
                 validateJsonAgainstSchema(json, schema);
             }
