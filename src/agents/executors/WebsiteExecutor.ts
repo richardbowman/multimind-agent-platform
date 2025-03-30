@@ -29,9 +29,8 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 - Your JavaScript must be inside of a 'text/babel' script so the JSX can be processed.
 - To access needed libraries: 
   - Ensure all MUI component imports are properly destructured from MaterialUI variable;
-  - Do not use any other CDN-hosted libraries;
 
-  ## Code Template
+## Code Template
 
 <artifact_html>
 <!DOCTYPE html>
