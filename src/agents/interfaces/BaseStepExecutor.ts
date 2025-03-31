@@ -126,10 +126,12 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
         // If we have posts, group steps by post
         if (posts && posts.length > 0) {
             const renderedSteps = new Map<string, string[]>();
-            const lastMessageId = posts[posts.length-1].id;
+            // Take only the most recent 10 messages
+            const recentPosts = posts.slice(-10);
+            const lastMessageId = recentPosts[recentPosts.length-1].id;
 
             // Initialize map with posts
-            posts.forEach(post => {
+            recentPosts.forEach(post => {
                 renderedSteps.set(post.id, []);
             });
 
@@ -163,7 +165,7 @@ ${[body && `Result: <toolResult>${body}</toolResult>`,
             }));
 
 
-            return posts.map(p => {
+            return recentPosts.map(p => {
                 if (renderedSteps.get(p.id)?.length||0 > 0) {
                     return {
                         ...p,
