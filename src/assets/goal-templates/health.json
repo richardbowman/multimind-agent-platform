@@ -1,0 +1,12 @@
+{
+    "id": "#health",
+    "name": "Health",
+    "description": "Achieveing your heath goals.",
+    "supportingAgents": ["@health-coordinator"],
+    "defaultResponder": "@sarah",
+    "initialTasks": [
+        {
+            "description": "Start my introductory session with health coordinator."
+        }
+    ]
+}

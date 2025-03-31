@@ -73,14 +73,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         refreshLogs();
 
         // Set up polling interval for updates
-        const pollInterval = setInterval(() => {
-            refreshLogs();
-        }, 10000); // Poll every 10 seconds
+        // const pollInterval = setInterval(() => {
+        //     refreshLogs();
+        // }, 10000); // Poll every 10 seconds
 
-        return () => {
-            logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
-            clearInterval(pollInterval);
-        };
+        // return () => {
+        //     logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
+        //     clearInterval(pollInterval);
+        // };
     }, [currentLogTab, logger]); // Remove refreshLogs from dependencies
 
     const filterLog = (content: string) => {

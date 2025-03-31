@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { createUUID } from '../types/uuid';
+import { createUUID } from '../src/types/uuid';
 
 function main() {
     // Generate a new UUID

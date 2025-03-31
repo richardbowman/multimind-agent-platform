@@ -90,20 +90,21 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
             prompt.addContext({ contentType: ContentType.FINAL_INSTRUCTIONS });
 
-            prompt.addInstruction(`
+            prompt.addOutputInstructions({ outputType: OutputType.ALL_XML_MESSAGE_REASONING_DATA, schema, status: false, specialInstructions: `
     IN <thinking>, describe this process:
-    - Review the STEP HISTORY BY POST to see what you've already done, particularly make sure to review the COMPLETED STEPS for THIS POST to see steps you've taken already to solve this user's request.
+    - Review the STEPS COMPLETED FOR POST to see what you've already done.
     - Consider the best Action Type from the AVAILABLE ACTION TYPES to achieve the goal.
-    - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
     - Explain each step and why it would or would not make sense to be the next action.
     - Consider Procedure Guides for help on step order required to be successful. 
-    THEN:
-    - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}. Provide a response message to the user outside of <thinking> and the code block. Respond in a friendly and concise chat message. The user cannot see <tool_result> information, you need to share it with them.
+    THEN IN <data>:
+    - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
     - If you need to continue working, set the next Action Type to one of the other tools. When generating the associated 'taskDescription' make sure it is stand-alone, repeating all necessary information the step needs including the details of the user's message.
-    - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.`);
+    - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.
+    FINALLY IN <message>:
+    - Respond in a friendly and concise chat message. Reminder: The user cannot see information in completed steps such as <tool_result> information, you need to share it with them.
 
-
-            prompt.addOutputInstructions({ outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema, status: false});
+    YOU MUST ALWAYS FOLLOW THE OUTPUT FORMAT WITH 3 SEPARATE XML-ENCLOSED SECTIONS: <thinking>...</thinking>, <data>...</data>, and <message>...</message>.
+    `});
 
             const validActions = new Set([
                 ...executorMetadata.map(m => m.key),
@@ -119,15 +120,13 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     }
 
                     const result = await prompt.generate({
-                        message: params.message || params.stepGoal,
-                        instructions: prompt,
                         modelType: ModelType.REASONING
                     });
 
                     const response = {
-                        ...StringUtils.hasJsonBlock(result.message) && StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema) || {},
                         reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
-                        message: StringUtils.extractNonCodeContent(result.message, ["thinking"], ["json"])
+                        message: StringUtils.extractXmlBlock(result.message, "message"),
+                        ...StringUtils.extractAndParseXmlJsonBlock<NextActionResponse>(result.message, "data", schema) || StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema)
                     };
 
                     // Validate nextAction is one of the available types
@@ -143,7 +142,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     return hasValidResponse || hasValidAction;
                 },
                 {
-                    maxRetries: 3,
+                    maxAttempts: 3,
                     initialDelayMs: 100,
                     backoffFactor: 2,
                     timeoutMs: 20000

@@ -1,6 +1,6 @@
 ---
 title: "Systematic literature search"
-agent: ScienceAssistant
+agent: Science Assistant
 ---
 ## Overview
 Find available research on a topic. Try to find at least 20 papers (or whatever is specified in goal)

@@ -128,7 +128,7 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.FullArtifact,
-                    status: `Retrieved ${selectedArtifactIds.length} artifacts:\n${thinking}`,
+                    status: `Retrieved ${selectedArtifactIds.length} artifacts. ${thinking||""}`,
                     data: {
                         selectedArtifactIds,
                         selectionReason: thinking||"[Unknown reason]"

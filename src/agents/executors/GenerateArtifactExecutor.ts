@@ -5,7 +5,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { Artifact, ArtifactType } from 'src/tools/artifact';
+import { Artifact, ArtifactMetadata, ArtifactType } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType, OutputType, globalRegistry } from 'src/llm/promptBuilder';
@@ -17,6 +17,7 @@ import { ModelType } from "src/llm/types/ModelType";
 import { CSVUtils } from 'src/utils/CSVUtils';
 import { asUUID, isUUID, UUID } from 'src/types/uuid';
 import { RetryError, withRetry } from 'src/helpers/retry';
+import { asError } from 'src/types/types';
 
 
 export interface ArtifactGenerationStepData {
@@ -51,7 +52,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
     protected addContentFormattingRules?(prompt: ModelConversation<ArtifactGenerationStepResponse>);
     protected abstract getSupportedFormat(): string;
 
-    protected getContentRules() : Promise<string>|string {
+    protected getContentRules(): Promise<string> | string {
         return "the document contents"
     }
 
@@ -82,31 +83,34 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
 
     protected getInstructionByOperation(operation: OperationTypes | 'requestFullContent'): string {
         return operation === "create" ? `Create a NEW document.` :
-            operation === "patch" ? `Update specific parts of an EXISTING document using merge conflict style syntax. Use merge conflict syntax to specify changes:
+            operation === "patch" ? `Update specific parts of an EXISTING document using merge conflict style syntax. To specify changes, use one or more of these SEARCH / REPLACE blocks:
 \<<<<<<< SEARCH
 text to find and replace
 =======
 new replacement text
->>>>>>> REPLACE\n` :
-                operation === "replace" ? `Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...").` :
-                    operation === "append" ? "Append to the end of an EXISTING document. Provide ONLY the new content." : "";
+>>>>>>> REPLACE\n
+ 
+You must use the EXACT text from the original document. Use requestFullContent to get the full content if you do not have access to it.` :
+            operation === "replace" ? `Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...").` :
+            operation === "append" ? "Append to the end of an EXISTING document. Provide ONLY the new content." : 
+            operation === "requestFullContent" ? "Request full content of an artifact prior to editing it." : "";
     }
 
     protected getAvailableOperations(): OperationTypes[] {
         return ['create', 'replace', 'patch', 'append', 'requestFullContent'];
     }
 
-    protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation> {
+    protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation<StepResponse>> {
         const promptBuilder = this.startModel(params);
 
         // Add core instructions
         promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
-        
+
         // Build operations list dynamically
         const operationsList = this.getAvailableOperations()
-            .map((op, i) => `${i+1}. ${op}: ${this.getInstructionByOperation(op)}`)
+            .map((op, i) => `${i + 1}. ${op}: ${this.getInstructionByOperation(op)}`)
             .join('\n');
-            
+
         promptBuilder.addInstruction(`# AVAILABLE ARTIFACT OPERATIONS:\n${operationsList}`);
 
         promptBuilder.addContext({ contentType: ContentType.ABOUT })
@@ -139,12 +143,12 @@ new replacement text
         const maxRetries = 1; // Only retry once after getting full content
 
         let artifactIndex = -1, existingArtifact: Artifact | null = null;
-        
+
         return withRetry<StepResult<ArtifactGenerationStepResponse>>(async () => {
             const conversation = await this.createBasePrompt(params);
             const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
             const tag = `artifact_${this.getSupportedFormat()}`;
-            const statusMessages : string[] = [];
+            const statusMessages: string[] = [];
 
             // Add content formatting rules
             if (this.addContentFormattingRules) this.addContentFormattingRules(conversation);
@@ -162,15 +166,37 @@ new replacement text
                     modelType: modelType || ModelType.DOCUMENT
                 });
 
-                const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
-                let documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, tag);
-                // Strip any code block formatting tags from the content
-                documentContent = this.stripCodeBlockFormatting(documentContent);
-                const message = StringUtils.extractNonCodeContent(unstructuredResult.message, ["thinking", tag]);
-                const result = {
-                    ...json,
-                    message
-                } as WithMessage<ArtifactGenerationResponse> & { content: string };
+                let result, documentContent;
+                try {
+                    const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
+                    documentContent = StringUtils.extractXmlBlock(unstructuredResult.message, tag);
+                    // Strip any code block formatting tags from the content
+                    if (documentContent) documentContent = this.stripCodeBlockFormatting(documentContent);
+                    const message = StringUtils.extractNonCodeContent(unstructuredResult.message, ["thinking", tag]);
+                    result = {
+                        ...json,
+                        message
+                    } as WithMessage<ArtifactGenerationResponse> & { content: string };
+                } catch (error) {
+                    throw new RetryError(`You must follow the required format: ${asError(error).message}`);
+                }
+
+                // Handle requestFullContent operation
+                if (result.operation === 'requestFullContent') {
+                    if (params.context?.artifacts && result.artifactIndex != null) {
+                        // Handle both numeric index and UUID string
+                        if (typeof result.artifactIndex === 'number') {
+                            existingArtifact = await this.artifactManager.loadArtifact(params.context.artifacts[result.artifactIndex].id);
+                            artifactIndex = result.artifactIndex;
+                        } else if (StringUtils.isString(result.artifactIndex) && isUUID(result.artifactIndex)) {
+                            existingArtifact = await this.artifactManager.loadArtifact(result.artifactIndex);
+                            artifactIndex = params.context.artifacts.findIndex(a => a.id === result.artifactIndex);
+                        }
+                        throw new RetryError("Retry with full artifact provided");
+                    } else {
+                        throw new Error("Request full content requested but no artifacts avaialble or artifactIndex not specified");
+                    }
+                }
 
                 if (!documentContent || documentContent?.length == 0) {
                     Logger.error(`No document block found in the response: ${unstructuredResult.message}`);
@@ -178,21 +204,6 @@ new replacement text
                 } else {
                     result.content = documentContent;
 
-                    // Handle requestFullContent operation
-                    if (result.operation === 'requestFullContent')
-                        if (params.context?.artifacts && result.artifactIndex != null) {
-                            // Handle both numeric index and UUID string
-                            if (typeof result.artifactIndex === 'number') {
-                                existingArtifact = await this.artifactManager.loadArtifact(params.context.artifacts[result.artifactIndex].id);
-                                artifactIndex = result.artifactIndex;
-                            } else if (typeof result.artifactIndex === 'string') {
-                                existingArtifact = await this.artifactManager.loadArtifact(result.artifactIndex);
-                                artifactIndex = params.context.artifacts.findIndex(a => a.id === result.artifactIndex);
-                            }
-                            throw new RetryError("Retry with full artifact provided");
-                        } else {
-                            throw new Error("Request full content requested but no artifacts avaialble or artifactIndex not specified");
-                        }
                 }
 
                 // Prepare the artifact
@@ -208,67 +219,79 @@ new replacement text
                     }
                 };
 
-
                 if (result.operation !== 'create' && result.artifactIndex != null && params.context?.artifacts) {
-                    try {
-                        // Handle both numeric index and UUID string
-                        if (typeof result.artifactIndex === 'number' && result.artifactIndex > 0) {
-                            artifactUpdate.id = params.context.artifacts[result.artifactIndex - 1].id;
-                        } else if (typeof result.artifactIndex === 'string' && isUUID(result.artifactIndex)) {
-                            artifactUpdate.id = asUUID(result.artifactIndex);
-                        } else if (typeof result.artifactIndex === 'string') {
+                    // Handle both numeric index and UUID string
+                    if (typeof result.artifactIndex === 'number' && result.artifactIndex > 0) {
+                        artifactUpdate.id = params.context.artifacts[result.artifactIndex - 1].id;
+                    } else if (typeof result.artifactIndex === 'string' && isUUID(result.artifactIndex)) {
+                        artifactUpdate.id = asUUID(result.artifactIndex);
+                    } else if (typeof result.artifactIndex === 'string') {
+                        try {
+                            artifactUpdate.id = params.context.artifacts[parseInt(result.artifactIndex) - 1].id;
+                        } catch (error) {
+                            Logger.error(`Failed to parse artifact index ${result.artifactIndex} during generation.`);
+                        }
+                    }
+
+
+                    const existingArtifact = artifactUpdate.id && await this.artifactManager.loadArtifact(artifactUpdate.id);
+
+                    // If types don't match, force create new artifact instead
+                    const newType = this.getArtifactType();
+                    if (existingArtifact?.type && newType !== existingArtifact.type) {
+                        Logger.warn(`Type mismatch: existing=${existingArtifact.type}, new=${newType}. Forcing new artifact creation.`);
+                        delete artifactUpdate.id; // Remove ID to force new artifact
+                        result.operation = 'create'; // Update operation
+                    } else {
+                        if (result.operation === 'append') {
                             try {
-                                artifactUpdate.id = params.context.artifacts[parseInt(result.artifactIndex)-1].id;
+                                artifactUpdate.content = await this.validateAndPrepareAppendContent(result.content, existingArtifact?.content.toString() || "");
                             } catch (error) {
-                                Logger.error(`Failed to parse artifact index ${result.artifactIndex} during generation.`);
+                                Logger.error('Artifact append validation failed:', error);
+                                throw new RetryError(`Append operation failed: ${asError(error).message}`);
                             }
-                        }
+                        } else if (result.operation === 'replace') {
+                            artifactUpdate.content = result.content;
+                        } else if (result.operation === 'patch') {
+                            // Handle merge conflict style editing
+                            const existingContent = existingArtifact?.content || "";
+                            const editContent = result.content;
 
+                            // Parse the edit content looking for conflict markers
+                            const conflictRegex = /<<<<<<< SEARCH\s([\s\S]*?)\s=======\s([\s\S]*?)\s>>>>>>> REPLACE/g;
+                            let finalContent = existingContent.toString();
+                            let match, replaceBlocks = 0, unmatchedBlocks = 0;
 
-                        const existingArtifact = artifactUpdate.id && await this.artifactManager.loadArtifact(artifactUpdate.id);
-
-                        // If types don't match, force create new artifact instead
-                        const newType = this.getArtifactType();
-                        if (existingArtifact?.type && newType !== existingArtifact.type) {
-                            Logger.warn(`Type mismatch: existing=${existingArtifact.type}, new=${newType}. Forcing new artifact creation.`);
-                            delete artifactUpdate.id; // Remove ID to force new artifact
-                            result.operation = 'create'; // Update operation
-                        } else {
-                            if (result.operation === 'append') {
-                                try {
-                                    artifactUpdate.content = await this.validateAndPrepareAppendContent(result.content, existingArtifact?.content || "");
-                                } catch (error) {
-                                    Logger.error('Artifact append validation failed:', error);
-                                    throw error;
+                            while ((match = conflictRegex.exec(editContent)) !== null) {
+                                replaceBlocks++;
+                                const [fullMatch, searchText, replacementText] = match;
+                                if (finalContent.includes(searchText)) {
+                                    finalContent = finalContent.replace(searchText, replacementText);
+                                } else {
+                                    statusMessages.push(`The search text "${searchText}" was not found. Please sure you provide the exact text from the document.`);
                                 }
-                            } else if (result.operation === 'replace') {
-                                artifactUpdate.content = result.content;
-                            } else if (result.operation === 'patch') {
-                                // Handle merge conflict style editing
-                                const existingContent = existingArtifact?.content || "";
-                                const editContent = result.content;
-
-                                // Parse the edit content looking for conflict markers
-                                const conflictRegex = /<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> REPLACE/g;
-                                let finalContent = existingContent.toString();
-                                let match, replaceBlocks = 0, unmatchedBlocks=0;
-
-                                while ((match = conflictRegex.exec(editContent)) !== null) {
-                                    replaceBlocks++;
-                                    const [fullMatch, searchText, replacementText] = match;
-                                    if (finalContent.includes(searchText)) {
-                                        finalContent = finalContent.replace(searchText, replacementText);
-                                    } else {
-                                        statusMessages.push('The search text "${searchText}" was not found. Please sure you provide the exact text from the document.');
-                                    }
-                                }
-
-                                artifactUpdate.content = finalContent;
                             }
-                            artifactUpdate.type = existingArtifact?.type;
+
+                            // update the existing artifact if we made progress towards matches
+                            if (existingArtifact) {
+                                existingArtifact.content = finalContent;
+                            }    
+
+                            if (replaceBlocks === 0) {
+                                statusMessages.push(`No valid SEARCH/REPLACE blocks found. To use 'patch' you must provide the exact change using one or more SEARCH/REPLACE blocks:
+\<<<<<<< SEARCH
+text to find and replace
+=======
+new replacement text
+>>>>>>> REPLACE`);
+                            }
+                            if (statusMessages.length > 0) {
+                                throw new RetryError(statusMessages.join("\n"));
+                            }
+
+                            artifactUpdate.content = finalContent;
                         }
-                    } catch (error) {
-                        Logger.error(`Could not find existing artifact for append operation for artifact index ${result.artifactIndex} ${artifactUpdate.id}`, error);
+                        artifactUpdate.type = existingArtifact?.type;
                     }
                 } else {
                     // Validate document type
@@ -288,7 +311,7 @@ new replacement text
                     replan: ReplanType.Allow,
                     response: {
                         type: StepResponseType.GeneratedArtifact,
-                        status: `${result.message}${statusMessages.length >0 ? "\n\n" + statusMessages.join(`\n`) : ""}`,
+                        status: `${result.message}${statusMessages.length > 0 ? "\n\n" + statusMessages.join(`\n`) : ""}`,
                         data: {
                             generatedArtifactId: artifact?.id,
                             requestFullContext: this.requestFullContext()
@@ -309,7 +332,7 @@ new replacement text
                     }
                 };
             }
-        }, () => true, { maxAttempts: 2, timeoutMs: 180000 });
+        }, () => true, { maxAttempts: 4, timeoutMs: 180000 });
     }
 
     protected async validateAndPrepareAppendContent(newContent: string, existingContent: string): Promise<string> {
@@ -346,7 +369,7 @@ new replacement text
         return match ? match[1].trim() : content;
     }
 
-    protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
+    protected async prepareArtifactMetadata(result: any): Promise<ArtifactMetadata> {
         return {
             subtype: result.subtype
         };

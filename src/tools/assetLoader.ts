@@ -63,8 +63,7 @@ async function loadAssets(
         }
 
         // Check if asset exists and has same content and metadata
-        const relativePath = path.relative(basePath, filePath);
-        const existingAsset = existingAssetMap.get(relativePath);
+        const existingAsset = existingAssetMap.get(metadata.source);
         if (existingAsset) {
             const existingHash = existingAsset.metadata?.contentHash;
             // Get all frontmatter keys from the document
@@ -157,10 +156,65 @@ export async function loadAgentConfigs(basePath: string, configPath: string, art
 }
 
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
-    const loadedArtifacts = await loadAssets(basePath, guidePath, artifactManager, {
+    const loadedSpreadsheet = await loadAssets(basePath, guidePath, artifactManager, {
+        artifactType: ArtifactType.Spreadsheet,
+        artifactSubtype: SpreadsheetSubType.Procedure,
         fileFilter: f => {
             const ext = path.extname(f).toLowerCase();
-            return ext === '.md' || ext === '.csv';
+            return ext === '.csv';
+        },
+        metadataBuilder: (filePath, content) => {
+            let frontmatter = {};
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            
+            if (match) {
+                try {
+                    frontmatter = yaml.load(match[1]) || {};
+                } catch (error) {
+                    Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
+                }
+            }
+
+            const ext = path.extname(filePath).toLowerCase();
+            const metadata: Record<string, any> = {
+                subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
+                title: frontmatter['title'] || path.basename(filePath, ext),
+                description: 'Procedure guide document',
+                ...frontmatter,
+                mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
+                source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, '')
+            };
+
+            // Load additional metadata from .metadata.json file if exists
+            const metadataPath = path.join(
+                path.dirname(filePath), 
+                `${path.basename(filePath, ext)}.metadata.json`
+            );
+            if (fs.existsSync(metadataPath)) {
+                try {
+                    const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+                    Object.assign(metadata, loadedMetadata);
+                } catch (error) {
+                    Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
+                }
+            }
+
+            return metadata;
+        },
+        contentProcessor: (content) => {
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            return match ? content.slice(match[0].length) : content;
+        }
+    });
+
+    const loadedDocs = await loadAssets(basePath, guidePath, artifactManager, {
+        artifactType: ArtifactType.Document,
+        artifactSubtype: DocumentSubtype.Procedure,
+        fileFilter: f => {
+            const ext = path.extname(f).toLowerCase();
+            return ext === '.md';
         },
         metadataBuilder: (filePath, content) => {
             let frontmatter = {};
@@ -209,12 +263,12 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
     });
 
     // Generate the actions artifact from the loaded guides
-    const actionsGuide = loadedArtifacts.find(a => a.metadata?.source?.endsWith('actions.md'));
+    const actionsGuide = loadedDocs.find(a => a.metadata?.source?.endsWith('actions.md'));
     if (actionsGuide) {
         await generateActionsArtifact(actionsGuide, artifactManager);
     }
 
-    return loadedArtifacts;
+    return [...loadedSpreadsheet, ...loadedDocs];
 }
 
 async function generateActionsArtifact(actionsGuide: Artifact, artifactManager: ArtifactManager): Promise<void> {

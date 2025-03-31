@@ -1,9 +1,9 @@
-import { StepResponse, StepResponseType } from "src/agents/interfaces/StepResult";
+import { StepResponse, StepResponseType, StepResult } from "src/agents/interfaces/StepResult";
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import Logger from "src/helpers/logger";
 import { ModelHelpers } from "./modelHelpers";
 import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelNameContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent, ChannelDetailsContent, StepGoalContent, ProcedureGuideContent } from "./ContentTypeDefinitions";
-import { InputPrompt } from "src/prompts/structuredInputPrompt";
+import { InputPrompt } from "src/types/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 import { StringUtils } from "src/utils/StringUtils";
@@ -11,6 +11,7 @@ import { JSONSchema } from "./ILLMService";
 import { ArtifactType } from "src/tools/artifact";
 import { FullArtifactStepResponse } from "src/agents/executors/RetrieveFullArtifactExecutor";
 import { json } from "sequelize";
+import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 
 export interface ContentRenderer<T> {
     (content: T): Promise<string> | string;
@@ -54,6 +55,7 @@ export enum OutputType {
     JSON_AND_MARKDOWN,
     JSON_WITH_MESSAGE,
     JSON_WITH_MESSAGE_AND_REASONING,
+    ALL_XML_MESSAGE_REASONING_DATA,
     MULTIPLE_JSON_WITH_MESSAGE,
     JSON_AND_XML,
     JSON_WITH_REASONING
@@ -130,10 +132,10 @@ For full details about MultiMind's capabilities, use the [check-knowledge] comma
         }
     };
 
-    private renderAllGoals({ params }: FullGoalsContent) {
-        return `${this.renderIntent({ contentType: ContentType.INTENT, params })}
-${params.overallGoal && this.renderOverallGoal({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal })}
-${params.stepGoal && `CURRENT STEP GOAL: ${params.stepGoal}`}`;
+    private renderAllGoals({ params, skipStepGoal }: FullGoalsContent) {
+        //intents not implemented... ${this.renderIntent({ contentType: ContentType.INTENT, params })}
+        return `${params.overallGoal && this.renderOverallGoal({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal })}
+${params.stepGoal && skipStepGoal !== true ? `CURRENT STEP GOAL: ${params.stepGoal}` : ""}`;
     };
 
 
@@ -211,9 +213,18 @@ ${this.modelHelpers.getPurpose()}
         return output;
     }
 
-    private async renderSteps({ steps, posts, handles }: StepsContent): Promise<string> {
+    public async renderResult(stepResult: StepResult<StepResponse>, stepTasks: StepTask<StepResponse>[]) : Promise<string|undefined> {
+        if (stepResult.response.type) {
+            const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
+            if (typeRenderer) {
+                return await typeRenderer(stepResult.response, stepTasks.map(s => s.props.result?.response).filter(r => !!r));
+            }
+        }
+        return undefined;
+    }
+
+    public async renderSteps({ steps, posts, handles }: StepsContent): Promise<string> {
         const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP || s.props.result?.response.type === StepResponseType.CompletionMessage);
-        
         // If we have posts, group steps by post
         if (posts && posts.length > 0) {
             const postMap = new Map<string, string[]>();
@@ -226,13 +237,7 @@ ${this.modelHelpers.getPurpose()}
             // Process steps and group by post
             await Promise.all(filteredSteps.map(async (step) => {
                 const stepResult = step.props.result!;
-                let body;
-                if (stepResult.response.type) {
-                    const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
-                    if (typeRenderer) {
-                        body = await typeRenderer(stepResult.response, steps.map(s => s.props.result?.response).filter(r => !!r));
-                    }
-                }
+                let body = await this.renderResult(stepResult, steps);
                 
                 const stepInfo = `- STEP [${step.props.stepType}]:
   Description: ${step.description}
@@ -543,8 +548,8 @@ export class PromptBuilder implements InputPrompt {
     private contentSections: Map<ContentType, any> = new Map();
     private instructions: (Promise<string> | string)[] = [];
     private context: (Promise<string> | string)[] = [];
-    private registry: PromptRegistry;
-    lastError: string;
+    public registry: PromptRegistry;
+    lastError: string|undefined;
     
     constructor(registry: PromptRegistry) {
         this.registry = registry;
@@ -570,40 +575,57 @@ export class PromptBuilder implements InputPrompt {
             Then, use a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides ${specialInstructions}.` : ''}.`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
             this.addInstruction(`# RESPONSE FORMAT\nRespond with  ${messageType} and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
+
+        } else if (outputType === OutputType.ALL_XML_MESSAGE_REASONING_DATA && schema) {
+            this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in a <thinking> </thinking> XML tag.
+2. Then, respond with ${messageType} in a <message> </message> tag.
+3. After your message, provide structured data in a <data> </data> tag containing an JSON object that follows this JSON schema:\n<schema>\n${JSON.stringify(schema, null, 2)}\n</schema>\n\n${specialInstructions || ''}
+
+Example:
+<thinking>I should...</thinking>
+<data>
+{
+  "nextAction": "",
+  ...
+}
+</data>
+<message>I have...</message>`);
+
+
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schema) {
             this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with ${messageType}
-3. After your message, provide the requested structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}
+3. After your message, provide the structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
 
-Example of calling a step:
-<thinking>
-Based on X, Y and Z...
-</thinking>
 
-I'm going to create a spreadsheet to...
+// Example of calling a step:
+// <thinking>
+// Based on X, Y and Z...
+// </thinking>
 
-\`\`\`json
-{
-  nextAction: "generate-spreadsheet",
-  ...
-}
-\`\`\`
+// I'm going to create a spreadsheet to...
 
-Example of responding to user:
-<thinking>
-Based on X, Y and Z...
-</thinking>
+// \`\`\`json
+// {
+//   nextAction: "generate-spreadsheet",
+//   ...
+// }
+// \`\`\`
 
-I've successfully created a spreadsheet to...
+// Example of responding to user:
+// <thinking>
+// Based on X, Y and Z...
+// </thinking>
 
-\`\`\`json
-{
-  nextAction: "REPLY",
-  ...
-}
-\`\`\`
+// I've successfully created a spreadsheet to...
 
-`);
+// \`\`\`json
+// {
+//   nextAction: "REPLY",
+//   ...
+// }
+// \`\`\`
+
         } else if (outputType === OutputType.MULTIPLE_JSON_WITH_MESSAGE && schema) {
             this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and one or more fenced code blocks \`\`\`json each containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n\n${specialInstructions || ''}`);
         }
@@ -679,16 +701,14 @@ I've successfully created a spreadsheet to...
 
         // Render and add content sections (excluding STEPS)
         for (const [contentType, content] of this.contentSections) {
-            if (contentType !== ContentType.STEPS) { // Skip STEPS here since handled at message level
-                const renderer = this.registry.getRenderer(contentType);
-                if (renderer) {
-                    const rendered = await renderer(content);
-                    if (rendered) {
-                        sections.push(`## ${contentType[0].toUpperCase()}${contentType.slice(1)}\n` + rendered);
-                    }
-                } else {
-                    Logger.error(`PromptBuilder renderer for content type ${contentType} not found`);
+            const renderer = this.registry.getRenderer(contentType);
+            if (renderer) {
+                const rendered = await renderer(content);
+                if (rendered) {
+                    sections.push(`## ${contentType[0].toUpperCase()}${contentType.slice(1)}\n` + rendered);
                 }
+            } else {
+                Logger.error(`PromptBuilder renderer for content type ${contentType} not found`);
             }
         }
 

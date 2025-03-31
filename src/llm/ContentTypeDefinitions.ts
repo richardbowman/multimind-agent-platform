@@ -140,6 +140,7 @@ export interface IntentContent {
 export interface FullGoalsContent {
     contentType: ContentType.GOALS_FULL;
     params: ExecuteParams;
+    skipStepGoal?: boolean;
 }
 
 export interface StepsContent {
@@ -147,6 +148,7 @@ export interface StepsContent {
     steps: StepTask<StepResponse>[];
     posts?: ChatPost[];
     handles?: ChatHandle[];
+    stepGoal?: string;
 }
 
 export interface TasksContent {

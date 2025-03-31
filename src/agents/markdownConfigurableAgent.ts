@@ -147,6 +147,9 @@ export class MarkdownConfigurableAgent extends ConfigurableAgent {
         if (metadata.description) {
             this.description = metadata.description;
         }
+        if (metadata.supportsDelegation) {
+            this.supportsDelegation = metadata.supportsDelegation;
+        }
 
         if (!config.purpose) {
             Logger.warn(`Agent ${this.agentName} missing purpose`);

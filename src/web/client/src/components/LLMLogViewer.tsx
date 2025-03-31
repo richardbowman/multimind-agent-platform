@@ -268,8 +268,8 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ filterText, highligh
     };
 
     return (
-        <Box>
-            <Box sx={{ height: 'calc(100vh - 200px)', width: '100%' }}>
+        <Box sx={{display: 'flex', flexDirection: 'column', overflow: 'hidden'}}>
+            <Box sx={{ display: 'flex', overflow: 'hidden', flex: 1 }}>
                 <DataGrid
                     rows={transformLogs(logs)}
                     columns={columns}

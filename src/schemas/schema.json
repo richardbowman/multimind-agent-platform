@@ -1145,17 +1145,8 @@
           "items": {
             "additionalProperties": false,
             "properties": {
-              "goalId": {
+              "goalIndex": {
                 "type": "string"
-              },
-              "nextSteps": {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              "progress": {
-                "type": "number"
               },
               "reasoning": {
                 "type": "string"
@@ -1163,53 +1154,23 @@
               "status": {
                 "enum": [
                   "pending",
-                  "in-progress",
-                  "complete"
+                  "inProgress",
+                  "completed"
                 ],
                 "type": "string"
               }
             },
             "required": [
-              "goalId",
-              "progress",
+              "goalIndex",
               "status",
               "reasoning"
             ],
             "type": "object"
           },
           "type": "array"
-        },
-        "goalsCompleted": {
-          "description": "List of goal IDs that should be marked complete",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "goalsInProgress": {
-          "description": "List of goal IDs that should be marked in-progress",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "goalsUpdated": {
-          "description": "List of goal IDs that were updated",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "summary": {
-          "description": "Summary of goal progress analysis",
-          "type": "string"
         }
       },
       "required": [
-        "summary",
-        "goalsUpdated",
-        "goalsInProgress",
-        "goalsCompleted",
         "goalAnalysis"
       ],
       "type": "object"

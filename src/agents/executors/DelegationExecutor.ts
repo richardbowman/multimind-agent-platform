@@ -16,6 +16,7 @@ import { TaskStatus } from 'src/schemas/TaskStatus';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { withRetry } from 'src/helpers/retry';
+import { asError } from 'src/types/types';
 
 @StepExecutorDecorator(ExecutorType.DELEGATION, 'Delegate task(s) to agent(s) in the channel')
 export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
@@ -104,66 +105,66 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
     
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
-        if (supportedAgents?.length === 0) {
-            throw new Error("No agents with delegation enabled in channel.");
-        }
-
-        // Search for delegation-specific procedure guides
-        const delegationGuides = await this.params.artifactManager.searchArtifacts(
-            StringUtils.truncateWithEllipsis(params.stepGoal, 1000),
-            {
-                type: ArtifactType.Document,
-                subtype: DocumentSubtype.Procedure,
-                tags: ['delegation']
-            },
-            3 // Limit to top 3 most relevant
-        );
-
-        const prompt = this.startModel(params);
-        prompt.addContext({contentType: ContentType.GOALS_FULL, params});
-        const schema = await DelegationSchema;
-        
-        // Add delegation guides context if found
-        if (delegationGuides.length > 0) {
-            const loadedGuides = await this.params.artifactManager.bulkLoadArtifacts(
-                delegationGuides.map(g => g.artifact.id)
-            );
-            prompt.addContext({
-                contentType: ContentType.PROCEDURE_GUIDES,
-                guideType: "delegation",
-                guides: loadedGuides
-            });
-        }
-
-        prompt.addInstruction( `Create a project with tasks that should be delegated to all agents in the channel. 
-            For each task, specify which agent should handle it based on their capabilities.
-            Output should include:
-            - A clear project name and goal
-            - A list of tasks with descriptions and assigned agents
-            - A response message to explain the delegation plan to the user.
-            - Create as few delegation steps as possible to achieve the goal.
-            - If you delegate to managers, don't also delegate to their team.`);
-
-        supportedAgents && prompt.addContext({contentType: ContentType.AGENT_OVERVIEWS, agents: supportedAgents});
-        prompt.addInstruction( `IMPORTANT DELEGATION RULES:
-            - Create THE FEWEST delegation steps as possible to achieve the goal.
-            - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the research manager AND the research assistant)
-            - Instead of making multiple tasks for the same agent, combine them into one complete task.
-            - MAKE SURE THE TASK DESCRIPTION is completely stand-alone and contains ALL details provided.
-            - Review any available delegation procedure guides for best practices on task delegation and assignment.
-            - The agent will not receive any other information except for what is in the task description so the task description
-            should not refer back to the message or goals, it should be self-contained. For instance, if the goal contains an artifact name or URL, make sure to restate it.`);
-        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
-
         try {
+            const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
+            if (supportedAgents?.length === 0) {
+                throw new Error("No agents with delegation enabled in channel.");
+            }
+    
+            // Search for delegation-specific procedure guides
+            const delegationGuides = await this.params.artifactManager.searchArtifacts(
+                StringUtils.truncateWithEllipsis(params.stepGoal, 1000),
+                {
+                    type: ArtifactType.Document,
+                    subtype: DocumentSubtype.Procedure,
+                    tags: ['delegation']
+                },
+                3 // Limit to top 3 most relevant
+            );
+    
+            const prompt = this.startModel(params);
+            prompt.addContext({contentType: ContentType.GOALS_FULL, params});
+            const schema = await DelegationSchema;
+            
+            // Add delegation guides context if found
+            if (delegationGuides.length > 0) {
+                const loadedGuides = await this.params.artifactManager.bulkLoadArtifacts(
+                    delegationGuides.map(g => g.artifact.id)
+                );
+                prompt.addContext({
+                    contentType: ContentType.PROCEDURE_GUIDES,
+                    guideType: "delegation",
+                    guides: loadedGuides
+                });
+            }
+    
+            prompt.addInstruction( `Create a project with tasks that should be delegated to all agents in the channel. 
+                For each task, specify which agent should handle it based on their capabilities.
+                Output should include:
+                - A clear project name and goal
+                - A list of tasks with descriptions and assigned agents
+                - A response message to explain the delegation plan to the user.
+                - Create as few delegation steps as possible to achieve the goal.
+                - If you delegate to managers, don't also delegate to their team.`);
+    
+            supportedAgents && prompt.addContext({contentType: ContentType.AGENT_OVERVIEWS, agents: supportedAgents});
+            prompt.addInstruction( `IMPORTANT DELEGATION RULES:
+                - Create THE FEWEST delegation steps as possible to achieve the goal.
+                - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the research manager AND the research assistant)
+                - Instead of making multiple tasks for the same agent, combine them into one complete task.
+                - MAKE SURE THE TASK DESCRIPTION is completely stand-alone and contains ALL details provided.
+                - Review any available delegation procedure guides for best practices on task delegation and assignment.
+                - The agent will not receive any other information except for what is in the task description so the task description
+                should not refer back to the message or goals, it should be self-contained. For instance, if the goal contains an artifact name or URL, make sure to restate it.`);
+            prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
+    
             const { projectName, projectGoal, tasks, responseMessage } = await withRetry(async () => {
                 const rawResponse = await prompt.generate({
                     message: params.stepGoal
                 });
                 const response = StringUtils.extractAndParseJsonBlock<DelegationResponse>(rawResponse, schema);
                 return response;
-            }, (r) => r.projectGoal.length > 0 && r.tasks.length > 0, { maxRetries: 2, timeoutMs: 180000} );
+            }, (r) => r.projectGoal.length > 0 && r.tasks.length > 0, { maxAttempts: 2, timeoutMs: 180000} );
 
 
             // Create the project
@@ -219,10 +220,11 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         } catch (error) {
             Logger.error('Error in DelegationExecutor:', error);
             return {
-                type: StepResultType.Delegation,
+                type: StepResultType.Error,
                 finished: true,
+                replan: ReplanType.Force,
                 response: {
-                    status: 'Failed to create the delegated project. Please try again later.'
+                    status: `Failed to create the delegated project: ${asError(error).message}`
                 }
             };
         }

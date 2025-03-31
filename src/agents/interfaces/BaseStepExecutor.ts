@@ -10,7 +10,7 @@ import { ExecuteParams } from './ExecuteParams';
 import { StepTask } from './ExecuteStepParams';
 import { ExecutorConstructorParams } from './ExecutorConstructorParams';
 import { StepExecutor, TaskNotification, ModelConversation, ModelConversationResponse } from './StepExecutor';
-import { StepResponse, StepResult, StepResponseType } from './StepResult';
+import { StepResponse, StepResult, StepResponseType, StepResponseRetention } from './StepResult';
 import { ContentInput, FullGoalsContent, StepsContent } from 'src/llm/ContentTypeDefinitions';
 import { ExecutorType } from './ExecutorType';
 import { Message } from 'src/chat/chatClient';
@@ -138,35 +138,60 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
             // Process steps and group by post
             const allSteps = filteredSteps;
             const totalSteps = allSteps.length;
-            
+            let lastCompletionMessage;
+
             await Promise.all(allSteps.map(async (step, index) => {
                 const stepResult = step.props.result!;
-                const isRecentStep = index >= totalSteps - 2; // Last two steps get full details
-                
-                let stepInfo: string;
-                if (isRecentStep) {
-                    let body = await this.prompt.registry.renderResult(stepResult, steps);
-                    stepInfo = `- STEP [${step.props.stepType}]:
-  Description: ${step.description}
-${[body && `Result: <toolResult>${body}</toolResult>`,
-                        stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
-                        stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
-                        stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
-                } else {
-                    // Compress older steps to just type and description
-                    stepInfo = `- [${step.props.stepType}]: ${step.description}`;
-                }
+                const isLongStep = index >= totalSteps - 10; // Long retention lasts for 5 steps
+                const isRecentStep = index >= totalSteps - 4; // Last two steps get full details
 
-                // If step has a threadId, add to corresponding post
-                const messageId = step.props.userPostId || lastMessageId;
-                const existing = renderedSteps.get(messageId) || [];
-                existing.push(stepInfo);
-                renderedSteps.set(messageId, existing);
+                if (stepResult.response.type !== StepResponseType.CompletionMessage) {
+                    let stepInfo: string;
+                    if (isRecentStep || stepResult.response.retention === StepResponseRetention.Always || (isLongStep && stepResult.response.retention === StepResponseRetention.Long)) {
+                        let body = await this.prompt.registry.renderResult(stepResult, steps);
+                        stepInfo = `- STEP [${step.props.stepType}]:
+    Description: ${step.description}
+    ${[body && `Result: <toolResult>${body}</toolResult>`,
+                            stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
+                            stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
+                            stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
+                    } else {
+                        // Compress older steps to just type and description
+                        stepInfo = `- [${step.props.stepType}]: ${step.description}`;
+                    }
+
+                    // If step has a threadId, add to corresponding post
+                    const messageId = step.props.userPostId || lastMessageId;
+                    const existing = renderedSteps.get(messageId) || [];
+                    existing.push(stepInfo);
+                    renderedSteps.set(messageId, existing);
+                } else {
+                    // put completion mesage context on the assistant message
+                    // If step has a threadId, add to corresponding post
+                    const messageId = step.props.responsePostId || lastMessageId;
+                    const existing = renderedSteps.get(messageId) || [];
+                    existing.push(step.props.result?.response.reasoning||"");
+                    renderedSteps.set(messageId, existing);
+                }
             }));
 
 
             return recentPosts.map(p => {
-                if (renderedSteps.get(p.id)?.length||0 > 0) {
+                if (p.user_id === this.params.agentId) {
+                    return {
+                        ...p,
+                        message: `
+<thinking>
+${renderedSteps.get(p.id)}
+</thinking>
+<data>
+{ 
+  "responseType": "REPLY"
+}
+</data>
+<message>${p.message}</message>`
+                    };
+                } else if (renderedSteps.get(p.id)?.length||0 > 0) {
                     return {
                         ...p,
                         message: p.message + `\n\n# 📝 STEPS COMPLETED FOR POST:\n${renderedSteps.get(p.id)?.join("\n\n")}`,
@@ -199,7 +224,7 @@ ${[body && `Result: <toolResult>${body}</toolResult>`,
         }
 
         const userPost = stepMessages?.find(m => m.id === this.params.userPost?.id);
-        const message = (userPost?.message || stepMessages[stepMessages.length-1] || this.params.stepGoal) + `\nENSURE YOU FOLLOW THE PROVIDED "RESPONSE FORMAT" SECTION. THE SYSTEM CANNOT INTERPRET YOUR RESPONSE OTHERWISE.`;
+        const message = (userPost?.message || stepMessages?.[stepMessages?.length-1] || this.params.stepGoal) + `\nENSURE YOU FOLLOW THE PROVIDED "RESPONSE FORMAT" SECTION. THE SYSTEM CANNOT INTERPRET YOUR RESPONSE OTHERWISE.`;
 
         const tracedinput: GenerateInputParams = {
             instructions: this.prompt,
@@ -248,10 +273,10 @@ ${[body && `Result: <toolResult>${body}</toolResult>`,
         )).filter(guide => !pastGuideIds.includes(guide.artifact.id));
 
         // Load all guides in a single bulk operation
-        const procedureGuides = await this.stepExecutor.params.artifactManager.bulkLoadArtifacts([
+        const procedureGuides = await this.stepExecutor.params.artifactManager.bulkLoadArtifacts([...new Set([
             ...searchedGuides.map(p => p.artifact.id),
             ...pastGuideIds
-        ]);
+        ])]);
 
         // Format searched guides for prompt
         const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));

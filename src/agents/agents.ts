@@ -3,7 +3,7 @@ import { ChatClient, ChatPost, ConversationContext, CreateMessage, Message, Proj
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import { ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
-import { InputPrompt } from "src/prompts/structuredInputPrompt";
+import { InputPrompt } from "src/types/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, ProjectMetadata, Task, TaskManager, TaskType } from "src/tools/taskManager";

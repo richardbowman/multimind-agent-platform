@@ -8,7 +8,6 @@ import { BraveConfig } from './searchSettings/BraveConfig';
 
 
 import { LanceDBSettings } from './databaseSettings/LanceDBSettings';
-import { SQLiteVecSettings } from './databaseSettings/SQLiteVecSettings';
 import { TTSSettings } from './ttsSettings/TTSSettings';
 
 
@@ -183,16 +182,7 @@ export class Settings {
         options: ['vectra', 'chroma', 'sqlite_vec', 'lancedb'],
         description: 'Type of vector database to use for storing and querying embeddings'
     })
-    vectorDatabaseType: 'vectra'|'chroma'|'sqlite_vec'|'lancedb' = 'vectra';
-
-    @ClientSettings({
-        label: 'SQLiteVec Settings',
-        category: 'Indexing',
-        type: 'section',
-        description: 'Configuration for SQLiteVec vector database',
-        visibleWhen: (settings) => settings.vectorDatabaseType === 'sqlite_vec'
-    })
-    sqliteVec: SQLiteVecSettings = new SQLiteVecSettings();
+    vectorDatabaseType: 'vectra'|'chroma'|'lancedb' = 'lancedb';
 
     @ClientSettings({
         label: 'LanceDB Settings',

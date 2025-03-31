@@ -46,7 +46,7 @@ export class CreateChannelExecutor extends BaseStepExecutor<ChannelStepResponse>
         
         const channelPurpose = goal;
         const templates = await ServerRPCHandler.loadGoalTemplates();
-        const templatePrompt = `Available templates:
+        const templatePrompt = `# Recommended Channel Templates:
 ${templates.map(t => 
     `Template: ${t.name} (ID: ${t.id})
     Description: ${t.description}
@@ -57,9 +57,7 @@ ${templates.map(t =>
         // Single LLM call to get all needed information
         const schema = await getGeneratedSchema(SchemaType.CreateChannelResponse);
         const prompt = this.startModel(params);
-        prompt.addInstruction(`You are a function that creates a chat channel for the user and appropriate agents. In the JSON attributes,
-provide information for the system to create the desired channel. Your channel name must be in the format "#channel-name". Then, respond to the user
-explaining that you've created a channel, which agents are a part of the channel, and how to get started.`)
+        prompt.addInstruction(`You are a function that creates a chat channel for the user and appropriate agents.`)
         .addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]})
         .addContext({contentType: ContentType.ARTIFACTS_FULL, artifacts: params.context?.artifacts||[]});
 
@@ -68,13 +66,15 @@ ${(await this.chatClient.getChannels()).map(c => ` - ${c.name}: ${c.description}
 
         prompt.addContext({contentType: ContentType.GOALS_FULL, params})
         .addContext(templatePrompt)
-        .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+        .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema, specialInstructions: `In the JSON attributes,
+provide information for the system to create the desired channel. Your channel name must be in the format "#channel-name". Then, respond to the agent
+explaining that you've created the channel, which agents are a part of the channel, and how you recommend the channel be used.`});
           
         const rawResponse = await prompt.generate({
             message: params.stepGoal||params.message
         });
         const channelData = StringUtils.extractAndParseJsonBlock<CreateChannelResponse>(rawResponse.message, schema);
-        const message = StringUtils.extractNonCodeContent(rawResponse.message, [], ["json"]);
+        const status = StringUtils.extractNonCodeContent(rawResponse.message, [], ["json"]);
         
         // Ensure channel name starts with #
         const channelName = createChannelHandle(channelData.name);
@@ -93,7 +93,6 @@ ${(await this.chatClient.getChannels()).map(c => ` - ${c.name}: ${c.description}
             description: channelData.description,
             isPrivate: false,
             members: channelData.supportingAgents.map(a => createChatHandle(a)),
-            goalTemplate: createChannelHandle(channelData.templateId),
             goalDescriptions: channelData.initialTasks,
             defaultResponder: templates.find(t => t.id === channelData.templateId)?.defaultResponder,
             artifactIds: artifactIds
@@ -103,9 +102,10 @@ ${(await this.chatClient.getChannels()).map(c => ` - ${c.name}: ${c.description}
 
         return {
             finished: true,
+            replan: ReplanType.Allow,
             response: {
                 type: StepResponseType.Channel,
-                message,
+                status: `CHANNEL CREATED: ${status}`,
                 data: {
                     channelHandle: channelName,
                     channelDescription: channel.description,

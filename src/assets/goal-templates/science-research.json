@@ -1,0 +1,20 @@
+{
+    "id": "#medical-research",
+    "name": "Medical Research Channel",
+    "description": "Template for setting up a medical research channel with a research manager",
+    "supportingAgents": [
+        "@research-manager",
+        "@science-assistant",
+        "@research-assistant",
+        "@science-reviewer"
+    ],
+    "defaultResponder": "@research-manager",
+    "initialTasks": [
+        {
+            "description": "Impacts of spirulina on adult heart health."
+        },
+        {
+            "description": "Impacts of sleep on childhood health."
+        }
+    ]
+}

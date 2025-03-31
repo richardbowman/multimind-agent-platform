@@ -8,7 +8,6 @@ import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { AddTaskParams, Project, Task, TaskManager, TaskType } from '../tools/taskManager';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import { Planner } from './planners/planner';
-import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { AgentConfig } from 'src/tools/AgentConfig';
 import { ReplanType, StepResponse, StepResult, StepResultType } from './interfaces/StepResult';
@@ -21,7 +20,6 @@ import { asUUID, UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../helpers/logger';
 import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
-import { error } from 'console';
 import { StringUtils } from 'src/utils/StringUtils';
 
 interface ExecutorCapability {
@@ -315,7 +313,7 @@ export abstract class StepBasedAgent extends Agent {
         };
 
         if (!this.planner) {
-            const goal = plannerParams.userPost ? `Reply to incoming message: ${plannerParams.userPost?.message}` : `Plan for task: '${params.projectTask?.description}' as part of project '${project.name}'`;
+            const goal = plannerParams.userPost ? `Reply to incoming message: ${plannerParams.userPost?.message}` : `Solve task: '${params.projectTask?.description}' as part of project '${project.name}'`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: goal,
@@ -545,7 +543,7 @@ export abstract class StepBasedAgent extends Agent {
                             return this.agents.agents[memberId];
                         }).defined();
                 } else {
-                    agentsOptions = Object.values(this.settings.agents).filter(a => a.userId).map(id => {
+                    agentsOptions = Object.values(this.agents.agents).filter(a => a.userId).map(id => {
                         return this.agents.agents[id.userId];
                     }).filter(a => a !== undefined);
                 }
@@ -639,21 +637,7 @@ export abstract class StepBasedAgent extends Agent {
             return;
         }
 
-        // Store the result in task props
-        await this.projects.updateTask(task.id, {
-            props: {
-                ...(stepResult.projectId && {
-                    ...task.props,
-                    childProjectId: stepResult.projectId
-                }) ?? task.props,
-                result: stepResult,
-                awaitingResponse: stepResult.needsUserInput,
-                userPostId: userPost?.id,
-                partialPostId: params.partialPost?.id
-            }
-        } as Partial<StepTask<StepResponse>>);
 
-        
         if (stepResult.projectId) {
             const newProject = await this.projects.getProject(stepResult.projectId);
             newProject.metadata.parentTaskId = task.id;
@@ -686,12 +670,13 @@ export abstract class StepBasedAgent extends Agent {
         }
 
         // Only send replies if we have a userPost to reply to
+        let lastPost : ChatPost;
         if (replyTo && stepResult.response.message) {
             const messageResponse = {
                 message: stepResult.response?.message
             }
             if (params.partialPost) {
-                await this.chatClient.updatePost(
+                lastPost = await this.chatClient.updatePost(
                     (params.partialPost as ChatPost).id,
                     messageResponse.message,
                     {
@@ -700,9 +685,25 @@ export abstract class StepBasedAgent extends Agent {
                     });
                 params.partialPost = undefined;
             } else {
-                await this.reply(replyTo, messageResponse, props);
+                lastPost = await this.reply(replyTo, messageResponse, props);
             }
         }
+
+        // Store the result in task props
+        await this.projects.updateTask(task.id, {
+            props: {
+                ...(stepResult.projectId && {
+                    ...task.props,
+                    childProjectId: stepResult.projectId
+                }) ?? task.props,
+                result: stepResult,
+                awaitingResponse: stepResult.needsUserInput,
+                userPostId: userPost?.id,
+                partialPostId: params.partialPost?.id,
+                responsePostId: lastPost?.id
+            }
+        } as Partial<StepTask<StepResponse>>);
+
         if (stepResult.finished || this.planner?.alwaysComplete) {
             // If this was the last planned task, add a validation step
             const remainingTasks = (await this.projects.getProjectTasks(projectId)).filter(t => !t.complete && t.type === "step" && t.id !== task.id);

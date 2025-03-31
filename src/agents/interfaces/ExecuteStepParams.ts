@@ -9,6 +9,7 @@ export interface StepTaskProps<T extends StepResponse> {
     stepType: ExecutorType;
     awaitingResponse?: boolean;
     userPostId?: UUID;
+    responsePostId?: UUID;
 }
 
 export interface StepTask<T extends StepResponse> extends Task {

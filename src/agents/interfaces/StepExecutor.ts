@@ -5,7 +5,7 @@ import { GenerateInputParams } from '../agents';
 import { TaskEventType } from "../../shared/TaskEventType";
 import { ChatPost } from 'src/chat/chatClient';
 import { StepTask } from './ExecuteStepParams';
-import { InputPrompt } from 'src/prompts/structuredInputPrompt';
+import { InputPrompt } from 'src/types/structuredInputPrompt';
 import { ModelMessageResponse, ModelResponse, ModelResponseMetadata } from 'src/schemas/ModelResponse';
 import { WithMetadata } from 'typescript';
 import { WithTokens } from 'src/llm/modelHelpers';

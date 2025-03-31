@@ -55,6 +55,13 @@ export enum ReplanType {
     Force = "force"
 }
 
+export enum StepResponseRetention {
+    Standard,
+    None,
+    Long,
+    Always
+}
+
 export type WithMessage<T> = T & {
     message?: string;
 };
@@ -67,6 +74,7 @@ export interface StepResponse {
     type?: StepResponseType;
     message?: string;
     data?: StepResponseData;
+    retention?: StepResponseRetention;
     reasoning?: string;
     status?: string;
     artifacts?: Partial<Artifact>[];

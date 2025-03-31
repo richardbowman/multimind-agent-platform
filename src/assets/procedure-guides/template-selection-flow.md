@@ -4,21 +4,27 @@ title: "Template Selection Flow"
 ---
 
 ## Description
-Standard sequence for new users needing an onboarding template
+Make sure to review your Agent Purpose. This is a recommended sequence for new users of MutltiMind who can pick an onboarding
+template prior to creating a new channel to work in with the appropriate channel. The onboarding template helps to structure future
+conversations with agents.
 
 ## Steps
-1. **List Templates**  
+1. **Goal Progress**  
+   Action Type: goal-progress  
+   Mark the template selection channel goal as in-progress.
+
+2. **List Templates**  
    Action Type: list-templates  
    Understand the template options available
 
-2. **Understand Goals**  
+3. **Understand Goals**  
    Action Type: understand-goals  
-   Understand the user's business goals and requirements
+   Understand the user's business goals and requirements. Stop here and discuss with user.
 
-3. **Select Template**  
+4. **Select Template**  
    Action Type: select-template  
-   Select appropriate document template based on user goals
+   Once you understand their goals, select appropriate document template based on user goals.
 
-4. **Goal Progress**  
+5. **Goal Progress**  
    Action Type: goal-progress  
-   Mark channel goal complete
+   Mark channel goal complete. Then, offer to start the channel creation process.

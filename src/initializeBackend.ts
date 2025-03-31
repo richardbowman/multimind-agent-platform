@@ -1,7 +1,7 @@
 import { LLMServiceFactory } from "./llm/LLMServiceFactory";
 import { ModelType } from "./llm/types/ModelType";
 import { LocalChatStorage, LocalTestClient } from "./chat/localChatClient";
-import SimpleTaskManager from "./test/simpleTaskManager";
+import SimpleTaskManager from "./tools/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
 import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import Logger from "./helpers/logger";

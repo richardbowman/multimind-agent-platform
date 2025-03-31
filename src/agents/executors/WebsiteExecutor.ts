@@ -1,15 +1,15 @@
 import { ArtifactGenerationStepResponse, GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ArtifactType } from 'src/tools/artifact';
-import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepResponseType, StepResult } from '../interfaces/StepResult';
+import { StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelType } from "src/llm/types/ModelType";
 import { ModelConversation } from '../interfaces/StepExecutor';
+import { OperationTypes } from 'src/schemas/ArtifactGenerationResponse';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_WEBSITE, 'Create/revise code for React-based website/app')
 export class WebsiteExecutor extends GenerateArtifactExecutor {
@@ -19,7 +19,7 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 
     protected getAvailableOperations(): OperationTypes[] {
         // Exclude 'replace' operation for websites
-        return super.getAvailableOperations().filter(op => op !== 'replace');
+        return super.getAvailableOperations().filter(op => op !== 'replace' && op !== 'append');
     }
 
     protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation<ArtifactGenerationStepResponse>> {

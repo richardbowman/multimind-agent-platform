@@ -105,7 +105,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
             return {
                 finished: true,
                 replan: ReplanType.Allow,
-                artifacts: newArtifactId ? [{ id: newArtifactId }] : undefined,
+                artifactIds: newArtifactId ? [newArtifactId] : undefined,
                 response: {
                     type: StepResponseType.DocumentTemplate,
                     status: message,

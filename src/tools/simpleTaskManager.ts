@@ -1,12 +1,12 @@
 import cron from 'node-cron';
 import * as Events from 'events';
-import { AddTaskParams, CreateProjectParams, Project, RecurrencePattern, Task, TaskManager, TaskType } from '../tools/taskManager';
+import { AddTaskParams, CreateProjectParams, Project, RecurrencePattern, Task, TaskManager, TaskType } from './taskManager';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from 'src/helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { createUUID, UUID } from 'src/types/uuid';
 import { Op, Sequelize } from 'sequelize';
-import { TaskModel, ProjectModel } from '../tools/taskModels';
+import { TaskModel, ProjectModel } from './taskModels';
 import { DatabaseMigrator } from 'src/database/migrator';
 import { getDataPath } from 'src/helpers/paths';
 import fs from 'node:fs';

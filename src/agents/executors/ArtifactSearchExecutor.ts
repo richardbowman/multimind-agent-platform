@@ -1,19 +1,13 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { IVectorDatabase, SearchResult } from '../../llm/IVectorDatabase';
+import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { Artifact } from 'src/tools/artifact';
-import { ContentType, OutputType } from 'src/llm/promptBuilder';
-import { StringUtils } from 'src/utils/StringUtils';
 import { asError } from 'src/types/types';
 import Logger from '../../helpers/logger';
-import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import { SchemaType } from '../../schemas/SchemaTypes';
 
 /**
  * Executor that searches artifacts in the vector database and returns matching documents.

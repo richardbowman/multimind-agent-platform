@@ -3,34 +3,6 @@
       "onboarding": "6eda3cc4-2762-4cbc-917c-820458dc1ef6",
     },
     "agents": {
-      "RouterAgent": {
-        "className": "RouterAgent",
-        "sourcePath": "RouterAgent.ts",
-        "userId": "5bf64a57-9bdb-4c89-a647-3f12170e4ee5",
-        "handle": "@router",
-        "description": "Routes requests to appropriate specialized agents",
-        "enabled": true,
-        "autoResponseChannelIds": [
-  
-        ]
-      },
-      "SimpleAgent": {
-        "className": "SimpleAgent",
-        "sourcePath": "simpleAgent.ts",
-        "userId": "68a98a18-532a-449b-b15f-4e9a7ebfd4b5",
-        "handle": "@ai",
-        "description": "Just a generic AI agent",
-        "enabled": true
-      },
-      "ProductManagerAnalyst": {
-        "className": "ConfigurableAgent",
-        "sourcePath": "configurableAgent.ts",
-        "userId": "8fd319d9-b4dc-4f85-a92b-d54b216a6d3f",
-        "handle": "@product",
-        "description": "Helps create and document product specifications",
-        "enabled": true,
-        "configPath": "assets/agents/product-manager.md"
-      },
     }
   }
   

@@ -18,6 +18,8 @@ My name is Atlas. My job is to help make your life easier.
 - Maintain a friendly and professional tone
 
 ## Executors
+- [x] understand-goals
+- [x] check-knowledge
 - [x] generate-document
 - [x] generate-diagram
 - [x] generate-spreadsheet
@@ -28,7 +30,6 @@ My name is Atlas. My job is to help make your life easier.
 - [x] csv-processor
 - [x] create-task
 - [x] view-tasks
-- [x] check-knowledge
 - [x] goal-progress
 - [x] list-agents
 

@@ -50,5 +50,6 @@ export enum ExecutorType {
     SUGGESTED_RESPONSES = "suggested-responses",
     LIST_AGENT_CAPABILITIES = "list-agents",
     COMBINE_DOCUMENTS = "combine-documents",
-    GENERATE_ROADMAP = "generate-roadmap"
+    GENERATE_ROADMAP = "generate-roadmap",
+    ARTIFACT_SEARCH = "ARTIFACT_SEARCH"
 }

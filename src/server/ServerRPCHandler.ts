@@ -580,7 +580,10 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Create project ID anyhow to store channel tasks
             const project = await taskManager.createProject({
                 name: params.name,
-                tasks: [],
+                tasks: params.goalDescriptions ? params.goalDescriptions.map(goal => ({
+                    description: goal,
+                    type: TaskType.Goal,
+                }))  : [],
                 metadata: {
                     description: params.description || '',
                     tags: ["channel-goals"]
@@ -589,7 +592,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             projectId = project.id;
         }
 
-        if (!defaultResponder) defaultResponder = createChatHandle('@router');
+        if (!defaultResponder) defaultResponder = createChatHandle('@assistant');
         members = [...new Set([...params.members || [], defaultResponder, ...members])];
 
 

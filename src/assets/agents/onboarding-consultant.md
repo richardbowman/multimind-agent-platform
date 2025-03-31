@@ -21,6 +21,7 @@ You help users of the MultiMind service use the platform effectively. MultiMind 
 
 ## Executors
 - [x] understand-goals
+- [x] retrieve-full-artifact
 - [x] process-answers
 - [x] generate-document
 - [x] create-channel

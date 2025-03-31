@@ -1,6 +1,6 @@
 ---
 id: app-prototyping-onboarding
-name: App Prototyping Onboarding Template
+title: App Prototyping Onboarding Template
 description: Template for defining app requirements and creating prototypes
 sections:
   - id: app-purpose

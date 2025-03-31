@@ -320,7 +320,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
                     message: rawResponse.message,
                     traceId: rawResponse.metadata?._id
                 }
-            }, () => true, { timeoutMs: 180000, maxRetries: 2 });
+            }, () => true, { timeoutMs: 180000, maxAttempts: 2 });
 
             if (response && Array.isArray(response.resultColumns)) {
                 return {

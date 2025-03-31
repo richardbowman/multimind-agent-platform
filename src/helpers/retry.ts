@@ -1,7 +1,7 @@
 import { asError } from "src/types/types";
 
 export interface RetryOptions {
-    maxRetries?: number;
+    maxAttempts?: number;
     initialDelayMs?: number;
     timeoutMs?: number;
     backoffFactor?: number;
@@ -25,7 +25,7 @@ export async function withRetry<T>(
     options: RetryOptions = {}
 ): Promise<T> {
     const {
-        maxRetries = 3,
+        maxAttempts: maxRetries = 3,
         initialDelayMs = 1000,
         timeoutMs = 180000,
         backoffFactor = 2,
@@ -67,7 +67,7 @@ export async function withRetry<T>(
                 lastResult = result;
             }
             
-            throw new Error('Validation failed');
+            throw new Error('Validation failed');   
         } catch (error) {
             lastError = error as Error;
             retryCount++;

@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseRetention, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -49,6 +49,7 @@ export class ListTemplatesExecutor extends BaseStepExecutor<StepResponse> {
             response: {
                 type: StepResponseType.ChannelTemplates,
                 status: `Available Templates:\n${templateList}`,
+                retention: StepResponseRetention.Long,
                 data: {
                     templates
                 }

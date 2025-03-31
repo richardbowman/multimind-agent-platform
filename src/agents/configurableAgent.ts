@@ -1,12 +1,13 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { Planner } from "./planners/planner";
-import { MultiStepPlanner } from "./planners/multiStepPlanner";
-import { ModelType } from "src/llm/types/ModelType";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
 import { ExecutorConstructorParams } from "./interfaces/ExecutorConstructorParams";
 import { AgentConfig } from 'src/tools/AgentConfig';
 
+/**
+ * @deprecated need to collapse into MarkdownConfigurableAgent
+ */
 export class ConfigurableAgent extends StepBasedAgent {
     protected agentName: string | undefined;
     protected agentConfig?: AgentConfig;
@@ -17,7 +18,6 @@ export class ConfigurableAgent extends StepBasedAgent {
         this.params = params;
         if (params.agentName) {
             this.agentName = params.agentName;
-            this.agentConfig = this.settings.agents[this.agentName].config;
         }
     }
     
@@ -32,9 +32,7 @@ export class ConfigurableAgent extends StepBasedAgent {
         if (this.agentConfig?.plannerType === "nextStep") {
             this.planner = null;
         } else if (this.agentConfig?.plannerType === "advanced") {
-            const planner = new MultiStepPlanner(this.params.llmService, this.params.taskManager, this.params.userId, this.modelHelpers, this.stepExecutors, this.params.agents);
-            planner.modelType = ModelType.ADVANCED_REASONING;
-            this.planner = planner;
+            throw new Error("Advanced planner no longer supported");
         }
 
         if (!this.agentConfig) {

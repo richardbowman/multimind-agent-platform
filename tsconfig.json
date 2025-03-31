@@ -15,6 +15,6 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [ "src/**/*", "tests/**/*" ],
+  "include": [ "src/**/*", "tests/**/*", "scripts/generate-uuid.ts" ],
   "exclude": ["node_modules", "dist", ".output", "src/web"]
 }

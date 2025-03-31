@@ -1,6 +1,6 @@
 import React, { useActionState, useCallback, useEffect } from 'react';
 import { Box, Paper, useTheme } from '@mui/material';
-import { BoldItalicUnderlineToggles, ChangeCodeMirrorLanguage, CodeBlockNode, codeBlockPlugin, codeMirrorPlugin, CodeToggle, ConditionalContents, CreateLink, diffSourcePlugin, DiffSourceToggleWrapper, headingsPlugin, imagePlugin, InsertCodeBlock, InsertFrontmatter, InsertTable, linkDialogPlugin, linkPlugin, listsPlugin, ListsToggle, markdownShortcutPlugin, MDXEditor, MDXEditorMethods, MDXEditorProps, quotePlugin, tablePlugin, thematicBreakPlugin, toolbarPlugin, UndoRedo } from '@mdxeditor/editor';
+import { BlockTypeSelect, BoldItalicUnderlineToggles, ChangeCodeMirrorLanguage, CodeBlockNode, codeBlockPlugin, codeMirrorPlugin, CodeToggle, ConditionalContents, CreateLink, diffSourcePlugin, DiffSourceToggleWrapper, headingsPlugin, imagePlugin, InsertCodeBlock, InsertFrontmatter, InsertTable, linkDialogPlugin, linkPlugin, listsPlugin, ListsToggle, markdownShortcutPlugin, MDXEditor, MDXEditorMethods, MDXEditorProps, quotePlugin, tablePlugin, thematicBreakPlugin, toolbarPlugin, UndoRedo } from '@mdxeditor/editor';
 import { useIPCService } from '../../contexts/IPCContext';
 import { ArtifactItem } from '../../../../../tools/artifact';
 import '@mdxeditor/editor/style.css';
@@ -83,6 +83,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               toolbarContents: () => (
                 <DiffSourceToggleWrapper>
                   <UndoRedo />
+                  <BlockTypeSelect/>
                   <BoldItalicUnderlineToggles />
                   <ListsToggle />
                   <CreateLink />

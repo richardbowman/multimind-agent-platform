@@ -71,53 +71,24 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
             message: goal
         });
 
-        const result = StringUtils.extractAndParseJsonBlock<GoalProgressResponse>(rawResult.message, schema);
-        const message = StringUtils.extractNonCodeContent(rawResult.message);
+        const { goalAnalysis } = StringUtils.extractAndParseJsonBlock<GoalProgressResponse>(rawResult.message, schema);
+        const status = StringUtils.extractNonCodeContent(rawResult.message);
 
         // Update task statuses based on the analysis
-        if (result?.goalsInProgress?.length) {
-            await Promise.all(result.goalsInProgress.map(async goalIndex => {
+        if (goalAnalysis?.length) {
+            await Promise.all(goalAnalysis.map(async analysis => {
                 try {
-                    const goalId = params.channelGoals[parseInt(goalIndex)-1].id;
-
+                    const goalId = params.channelGoals[parseInt(analysis.goalIndex)-1].id;
                     const task = isUUID(goalId) && await this.taskManager.getTaskById(goalId);
-                    if (task && task.status !== TaskStatus.InProgress) {
-                        await this.taskManager.markTaskInProgress(goalId);
-                        // Update project status if needed
-                        const project = await this.taskManager.getProject(task.projectId);
-                        if (project && project.metadata.status !== 'active') {
-                            await this.taskManager.updateProject(task.projectId, {
-                                metadata: { ...project.metadata, status: 'active' }
-                            });
+                    if (task && task.status !== analysis.status) {
+                        if (analysis.status === 'completed') {
+                            await this.taskManager.completeTask(goalId);
+                        } else if (analysis.status === 'inProgress') {
+                            await this.taskManager.markTaskInProgress(goalId);
                         }
                     }
                 } catch (error) {
-                    Logger.error(`Failed to mark task ${goalIndex} as in-progress: ${error}`);
-                }
-            }));
-        }
-
-        if (result?.goalsCompleted?.length) {
-            await Promise.all(result.goalsCompleted.map(async goalIndex => {
-                try {
-                    const goalId = params.channelGoals[parseInt(goalIndex)-1].id;
-                    const task = isUUID(goalId) && await this.taskManager.getTaskById(goalId);
-                    if (task && task.status !== TaskStatus.Completed) {
-                        await this.taskManager.completeTask(goalId);
-                        // Check if all tasks in project are complete
-                        const project = await this.taskManager.getProject(task.projectId);
-                        if (project) {
-                            const allTasksComplete = Object.values(project.tasks)
-                                .every(t => t.status === TaskStatus.Completed);
-                            if (allTasksComplete) {
-                                await this.taskManager.updateProject(task.projectId, {
-                                    metadata: { ...project.metadata, status: 'completed' }
-                                });
-                            }
-                        }
-                    }
-                } catch (error) {
-                    Logger.error(`Failed to mark task ${goalIndex} as complete: ${error}`);
+                    Logger.error(`Failed to mark task ${analysis.goalIndex} as in-progress: ${error}`);
                 }
             }));
         }
@@ -126,13 +97,10 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
             finished: true,
             needsUserInput: false,
             replan: ReplanType.Allow,
-            goal: result?.summary,
             response: {
-                message,
+                status,
                 data: {
-                    goalsUpdated: result?.goalsUpdated,
-                    goalsInProgress: result?.goalsInProgress,
-                    goalsCompleted: result?.goalsCompleted
+                    goalAnalysis
                 }
             }
         };

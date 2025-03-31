@@ -241,6 +241,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 flexDirection: 'column',
                 height: '100%'
             }}>
+                {(validationMessage || successMessage) && (
                 <Box sx={{
                     bottom: 0,
                     left: drawerOpen ? 250 : 0,
@@ -262,7 +263,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             {successMessage}
                         </Alert>
                     )}
-                </Box>
+                </Box>)}
                 <Box sx={{
                     display: 'flex',
                     flex: 1,
@@ -272,7 +273,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     <ScrollView sx={{
                         display: 'flex',
                         flexDirection: 'column',
-                        p: 2,
+                        p: 1,
                         flex: 1
                     }}
                     >

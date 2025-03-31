@@ -249,7 +249,7 @@ export class ModelHelpers {
                     throw new Error(`Response does not conform to schema:\n${asError(error).message}`);
                 }
             }, {
-                maxRetries: 2
+                maxAttempts: 2
             })
         } catch (error) {
             throw new Error(`Failed to generate valid response after retries: ${asError(error).message}`);
@@ -295,7 +295,7 @@ export class ModelHelpers {
                     ...params.context
                 }
             });
-        }, () => true, { maxRetries: 2, timeoutMs: 180000 });
+        }, () => true, { maxAttempts: 2, timeoutMs: 180000 });
 
         // Ensure response is an object with message property
         const formattedResponse: RequestArtifacts = typeof response === "string"

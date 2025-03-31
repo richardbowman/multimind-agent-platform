@@ -288,7 +288,7 @@ interface PubMedSearchResult {
                  (response) => response.status === 200 && response.data?.length > 0,
                  {
                      timeoutMs: 10000,
-                     maxRetries: 3,
+                     maxAttempts: 3,
                      initialDelayMs: 1000,
                      minDelayBetweenTasksMs: 500
                  }
