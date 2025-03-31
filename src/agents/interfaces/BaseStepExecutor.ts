@@ -197,7 +197,7 @@ ${[body && `Result: <toolResult>${body}</toolResult>`,
         }
 
         const userPost = stepMessages?.find(m => m.id === this.params.userPost?.id);
-        const message = userPost?.message || stepMessages[stepMessages.length-1] || this.params.stepGoal ;
+        const message = (userPost?.message || stepMessages[stepMessages.length-1] || this.params.stepGoal) + `\nENSURE YOU FOLLOW THE PROVIDED "RESPONSE FORMAT" SECTION. THE SYSTEM CANNOT INTERPRET YOUR RESPONSE OTHERWISE.`;
 
         const tracedinput: GenerateInputParams = {
             instructions: this.prompt,
