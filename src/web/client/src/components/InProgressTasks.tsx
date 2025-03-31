@@ -106,6 +106,12 @@ export const InProgressTasks: React.FC<InProgressTasksProps> = ({ tasks }) => {
                         setDialogOpen(false);
                         setSelectedTask(null);
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                            setDialogOpen(false);
+                            setSelectedTask(null);
+                        }
+                    }}
                     selectedTask={selectedTask}
                     setSelectedTask={setSelectedTask}
                     tasks={tasks}
