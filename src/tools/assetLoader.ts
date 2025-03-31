@@ -62,17 +62,19 @@ async function loadAssets(
             content = options.contentProcessor(content);
         }
 
-        // Check if asset exists and has same content
+        // Check if asset exists and has same content and metadata
         const relativePath = path.relative(basePath, filePath);
         const existingAsset = existingAssetMap.get(relativePath);
         if (existingAsset) {
             const existingHash = existingAsset.metadata?.contentHash;
-            if (existingHash === metadata.contentHash) {
+            const metadataChanged = JSON.stringify(existingAsset.metadata) !== JSON.stringify(metadata);
+            
+            if (existingHash === metadata.contentHash && !metadataChanged) {
                 Logger.info(`${options.artifactSubtype} unchanged: ${file}`);
                 loadedAssets.push(existingAsset);
                 continue;
             }
-            Logger.info(`Updating ${options.artifactSubtype}: ${file}`);
+            Logger.info(`Updating ${options.artifactSubtype}: ${file} (${metadataChanged ? 'metadata' : 'content'} changed)`);
         }
 
         try {
