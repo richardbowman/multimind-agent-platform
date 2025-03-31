@@ -81,13 +81,36 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
             message = StringUtils.extractNonCodeContent(modelResponse.message);
             const data = StringUtils.extractAndParseJsonBlock<TemplateSelectionResponse>(modelResponse.message, schema);
 
+            // Create a copy of the selected template as a new artifact
+            let newArtifactId: UUID | undefined;
+            if (data.selectedTemplateId) {
+                const template = await this.artifactManager.loadArtifact(data.selectedTemplateId);
+                if (template) {
+                    const newArtifact = await this.artifactManager.saveArtifact({
+                        type: template.type,
+                        content: template.content,
+                        metadata: {
+                            ...template.metadata,
+                            title: `Copy of ${template.metadata?.title || 'Template'}`,
+                            isTemplateCopy: true,
+                            originalTemplateId: data.selectedTemplateId
+                        }
+                    });
+                    newArtifactId = newArtifact.id;
+                }
+            }
+
             return {
                 finished: true,
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.DocumentTemplate,
                     status: message,
-                    data
+                    data: {
+                        ...data,
+                        newArtifactId
+                    },
+                    artifacts: newArtifactId ? [{ id: newArtifactId }] : undefined
                 }
             };
         } catch (error) {
