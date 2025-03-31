@@ -569,9 +569,22 @@ export class ArtifactManager {
       // Search the vector database
       let results : SearchResult[];
       try {
-        results = [...new Set((await vectorDb.query([query], vectorWhere, Object.keys(postVectorWhere).length > 0 ? limit * 2: limit))
-          .filter(r => r.score > minScore)
-          .sort((a, b) => b.score - a.score))];
+        // Get initial results with higher limit to account for deduplication
+        const initialResults = (await vectorDb.query([query], vectorWhere, Object.keys(postVectorWhere).length > 0 ? limit * 3 : limit * 2))
+            .filter(r => r.score > minScore);
+        
+        // Group by artifact ID and keep only the highest scoring chunk per artifact
+        const resultsByArtifact = new Map<string, SearchResult>();
+        for (const result of initialResults) {
+            const artifactId = result.metadata.artifactId as string;
+            const existing = resultsByArtifact.get(artifactId);
+            if (!existing || result.score > existing.score) {
+                resultsByArtifact.set(artifactId, result);
+            }
+        }
+        
+        // Convert back to array and sort by score
+        results = Array.from(resultsByArtifact.values()).sort((a, b) => b.score - a.score);
       } catch (e) {
         const message = `Vector search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(vectorWhere, null, 2)}" with limit ${limit}`;
         Logger.error(message, e)
