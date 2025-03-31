@@ -67,9 +67,14 @@ async function loadAssets(
         const existingAsset = existingAssetMap.get(relativePath);
         if (existingAsset) {
             const existingHash = existingAsset.metadata?.contentHash;
-            // Compare only the metadata keys we explicitly set in this loader
-            const relevantMetadataKeys = ['title', 'description', 'source', 'contentHash', ...Object.keys(options.metadataBuilder?.(filePath, content) || {})];
-            const metadataChanged = relevantMetadataKeys.some(key => 
+            // Get all frontmatter keys from the document
+            const frontmatterKeys = new Set([
+                ...Object.keys(metadata),
+                ...Object.keys(existingAsset.metadata || {})
+            ]);
+            
+            // Check if any frontmatter values differ
+            const metadataChanged = Array.from(frontmatterKeys).some(key => 
                 JSON.stringify(existingAsset.metadata?.[key]) !== JSON.stringify(metadata[key])
             );
             
