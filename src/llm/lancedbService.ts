@@ -37,6 +37,7 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                     new arrow.Field('text', new arrow.Utf8()),
                     new arrow.Field('type', new arrow.Utf8()),
                     new arrow.Field('subtype', new arrow.Utf8()),
+                    new arrow.Field('artifactid', new arrow.Utf8()),
                     new arrow.Field('metadata_json', new arrow.Utf8())
                 ]);
 
@@ -62,6 +63,7 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
                 text: doc,
                 type: collection.metadatas[i].type || '',
                 subtype: collection.metadatas[i].subtype || '',
+                artifactid: collection.metadatas[i].artifactid || '',
                 metadata_json: JSON.stringify(collection.metadatas[i])
             }));
 
@@ -79,6 +81,7 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
             const results = await this.table.search(queryEmbedding)
                 .limit(nResults)
                 .where(where ? this.buildWhereClause(where) : "")
+                .select(["id", "text", "metadata_json", "artifactid"])
                 .toArray();
 
             return results.map((result: any) => ({
