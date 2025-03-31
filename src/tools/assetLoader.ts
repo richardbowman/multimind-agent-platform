@@ -157,101 +157,56 @@ export async function loadAgentConfigs(basePath: string, configPath: string, art
 }
 
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
-    const loadedArtifacts: Artifact[] = [];
-    const guidesDir = path.join(basePath, guidePath);
-    if (!fs.existsSync(guidesDir)) {
-        Logger.warn(`Procedure guides directory not found at ${guidesDir}`);
-        return;
-    }
+    const loadedArtifacts = await loadAssets(basePath, guidePath, artifactManager, {
+        fileFilter: f => {
+            const ext = path.extname(f).toLowerCase();
+            return ext === '.md' || ext === '.csv';
+        },
+        metadataBuilder: (filePath, content) => {
+            let frontmatter = {};
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            
+            if (match) {
+                try {
+                    frontmatter = yaml.load(match[1]) || {};
+                } catch (error) {
+                    Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
+                }
+            }
 
-    const files = fs.readdirSync(guidesDir);
-    const supportedFiles = files.filter(f => {
-        const ext = path.extname(f).toLowerCase();
-        return ext === '.md' || ext === '.csv';
+            const ext = path.extname(filePath).toLowerCase();
+            const metadata: Record<string, any> = {
+                subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
+                title: frontmatter['title'] || path.basename(filePath, ext),
+                description: 'Procedure guide document',
+                ...frontmatter,
+                mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
+                source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, '')
+            };
+
+            // Load additional metadata from .metadata.json file if exists
+            const metadataPath = path.join(
+                path.dirname(filePath), 
+                `${path.basename(filePath, ext)}.metadata.json`
+            );
+            if (fs.existsSync(metadataPath)) {
+                try {
+                    const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+                    Object.assign(metadata, loadedMetadata);
+                } catch (error) {
+                    Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
+                }
+            }
+
+            return metadata;
+        },
+        contentProcessor: (content) => {
+            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+            const match = content.match(frontmatterRegex);
+            return match ? content.slice(match[0].length) : content;
+        }
     });
-
-    // Get existing guides from artifact manager
-    const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.Document });
-    const existingTables = await artifactManager.getArtifacts({ type: ArtifactType.Spreadsheet });
-    const existingGuideMap = new Map([...existingGuides, ...existingTables].map(g => [g.metadata?.source, g]));
-
-    for (let i = 0; i < supportedFiles.length; i++) {
-        const file = supportedFiles[i];
-        Logger.progress(`Loading agent procedures (${i + 1} of ${supportedFiles.length})`, (i + 1) / supportedFiles.length, "agent-procedures");
-        const filePath = path.join(guidesDir, file);
-        let content = fs.readFileSync(filePath, 'utf-8');
-        let frontmatter = {};
-        
-        // Extract YAML front matter if present
-        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-        const match = content.match(frontmatterRegex);
-        if (match) {
-            try {
-                frontmatter = yaml.load(match[1]) || {};
-                // Remove the frontmatter from the content
-                content = content.slice(match[0].length);
-            } catch (error) {
-                Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
-            }
-        }
-
-        // Determine artifact type based on file extension
-        const ext = path.extname(file).toLowerCase();
-        const artifactType = ext === '.csv' ? ArtifactType.Spreadsheet : ArtifactType.Document;
-        
-        const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
-
-        // Check if guide exists and has same content
-        // Use the same key for both markdown and CSV by removing the extension
-        const relativePath = path.relative(basePath, filePath);
-        const basePathKey = relativePath.replace(/\.(md|csv)$/, '');
-        const existingGuide = existingGuideMap.get(basePathKey);
-        if (existingGuide) {
-            const existingHash = existingGuide.metadata?.contentHash;
-            if (existingHash === contentHash) {
-                Logger.info(`Procedure guide unchanged: ${file}`);
-                loadedArtifacts.push(existingGuide);
-                continue;
-            }
-            Logger.info(`Updating procedure guide: ${file}`);
-        }
-
-        // Try to load metadata file if it exists
-        const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
-        // Start with YAML frontmatter as base metadata
-        let metadata: Record<string, any> = {
-            subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
-            title: frontmatter['title'] || path.basename(file, '.md'),
-            description: 'Procedure guide document',
-            ...frontmatter,
-            mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
-            source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, ''),
-            contentHash: contentHash
-        };
-
-        if (fs.existsSync(metadataPath)) {
-            try {
-                const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-                metadata = { ...metadata, ...loadedMetadata };
-            } catch (error) {
-                Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
-            }
-        }
-
-        try {
-            const artifact = await artifactManager.saveArtifact({
-                ...existingGuide?.id?{id: existingGuide?.id}:{},
-                type: artifactType,
-                content: content,
-                metadata: metadata
-            });
-
-            loadedArtifacts.push(artifact);
-            Logger.info(`Loaded procedure guide: ${file}`);
-        } catch (e) {
-            Logger.error(`Failed to save procedure guide ${file}`, e);
-        }
-    }
 
     // Generate the actions artifact from the loaded guides
     const actionsGuide = loadedArtifacts.find(a => a.metadata?.source?.endsWith('actions.md'));
