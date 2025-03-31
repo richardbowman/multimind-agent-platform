@@ -67,7 +67,11 @@ async function loadAssets(
         const existingAsset = existingAssetMap.get(relativePath);
         if (existingAsset) {
             const existingHash = existingAsset.metadata?.contentHash;
-            const metadataChanged = JSON.stringify(existingAsset.metadata) !== JSON.stringify(metadata);
+            // Compare only the metadata keys we explicitly set in this loader
+            const relevantMetadataKeys = ['title', 'description', 'source', 'contentHash', ...Object.keys(options.metadataBuilder?.(filePath, content) || {})];
+            const metadataChanged = relevantMetadataKeys.some(key => 
+                JSON.stringify(existingAsset.metadata?.[key]) !== JSON.stringify(metadata[key])
+            );
             
             if (existingHash === metadata.contentHash && !metadataChanged) {
                 Logger.info(`${options.artifactSubtype} unchanged: ${file}`);
