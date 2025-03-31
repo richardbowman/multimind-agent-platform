@@ -13,6 +13,7 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { asError } from 'src/types/types';
+import { asUUID, UUID } from 'src/types/uuid';
 
 /**
  * Executor that selects the most appropriate document template based on user goals and requirements.
@@ -35,7 +36,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
         globalRegistry.stepResponseRenderers.set(StepResponseType.DocumentTemplate, async (response : StepResponse) => {
             const artifactId = response.data?.selectedTemplateId;
             const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
-            return (artifact && `DOCUMENT TEMPLATE ${artifact.metadata?.title}:\n<content>\n${artifact.content.toString()}</content>\n`) ?? "[NO LOADED TEMPLATE]";
+            return (artifact && `DOCUMENT CREATED FROM TEMPLATE ${artifact.metadata?.title} (ID: ${artifact.id}):\n<artifact_markdown>\n${artifact.content.toString()}</artifact_markdown>\n`) ?? "[NO LOADED TEMPLATE]";
         });
     }
 
@@ -84,7 +85,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
             // Create a copy of the selected template as a new artifact
             let newArtifactId: UUID | undefined;
             if (data.selectedTemplateId) {
-                const template = await this.artifactManager.loadArtifact(data.selectedTemplateId);
+                const template = await this.artifactManager.loadArtifact(asUUID(data.selectedTemplateId));
                 if (template) {
                     const newArtifact = await this.artifactManager.saveArtifact({
                         type: template.type,
@@ -103,6 +104,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
             return {
                 finished: true,
                 replan: ReplanType.Allow,
+                artifacts: newArtifactId ? [{ id: newArtifactId }] : undefined,
                 response: {
                     type: StepResponseType.DocumentTemplate,
                     status: message,
@@ -110,7 +112,6 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
                         ...data,
                         newArtifactId
                     },
-                    artifacts: newArtifactId ? [{ id: newArtifactId }] : undefined
                 }
             };
         } catch (error) {
