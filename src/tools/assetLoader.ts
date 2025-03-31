@@ -68,10 +68,7 @@ async function loadAssets(
         if (existingAsset) {
             const existingHash = existingAsset.metadata?.contentHash;
             // Get all frontmatter keys from the document
-            const frontmatterKeys = new Set([
-                ...Object.keys(metadata),
-                ...Object.keys(existingAsset.metadata || {})
-            ]);
+            const frontmatterKeys = Object.keys(metadata);
             
             // Check if any frontmatter values differ
             const metadataChanged = Array.from(frontmatterKeys).some(key => 
