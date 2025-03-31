@@ -94,7 +94,8 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
                             ...template.metadata,
                             title: `Copy of ${template.metadata?.title || 'Template'}`,
                             isTemplateCopy: true,
-                            originalTemplateId: data.selectedTemplateId
+                            originalTemplateId: data.selectedTemplateId,
+                            subtype: template.metadata?.subtype || DocumentSubtype.Default
                         }
                     });
                     newArtifactId = newArtifact.id;
