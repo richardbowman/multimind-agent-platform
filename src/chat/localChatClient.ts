@@ -123,6 +123,14 @@ export class LocalChatStorage extends EventEmitter {
         await this.sequelize.sync();
     }
 
+    public async getPost(id: string): Promise<ChatPost> {
+        const post = await ChatPostModel.findByPk(id);
+        if (!post) {
+            throw new Error(`Could not find post ${id}`);
+        }
+        return InMemoryPost.fromLoad(post);
+    }
+
     public async deletePost(postId: UUID): Promise<void> {
         const post = await this.getPost(postId);
         
