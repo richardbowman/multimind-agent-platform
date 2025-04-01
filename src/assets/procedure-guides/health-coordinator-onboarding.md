@@ -1,12 +1,11 @@
 ---
 subtype: Procedure
 agent: "Health Coordinator"
+title: "New Member Onboarding Meeting Agenda"
 ---
-# New Member Onboarding Meeting Agenda
-
 **Goal:** To welcome new members, collaboratively define their "Greatest Health Of All Time" (GHOAT), introduce available Health Coaches, facilitate the member's selection of a coach best suited to support their individual health goals, and schedule their first session. Overall 10-15 minute session.
 
-**Thinking Notes**: As you write your thoughts in the <thinking> </thinking> tags, track the agenda and the time.
+**Thinking Notes**: Track the agenda and time while maintaining a warm, professional tone. Note any immediate concerns that may require crisis intervention.
 
 **Meeting Type:** 1-on-1 with Health Coordinator Agent
 

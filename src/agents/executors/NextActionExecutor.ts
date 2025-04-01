@@ -151,6 +151,17 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
             Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
+            const retainedProcedureGuides = response.procedureGuideTitle !== "none" ? {
+                procedureGuide: {
+                    title: response.procedureGuideTitle,
+                    // Only include artifactId if we found a matching guide
+                    ...(procedureGuides.some(g => g.metadata?.title === response.procedureGuideTitle) && {
+                        artifactId: procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)?.id
+                    }
+                    )
+                }
+            } : {};
+
             // Create new task for the next action
             if (response.nextAction && response.nextAction !== completionAction) {
                 // Find the procedure guide if one is being followed
@@ -180,16 +191,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                             steps: response.nextAction ? [{
                                 actionType: response.nextAction,
                                 context: response.taskDescription,
-                                ...(response.procedureGuideTitle !== "none" && {
-                                    procedureGuide: {
-                                        title: response.procedureGuideTitle,
-                                        // Only include artifactId if we found a matching guide
-                                        ...(procedureGuides.some(g => g.metadata?.title === response.procedureGuideTitle) && {
-                                            artifactId: procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)?.id
-                                        }
-                                        )
-                                    }
-                                })
+                                ...retainedProcedureGuides
                             }] : []
                         }
                     }
@@ -202,7 +204,10 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     response: {
                         type: StepResponseType.CompletionMessage,
                         reasoning: response.reasoning,
-                        message: response.message
+                        message: response.message,
+                        data: {
+                            steps: [retainedProcedureGuides]
+                        }
                     }
                 };
             } else {

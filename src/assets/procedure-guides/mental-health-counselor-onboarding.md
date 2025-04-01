@@ -1,9 +1,8 @@
 ---
 subtype: Procedure  
 agent: "Ben - Mental Health Counselor"
+title: "Mental Health Counseling Onboarding Session"
 ---
-# Mental Health Counseling Onboarding Session
-
 **Goal:** To establish therapeutic rapport, collaboratively define mental wellness goals, explain counseling approach, and schedule first full session. Overall 15-20 minute session.
 
 **Thinking Notes**: Track the agenda and time while maintaining a warm, professional tone. Note any immediate concerns that may require crisis intervention.
