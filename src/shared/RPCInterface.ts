@@ -140,6 +140,13 @@ export interface ServerMethods {
     uploadGGUFModelChunk(params: UploadGGUFParameters): Promise<{ modelId: string, error?: string }>;
 
     resetSettings(): Promise<Settings>;
+
+    /**
+     * Delete a message and its replies if it's a root message
+     * @param messageId - ID of the message to delete
+     * @returns Promise resolving when deletion is complete
+     */
+    deleteMessage(messageId: UUID): Promise<void>;
 }
 
 export interface UploadGGUFParameters {
