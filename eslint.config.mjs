@@ -3,10 +3,13 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
-  eslint.configs.recommended,
-  tseslint.configs.recommended,
-  {
-    files: ["src/**/*.ts"]
-  }
-);
+export default tseslint.config({
+  files: ['src/**/*.ts'],
+  extends: [
+    eslint.configs.recommended,
+    tseslint.configs.recommended,
+  ],
+  rules: {
+    'require-await': 'error'
+  },
+});
