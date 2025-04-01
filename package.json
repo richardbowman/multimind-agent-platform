@@ -5,6 +5,8 @@
   "scripts": {
     "uuid": "tsx scripts/generate-uuid.ts",
     "test": "jest",
+    "lint": "eslint . --ext .ts,.tsx --fix",
+    "lint:check": "eslint . --ext .ts,.tsx",
     "dev": "yarn electron:dev",
     "build": "yarn build:app",
     "package": "yarn electron:package",
@@ -116,6 +118,12 @@
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
+    "@typescript-eslint/eslint-plugin": "^7.10.0",
+    "@typescript-eslint/parser": "^7.10.0",
+    "eslint": "^9.4.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.34.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
     "@babel/preset-typescript": "^7.26.0",
