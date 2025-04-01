@@ -23,6 +23,12 @@ export class SettingsManager extends EventEmitter {
         console.log(`Settings will be written to ${this.settingsFile}`)
     }
 
+    async reset() : Promise<Settings> {
+        this.settings = new Settings();
+        this.save();
+        return this.getSettings();
+    }
+
     private determineBaseDir(): string {
         try {
             if (process.versions['electron']) {
@@ -56,22 +62,7 @@ export class SettingsManager extends EventEmitter {
         return output;
     }
 
-    private async loadAgents(): Promise<any> {
-        try {
-            const defaultsPath = path.join(this.baseDir, 'agents.json5');
-            const data = await this.fileQueue.enqueue(() =>
-                fs.readFile(defaultsPath, 'utf-8')
-            );
-            return JSON5.parse(data);
-        } catch (error) {
-            Logger.error('Error loading defaults:', error);
-            return {};
-        }
-    }
-
     async load(): Promise<void> {
-        const agentsConfig = await this.loadAgents();
-        
         try {
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(this.settingsFile, 'utf-8')
@@ -82,10 +73,9 @@ export class SettingsManager extends EventEmitter {
             } catch (err) {
             }
             this.settings = this.deepMerge(new Settings(), userSettings);
-            this.settings = this.deepMerge(this.settings, agentsConfig);   // overwrite agents config with latest
         } catch (error: any) {
             if (error?.code === 'ENOENT') {
-                this.settings = this.deepMerge(new Settings(), agentsConfig);
+                this.settings = new Settings();
                 await this.save();
             } else {
                 Logger.error('Error loading settings:', error);

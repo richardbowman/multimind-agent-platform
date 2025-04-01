@@ -3,13 +3,12 @@
     "name": "Marketing Campaign",
     "description": "Template for running a marketing campaign",
     "supportingAgents": [
-        "@router",
         "@writer",
         "@content",
         "@data",
         "@marketing"
     ],
-    "defaultResponder": "@router",
+    "defaultResponder": "@marketing",
     "initialTasks": [
         {
             "description": "Share existing website content",

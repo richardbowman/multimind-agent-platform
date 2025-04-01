@@ -5,15 +5,13 @@ import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase, SearchResult } from '../llm/IVectorDatabase';
 import { ILLMService } from '../llm/ILLMService';
-import { Artifact, ArtifactItem, ArtifactType, DocumentSubtype, SpreadsheetSubType } from './artifact';
+import { Artifact, ArtifactItem, ArtifactType } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
-import { asUUID, createUUID, UUID } from 'src/types/uuid';
+import { UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
-import { asError, isError } from 'src/types/types';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { asError } from 'src/types/types';
 import { ArtifactModel } from './artifactModel';
 import { DatabaseMigrator } from 'src/database/migrator';
-import VectraService from 'src/llm/vectraService';
 import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { FilterCriteria } from 'src/types/FilterCriteria';
 import { ModelType } from 'src/llm/types/ModelType';
@@ -71,7 +69,7 @@ const getFileInfo = (mimeType?: string): { extension: string, type: string } => 
 export class ArtifactManager {
   private storageDir: string;
   private sequelize: Sequelize;
-  private procedureVectorDb: IVectorDatabase;
+  // private procedureVectorDb: IVectorDatabase;
   private docsVectorDb: IVectorDatabase;
   private llmService?: ILLMService;
   private fileQueue: AsyncQueue;
@@ -84,7 +82,7 @@ export class ArtifactManager {
    constructor(vectorDb: IVectorDatabase, procedureVectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
        this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
        this.docsVectorDb = vectorDb;
-       this.procedureVectorDb = procedureVectorDb;
+      //  this.procedureVectorDb = procedureVectorDb;
        this.fileQueue = new AsyncQueue();
        this.saveQueue = new AsyncQueue();
        this.llmService = llmService;
@@ -262,12 +260,12 @@ export class ArtifactManager {
   }
 
   protected whichVectorDb(artifact: ArtifactItem) {
-    const vectorDb = 
-      artifact.metadata?.subtype === DocumentSubtype.Procedure || 
-      artifact.metadata?.subtype === SpreadsheetSubType.Procedure ? 
-        this.procedureVectorDb :
-        this.docsVectorDb;
-    return vectorDb;
+    // const vectorDb = 
+    //   artifact.metadata?.subtype === DocumentSubtype.Procedure || 
+    //   artifact.metadata?.subtype === SpreadsheetSubType.Procedure ? 
+    //     this.procedureVectorDb :
+    //     this.docsVectorDb;
+    return this.docsVectorDb;
   }
 
   protected async indexArtifact(artifact: Artifact): Promise<void> {
@@ -443,7 +441,7 @@ export class ArtifactManager {
         // Remove from vector database
         try {
           await this.docsVectorDb.deleteDocuments({ artifactId });
-          await this.procedureVectorDb.deleteDocuments({ artifactId });
+          // await this.procedureVectorDb.deleteDocuments({ artifactId });
         } catch (error) {
           Logger.error('Error deleting artifact from vector database:', error);
         }
@@ -564,7 +562,7 @@ export class ArtifactManager {
       }
       
 
-      const vectorDb = filter?.subtype === DocumentSubtype.Procedure ? this.procedureVectorDb : this.docsVectorDb;
+      const vectorDb = this.docsVectorDb; //filter?.subtype === DocumentSubtype.Procedure ? this.procedureVectorDb : this.docsVectorDb;
 
       // Search the vector database
       let results : SearchResult[];

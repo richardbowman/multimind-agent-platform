@@ -217,7 +217,7 @@ export class LocalTestClient implements ChatClient {
             throw new Error(`Channel ${channelId} not found`);
         }
 
-        const artifactIds = channel.artifactIds || [];
+        const artifactIds = channel.artifactIds ? [...channel.artifactIds] : [];
         if (!artifactIds.includes(artifactId)) {
             artifactIds.push(artifactId);
             await channel.update({ artifactIds });

@@ -201,6 +201,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         }
 
         // Load procedure guides
+        Logger.progress("Loading knowledge", 0.7, "loading");
         const guidesDir = path.join('dist', 'assets', "procedure-guides");
         const templatesDir = path.join('dist', 'assets', "templates");
         const agentsDir = path.join('dist', 'assets', "agents");
@@ -212,17 +213,9 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         const agents: Agents = { agents: {} };
 
         // Load all agents dynamically
-        const jsonAgentObjects = await AgentLoader.loadAgents({
-            llmServices,
-            taskManager: tasks,
-            artifactManager,
-            chatStorage,
-            settingsManager,
-            agents
-        });
-
+        Logger.progress("Loading agents", 0.8, "loading");
         // Load all agents dynamically
-        const markdownAgentObjects = await AgentLoader.loadMarkdownConfigurableAgents({
+        const agentObjects = await AgentLoader.loadMarkdownConfigurableAgents({
             llmServices,
             taskManager: tasks,
             artifactManager,
@@ -230,8 +223,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             settingsManager,
             agents
         });
-
-        const agentObjects = [...jsonAgentObjects.entries(), ...markdownAgentObjects.entries()];
 
         // Initialize all agents
         let i = 1, total = Object.keys(agentObjects).length;
@@ -244,6 +235,9 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             agents.agents[agent.userId] = agent;
             i++;
         }
+
+
+        Logger.progress("Final setup", 0.9, "loading");
 
         chatStorage.announceChannels();
 
@@ -314,6 +308,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         };
     } catch (error) {
         throw error;
+    } finally {
+        Logger.progress("Initalization finished", 1, "loading");
     }
 
 

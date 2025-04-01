@@ -138,6 +138,8 @@ export interface ServerMethods {
      * @returns Promise resolving to the model ID and any error
      */
     uploadGGUFModelChunk(params: UploadGGUFParameters): Promise<{ modelId: string, error?: string }>;
+
+    resetSettings(): Promise<Settings>;
 }
 
 export interface UploadGGUFParameters {

@@ -1,5 +1,5 @@
 ---
-agent: ProductManagerAnalyst
+agent: "Product Manager Analyst"
 title: "Product Vision Procedure"
 ---
 

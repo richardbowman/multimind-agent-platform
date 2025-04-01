@@ -35,6 +35,10 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
         }
     }
 
+    async resetSettings() : Promise<Settings> {
+        return await this.partialServices.settingsManager.reset();
+    }
+
 
     async getSettings(): Promise<Settings> {
         const settings = this.partialServices.settingsManager.getSettings();

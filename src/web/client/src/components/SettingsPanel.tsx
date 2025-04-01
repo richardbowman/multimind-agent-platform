@@ -410,11 +410,8 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         onClick={async () => {
                             setResetDialogOpen(false);
                             try {
-                                const defaultSettings = new Settings();
-                                const { settings: updatedSettings } = await updateSettings(defaultSettings);
-                                // Force reload settings from server
-                                const currentSettings = await getSettings();
-                                setSettings(currentSettings);
+                                const updatedSettings = await ipcService.getRPC().resetSettings();
+                                setSettings(updatedSettings);
                                 setSuccessMessage('Settings reset to factory defaults');
                             } catch (error) {
                                 setValidationMessage(`Failed to reset settings: ${error instanceof Error ? error.message : 'Unknown error'}`);

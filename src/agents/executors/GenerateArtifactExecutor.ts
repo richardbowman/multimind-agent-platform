@@ -363,9 +363,11 @@ new replacement text
     }
 
     protected stripCodeBlockFormatting(content: string): string {
+        if (!StringUtils.isNonEmptyString(content)) return content;
+
         // Only remove outer formatting tags if the entire content is wrapped in them
         const outerFormatRegex = /^```[a-zA-Z]*\n([\s\S]*)\n```$/;
-        const match = content?.match(outerFormatRegex);
+        const match = content.match(outerFormatRegex);
         return match ? match[1].trim() : content;
     }
 

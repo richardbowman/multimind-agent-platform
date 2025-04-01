@@ -1,5 +1,5 @@
 ---
-agent: ProductManagerAnalyst
+agent: "Product Manager Analyst"
 title: "Single User Story Specification Procedure"
 ---
 

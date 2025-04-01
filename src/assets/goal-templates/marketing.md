@@ -6,14 +6,13 @@
 Template for running a marketing campaign
 
 ## Supporting Agents
-- `@router`
 - `@writer` 
 - `@content`
 - `@data`
 - `@marketing`
 
 ## Default Responder
-`@router`
+`@marketing`
 
 ## Initial Tasks
 

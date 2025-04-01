@@ -6,6 +6,7 @@ import { PromptBuilder } from 'src/llm/promptBuilder';
 import { ArtifactType } from 'src/tools/artifact';
 import { ModelConversation } from '../interfaces/StepExecutor';
 import { OperationTypes } from 'src/schemas/ArtifactGenerationResponse';
+import { RetryError } from 'src/helpers/retry';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_SPREADSHEET, 'Create/revise CSV spreadsheets (that you can fit into context, not for large spreadsheets)')
 export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
@@ -62,10 +63,10 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
 
         // Validate headers match
         if (newHeaders !== existingHeaders) {
-            throw new Error(`Header mismatch. Expected: ${existingHeaders}, Received: ${newHeaders}`);
+            throw new RetryError(`Header mismatch. Expected: ${existingHeaders}, Received: ${newHeaders}`);
         }
 
         // Return only data rows from new content
-        return newLines.slice(1).join('\n');
+        return existingContent + "\n" + newLines.slice(1).join('\n');
     }
 }

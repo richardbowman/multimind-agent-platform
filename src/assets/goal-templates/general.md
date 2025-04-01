@@ -3,13 +3,13 @@
 **ID**: `#general`
 
 ## Description
-Template for setting up a chat channel with a simple AI assistant. This agent is the simplest and does not perform multi-step workflows. Good for testing models.
+Template for setting up a chat channel with a simple AI assistant. There are no other agents in the channel, so the assistant won't be able to do more advanced delegation.
 
 ## Supporting Agents
-- `@ai`
+- `@assistant`
 
 ## Default Responder
-`@ai`
+`@assistant`
 
 ## Initial Tasks
 None

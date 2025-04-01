@@ -1,6 +1,7 @@
 import { Sequelize, Model, DataTypes } from 'sequelize';
 import { UUID } from '../types/uuid';
 import { LLMContext } from './ILLMService';
+import Logger from 'src/helpers/logger';
 
 export interface LLMLogEntry {
     id?: number;

@@ -2,7 +2,7 @@
     "id": "#general",
     "name": "Chat Channel",
     "description": "Template for setting up a chat channel with a simple AI assistant. This agent is the simplest and does not perform multi-step workflows. Good for testing models.",
-    "supportingAgents": ["@ai"],
-    "defaultResponder": "@ai",
+    "supportingAgents": ["@assistant"],
+    "defaultResponder": "@assistant",
     "initialTasks": []
 }
