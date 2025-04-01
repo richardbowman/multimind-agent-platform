@@ -11,6 +11,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import ReplyIcon from '@mui/icons-material/Reply';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { CodeBlock } from './shared/CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -346,6 +347,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             </Box>
                         </IconButton>
                         )}
+                        <IconButton
+                            size="small"
+                            onClick={async () => {
+                                try {
+                                    await ipcService.getRPC().deleteMessage(message.id);
+                                } catch (error) {
+                                    console.error('Failed to delete message:', error);
+                                }
+                            }}
+                            sx={{
+                                p: 0.5,
+                                bgcolor: 'action.hover',
+                                '&:hover': {
+                                    bgcolor: 'error.main',
+                                    color: 'error.contrastText'
+                                }
+                            }}
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
                         {hasAttachments && (
                             <IconButton
                                 size="small"
