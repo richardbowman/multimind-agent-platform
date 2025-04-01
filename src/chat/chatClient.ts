@@ -68,6 +68,13 @@ export interface ChatClient {
      * @param artifactId - ID of the artifact to remove
      */
     removeArtifactFromChannel(channelId: UUID, artifactId: UUID): Promise<void>;
+
+    /**
+     * Delete a post and any replies if it's a root post
+     * @param postId - ID of post to delete
+     * @returns Promise resolving when deletion is complete
+     */
+    deletePost(postId: UUID): Promise<void>;
 }
 
 export interface ProjectChainResponse {

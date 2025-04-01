@@ -123,6 +123,29 @@ export class LocalChatStorage extends EventEmitter {
         await this.sequelize.sync();
     }
 
+    public async deletePost(postId: UUID): Promise<void> {
+        const post = await this.getPost(postId);
+        
+        // If this is a root post, find and delete all replies first
+        if (!post.getRootId()) {
+            const replies = await ChatPostModel.findAll({ 
+                where: { 
+                    props: { 
+                        'root-id': postId 
+                    } 
+                } 
+            });
+            await ChatPostModel.destroy({ 
+                where: { 
+                    id: replies.map(r => r.id) 
+                } 
+            });
+        }
+
+        // Delete the post itself
+        await ChatPostModel.destroy({ where: { id: postId } });
+    }
+
     public async getChannels() : Promise<ChannelDataModel[]> {
         const channels = await ChannelDataModel.findAll();
         return channels;
@@ -362,6 +385,23 @@ export class LocalTestClient implements ChatClient {
         } else {
             throw new Error("Couldn't find post or post wasn't a root post to reply to.")
         }
+    }
+
+    public async deletePost(postId: UUID): Promise<void> {
+        const post = await this.getPost(postId);
+        
+        // If this is a root post, find and delete all replies first
+        if (!post.getRootId()) {
+            const replies = await this.getPosts().then(posts => 
+                posts.filter(p => p.getRootId() === postId)
+            );
+            await Promise.all(replies.map(reply => 
+                this.storage.deletePost(reply.id!)
+            ));
+        }
+
+        // Delete the post itself
+        await this.storage.deletePost(postId);
     }
 
     public async updatePost(postId: UUID, newContent: string|undefined, newProps?: ConversationContext): Promise<ChatPost> {
