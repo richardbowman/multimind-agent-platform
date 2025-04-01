@@ -16,6 +16,12 @@ import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { FilterCriteria } from 'src/types/FilterCriteria';
 import { ModelType } from 'src/llm/types/ModelType';
 
+
+export interface SaveArtifactOpts {
+  summarize?: boolean;
+  index?: boolean;
+}
+
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
   if (!mimeType) return { extension: 'md', type: 'document' };
@@ -133,7 +139,9 @@ export class ArtifactManager {
     return ArtifactModel.findAll();
   }
 
-  async saveArtifact(artifactParam: Partial<Artifact>): Promise<Artifact> {
+  async saveArtifact(artifactParam: Partial<Artifact>, opts?: SaveArtifactOpts): Promise<Artifact> {
+    const {index, summarize} = { index: true, summarize: true, ...opts};
+
     return this.saveQueue.enqueue(async () => {
       // Set type based on MIME type if provided
       const mimeType = artifactParam.metadata?.mimeType;
@@ -235,7 +243,7 @@ export class ArtifactManager {
       });
 
       // Generate and store summary if LLM service is available
-      if (this.llmService) {
+      if (summarize && this.llmService) {
         try {
           const summary = await this.generateSummary(artifact);
           if (summary) {
@@ -249,10 +257,12 @@ export class ArtifactManager {
         }
       }
 
-      try {
-        await this.indexArtifact(artifact);
-      } catch (e) {
-        Logger.error(`Vector indexing failed for ${artifact.id}`)
+      if (index) {
+        try {
+          await this.indexArtifact(artifact);
+        } catch (e) {
+          Logger.error(`Vector indexing failed for ${artifact.id}`)
+        }
       }
       
       return artifact;

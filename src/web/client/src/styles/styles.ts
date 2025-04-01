@@ -1,6 +1,6 @@
-import { margin, minHeight, padding } from "@mui/system";
+import { Theme } from "@mui/material";
 
-export const CustomScrollbarStyles = (theme) => ({
+export const CustomScrollbarStyles = (theme: Theme) => ({
     '&::-webkit-scrollbar': {
         width: '8px',
     },

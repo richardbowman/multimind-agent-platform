@@ -6,7 +6,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import { ContentRenderer } from './ContentRenderer';
 import { useArtifacts } from '../../contexts/ArtifactContext';
 import { createUUID } from '../../../../../types/uuid';
-import { ArtifactType } from '../../../../../tools/artifact';
+import { ArtifactType, DocumentSubtype } from '../../../../../tools/artifact';
 
 interface CodeBlockProps {
     language?: string;
@@ -100,10 +100,10 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             if (artifactContext) {
                                 try {
                                     await artifactContext.saveArtifact({
-                                        id: createUUID(),
                                         type: ArtifactType.Document,
                                         content: content,
                                         metadata: {
+                                            subtype: DocumentSubtype.General,
                                             language: language,
                                             title: artifactTitle
                                         }

@@ -830,4 +830,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             throw new Error('Audio transcription failed');
         }
     }
+
+    async deleteMessage(messageId: UUID): Promise<void> {
+        await this.services.chatClient.deletePost(messageId);
+    }
 }

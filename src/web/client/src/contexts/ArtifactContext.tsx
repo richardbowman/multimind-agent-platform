@@ -8,7 +8,7 @@ export interface ArtifactContextType {
   artifacts: ArtifactItem[];
   isLoading: boolean;
   fetchAllArtifacts: () => Promise<void>;
-  saveArtifact: (artifact: Artifact) => Promise<Artifact>;
+  saveArtifact: (artifact: Partial<Artifact>) => Promise<Artifact>;
   deleteArtifact: (artifactId: UUID) => Promise<void>;
   updateSpecificArtifacts: (artifactIds: UUID[]) => Promise<void>;
   getArtifact: (artifactId: UUID) => Promise<Artifact | null>;

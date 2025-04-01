@@ -4,14 +4,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button, Typography,
-    Box
+    Button, Box
 } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { useTasks } from '../contexts/TaskContext';
 import { useEffect, useState } from 'react';
-import { LoadingButton } from '@mui/lab';
-import { AttachmentCard } from './shared/AttachmentCard';
 import { useArtifacts } from '../contexts/ArtifactContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { TaskListPanel } from './TaskListPanel';
@@ -145,7 +142,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             </DialogContent>
             <DialogActions>
                 {selectedTask && !selectedTask.complete && (
-                    <LoadingButton
+                    <Button
                         variant="contained"
                         color="error"
                         onClick={async () => {
@@ -163,10 +160,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         }}
                     >
                         Cancel Task
-                    </LoadingButton>
+                    </Button>
                 )}
                 {selectedTask && (
-                    <LoadingButton
+                    <Button
                         variant="contained"
                         color={selectedTask.complete ? "secondary" : "primary"}
                         onClick={async () => {
@@ -184,7 +181,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         }}
                     >
                         {selectedTask.complete ? 'Mark Incomplete' : 'Mark Complete'}
-                    </LoadingButton>
+                    </Button>
                 )}
                 <Button onClick={onClose}>Close</Button>
             </DialogActions>

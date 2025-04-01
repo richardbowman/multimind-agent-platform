@@ -256,7 +256,7 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingStepRes
             content: originalArtifact.content // Start with original content
         };
 
-        const savedArtifact = await this.artifactManager.saveArtifact(processedArtifact);
+        const savedArtifact = await this.artifactManager.saveArtifact(processedArtifact, {index: false, summarize: false});
         return savedArtifact;
     }
 
@@ -501,7 +501,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
             await this.artifactManager.saveArtifact({
                 ...csvArtifact,
                 content: newContent
-            });
+            }, {index: false, summarize: false});
         }
     }
 }

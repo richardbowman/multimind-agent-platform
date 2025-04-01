@@ -14,7 +14,8 @@ import {
     Dialog,
     ToggleButtonGroup,
     ToggleButton,
-    styled
+    styled,
+    useTheme
 } from '@mui/material';
 import { TaskDialog } from './TaskDialog';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -29,6 +30,7 @@ import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
 import { TaskType } from '../../../../tools/taskManager';
 import { useIPCService } from '../contexts/IPCContext';
+import { CustomScrollbarStyles } from '../styles/styles';
 
 const flyRight = keyframes`
   0% {
@@ -67,6 +69,7 @@ const fadeIn = keyframes`
 `;
 
 export const TaskStatusPanel: React.FC = () => {
+    const theme = useTheme();
     const { tasks } = useTasks();
     const ipcService = useIPCService();
     const [prevTaskPositions, setPrevTaskPositions] = useState<Record<string, TaskStatus>>({});
@@ -124,7 +127,6 @@ export const TaskStatusPanel: React.FC = () => {
                 if (taskTypes.length === 0 || taskTypes.includes(taskType)) {
                     groups[task.status].push(task);
                 }
-                console.log('Task:', task.id, 'Type:', taskType, 'Selected Types:', taskTypes);
             }
         });
 
@@ -273,21 +275,7 @@ export const TaskStatusPanel: React.FC = () => {
                                         style={{
                                             scrollbarWidth: 'thin',
                                             scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent',
-                                            '&::-webkit-scrollbar': {
-                                                width: '8px',
-                                                height: '8px'
-                                            },
-                                            '&::-webkit-scrollbar-track': {
-                                                background: 'transparent'
-                                            },
-                                            '&::-webkit-scrollbar-thumb': {
-                                                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                                borderRadius: '4px',
-                                                border: '2px solid transparent'
-                                            },
-                                            '&::-webkit-scrollbar-thumb:hover': {
-                                                backgroundColor: 'rgba(255, 255, 255, 0.4)'
-                                            }
+                                            ...CustomScrollbarStyles(theme)
                                         }}
                                     >
                                         {({ data, index, style }) => {

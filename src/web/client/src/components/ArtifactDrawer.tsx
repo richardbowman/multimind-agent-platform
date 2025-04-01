@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Drawer, styled } from '@mui/material';
@@ -40,6 +40,7 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
 }) => {
     const { actions, registerActions, updateActionState, unregisterActions } = useToolbarActions();
     const { currentChannelId, channels, addArtifactToChannel, removeArtifactFromChannel } = useChannels();
+    const currentIndexRef = useRef<number>(0);
 
     const isPinned = useCallback((artifact?: Artifact) => {
         if (!currentChannelId || !artifact) return false;
@@ -48,8 +49,6 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
     }, [currentChannelId, channels]);
 
     useEffect(() => {
-        if (!currentArtifact) return;
-
         const baseActions = [{
             icon: <Close/>,
             id: "artifact-close",
@@ -58,47 +57,40 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
         }];
 
         if (showNavigation && artifacts.length > 1) {
-            const currentIndex = artifacts.findIndex(a => a.id === currentArtifact.id);
             baseActions.unshift(
                 {
                     icon: <ChevronLeft/>,
                     id: "artifact-prev",
                     label: "Previous Artifact",
                     onClick: () => {
-                        const prevIndex = currentIndex - 1;
+                        const prevIndex = currentIndexRef.current - 1;
                         if (prevIndex >= 0 && onArtifactChange) {
                             onArtifactChange(artifacts[prevIndex]);
                         }
                     },
-                    disabled: currentIndex <= 0
+                    disabled: currentIndexRef.current <= 0
                 },
                 {
                     icon: <ChevronRight/>,
                     id: "artifact-next",
                     label: "Next Artifact",
                     onClick: () => {
-                        const nextIndex = currentIndex + 1;
+                        const nextIndex = currentIndexRef.current + 1;
                         if (nextIndex < artifacts.length && onArtifactChange) {
                             onArtifactChange(artifacts[nextIndex]);
                         }
                     },
-                    disabled: currentIndex >= artifacts.length - 1
+                    disabled: currentIndexRef.current >= artifacts.length - 1
                 }
             );
         }
 
         if (showPinActions && currentChannelId) {
             baseActions.push({
-                icon: isPinned(currentArtifact) ? <PushPin/> : <PushPinOutlined/>,
+                icon: <PushPin/>,
                 id: "artifact-pin",
-                label: isPinned(currentArtifact) ? "Unpin from Channel" : "Pin to Channel",
-                onClick: () => {
-                    if (isPinned(currentArtifact)) {
-                        removeArtifactFromChannel(currentChannelId, currentArtifact.id);
-                    } else {
-                        addArtifactToChannel(currentChannelId, currentArtifact.id);
-                    }
-                }
+                label: "Pin to Channel",
+                onClick: () => {}
             });
         }
 
@@ -107,7 +99,24 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
     }, []);
 
     useEffect(() => {
-        // updateActionState()
+        if (currentArtifact && currentChannelId) {
+            updateActionState("artifact-pin", {
+                icon: isPinned(currentArtifact) ? <PushPin/> : <PushPinOutlined/>,
+                label: isPinned(currentArtifact) ? "Unpin from Channel" : "Pin to Channel",
+                onClick: () => {
+                    if (isPinned(currentArtifact)) {
+                        removeArtifactFromChannel(currentChannelId, currentArtifact.id);
+                    } else {
+                        addArtifactToChannel(currentChannelId, currentArtifact.id);
+                    }
+                },
+                disabled: false
+            });
+        } else {
+            updateActionState("artifact-pin", {
+                disabled: true
+            })
+        }
     }, [currentArtifact, artifacts, onArtifactChange, showNavigation, showPinActions, currentChannelId]);
 
     return (
