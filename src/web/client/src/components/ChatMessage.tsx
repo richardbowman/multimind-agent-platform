@@ -475,14 +475,37 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 flex: 1,
                                 minWidth: 100,
                                 renderCell: (params: GridRenderCellParams<any, any>) => {
-                                    return params.value;
+                                    return (
+                                        <ReactMarkdown 
+                                            remarkPlugins={[remarkGfm]}
+                                            components={{
+                                                a: ({node, href, children, ...props}) => (
+                                                    <CustomLink href={href} {...props}>{children}</CustomLink>
+                                                )
+                                            }}
+                                        >
+                                            {params.value}
+                                        </ReactMarkdown>
+                                    );
                                 },
                             }));
 
                             const rowsData = dataRows.map((row, rowIndex) => {
                                 const rowData: any = { id: rowIndex };
                                 row.forEach((cell, cellIndex) => {
-                                    rowData[`col${cellIndex}`] = cell;
+                                    // Convert AST nodes back to markdown string
+                                    const markdown = cell.map(child => {
+                                        if (child.type === 'text') return child.value;
+                                        if (child.type === 'element') {
+                                            if (child.tagName === 'a') {
+                                                return `[${child.children[0].value}](${child.properties.href})`;
+                                            }
+                                            // Add other element types as needed
+                                            return child.children.map(c => c.value).join('');
+                                        }
+                                        return '';
+                                    }).join('');
+                                    rowData[`col${cellIndex}`] = markdown;
                                 });
                                 return rowData;
                             });
