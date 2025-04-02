@@ -428,6 +428,68 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
+                        table: ({node, children}) => {
+                            // Parse table rows and cells
+                            const rows = node.children
+                                .filter((child: any) => child.type === 'element' && child.tagName === 'tr')
+                                .map((tr: any) => {
+                                    return tr.children
+                                        .filter((td: any) => td.type === 'element' && (td.tagName === 'td' || td.tagName === 'th'))
+                                        .map((td: any) => {
+                                            return td.children
+                                                .filter((child: any) => child.type === 'text')
+                                                .map((child: any) => child.value)
+                                                .join('');
+                                        });
+                                });
+
+                            if (rows.length < 2) {
+                                return <table>{children}</table>;
+                            }
+
+                            // First row is headers
+                            const headers = rows[0];
+                            const dataRows = rows.slice(1);
+
+                            const columns: GridColDef[] = headers.map((header, index) => ({
+                                field: `col${index}`,
+                                headerName: header,
+                                flex: 1,
+                                minWidth: 100,
+                            }));
+
+                            const rowsData = dataRows.map((row, rowIndex) => {
+                                const rowData: any = { id: rowIndex };
+                                row.forEach((cell, cellIndex) => {
+                                    rowData[`col${cellIndex}`] = cell;
+                                });
+                                return rowData;
+                            });
+
+                            return (
+                                <Box sx={{ 
+                                    height: Math.min(400, 52 + dataRows.length * 52),
+                                    width: '100%',
+                                    my: 2
+                                }}>
+                                    <DataGrid
+                                        rows={rowsData}
+                                        columns={columns}
+                                        pageSizeOptions={[5, 10, 25]}
+                                        disableRowSelectionOnClick
+                                        density="compact"
+                                        sx={{
+                                            '& .MuiDataGrid-cell': {
+                                                py: 1,
+                                            },
+                                            '& .MuiDataGrid-columnHeaders': {
+                                                bgcolor: 'background.paper',
+                                            },
+                                        }}
+                                    />
+                                </Box>
+                            );
+                        },
                         a: ({node, href, children, ...props}) => {
                             // Handle artifact links
                             if (href?.startsWith('/artifact/')) {
