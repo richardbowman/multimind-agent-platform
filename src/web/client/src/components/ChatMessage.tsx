@@ -477,7 +477,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         columns={columns}
                                         pageSizeOptions={[5, 10, 25]}
                                         disableRowSelectionOnClick
-                                        density="compact"
+                                        getRowHeight={() => 'auto'}
                                         sx={{
                                             '& .MuiDataGrid-cell': {
                                                 py: 1,
