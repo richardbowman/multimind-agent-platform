@@ -1,5 +1,5 @@
 // logger.ts
-import { appendFileSync, mkdirSync, existsSync, readFileSync, statSync } from 'fs';
+import { appendFileSync, mkdirSync } from 'fs';
 import * as path from 'path';
 import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
@@ -20,7 +20,6 @@ export interface LogEntry {
 export class LogManager extends EventEmitter {
     private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.jsonl`);
     private logCache: LogEntry[] = [];
-    private lastModified = 0;
     private cacheSize = 10000;
 
     private ensureLogDirectoryExists(): void {
@@ -28,36 +27,11 @@ export class LogManager extends EventEmitter {
         mkdirSync(dir, { recursive: true });
     }
 
-    private readLogFile(): LogEntry[] {
-        try {
-            if (!existsSync(this.logFilePath)) {
-                return [];
-            }
-
-            const content = readFileSync(this.logFilePath, 'utf-8');
-            return content
-                .split('\n')
-                .filter(line => line.trim())
-                .map(line => JSON.parse(line));
-        } catch (error) {
-            this.error('Error reading log file', error);
-            return [];
-        }
-    }
-
-    private updateCache() {
-        try {
-            const stats = statSync(this.logFilePath);
-            if (stats.mtimeMs > this.lastModified) {
-                this.lastModified = stats.mtimeMs;
-                this.logCache = this.readLogFile();
-                // Keep only the most recent entries
-                if (this.logCache.length > this.cacheSize) {
-                    this.logCache = this.logCache.slice(-this.cacheSize);
-                }
-            }
-        } catch (error) {
-            this.error('Error updating log cache', error);
+    private addToCache(entry: LogEntry) {
+        this.logCache.push(entry);
+        // Keep only the most recent entries
+        if (this.logCache.length > this.cacheSize) {
+            this.logCache.shift();
         }
     }
 
@@ -76,6 +50,7 @@ export class LogManager extends EventEmitter {
             if (level !== "progress") {
                 this.ensureLogDirectoryExists();
                 appendFileSync(Logger.logFilePath, JSON.stringify(logEntry) + '\n');
+                this.addToCache(logEntry);
             }
         } catch (e) {
             //swallow errors, this can happen as process is exiting
@@ -142,8 +117,6 @@ export class LogManager extends EventEmitter {
             endTime?: number;
         };
     }): { logs: LogEntry[]; total: number } {
-        this.updateCache();
-
         let filtered = [...this.logCache];
         
         if (params.filter) {
