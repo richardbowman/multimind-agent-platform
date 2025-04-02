@@ -429,12 +429,37 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     remarkPlugins={[remarkGfm]}
                     components={{
                         table: ({node, children}) => {
-                            // Parse table rows and cells
-                            const rows = node.children
+                            // Find thead and tbody elements
+                            const thead = node.children.find(
+                                (child: any) => child.type === 'element' && child.tagName === 'thead'
+                            );
+                            const tbody = node.children.find(
+                                (child: any) => child.type === 'element' && child.tagName === 'tbody'
+                            );
+
+                            if (!thead || !tbody) {
+                                return <table>{children}</table>;
+                            }
+
+                            // Extract headers from thead
+                            const headerRow = thead.children.find(
+                                (child: any) => child.type === 'element' && child.tagName === 'tr'
+                            );
+                            const headers = headerRow?.children
+                                ?.filter((child: any) => child.type === 'element' && child.tagName === 'th')
+                                .map((th: any) => {
+                                    return th.children
+                                        .filter((child: any) => child.type === 'text')
+                                        .map((child: any) => child.value)
+                                        .join('');
+                                }) || [];
+
+                            // Extract data rows from tbody
+                            const dataRows = tbody.children
                                 .filter((child: any) => child.type === 'element' && child.tagName === 'tr')
                                 .map((tr: any) => {
                                     return tr.children
-                                        .filter((td: any) => td.type === 'element' && (td.tagName === 'td' || td.tagName === 'th'))
+                                        .filter((td: any) => td.type === 'element' && td.tagName === 'td')
                                         .map((td: any) => {
                                             return td.children
                                                 .filter((child: any) => child.type === 'text')
@@ -443,13 +468,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         });
                                 });
 
-                            if (rows.length < 2) {
+                            if (headers.length === 0 || dataRows.length === 0) {
                                 return <table>{children}</table>;
                             }
-
-                            // First row is headers
-                            const headers = rows[0];
-                            const dataRows = rows.slice(1);
 
                             const columns: GridColDef[] = headers.map((header, index) => ({
                                 field: `col${index}`,
