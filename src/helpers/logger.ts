@@ -4,20 +4,14 @@ import * as path from 'path';
 import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
 import EventEmitter from 'events';
+import { LogReader } from 'src/server/LogReader';
+import { LogEntry } from '@langchain/core/dist/tracers/log_stream';
 
 declare global {
     var socket: Socket | undefined;
 }
 
-export interface LogEntry {
-    timestamp: number;
-    isoTime: string;
-    level: string;
-    message: string;
-    details?: Record<string, any>;
-}
-
-export class LogManager extends EventEmitter {
+export class LogManager extends EventEmitter implements LogReader {
     private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.jsonl`);
     private logCache: LogEntry[] = [];
     private cacheSize = 10000;
