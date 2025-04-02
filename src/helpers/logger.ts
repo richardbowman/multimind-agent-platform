@@ -10,7 +10,7 @@ declare global {
 }
 
 export class LogManager extends EventEmitter {
-    private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);
+    private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.jsonl`);
 
     private ensureLogDirectoryExists(): void {
         const dir = path.dirname(Logger.logFilePath);
@@ -19,19 +19,19 @@ export class LogManager extends EventEmitter {
 
     log(level: string, message: string, details?: Record<string, any>): void {
         const timestamp = new Date().toISOString();
-        const formattedMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
         const logEntry = {
             timestamp: new Date().getTime(),
             level: level.toUpperCase(),
             message,
-            details
+            details,
+            isoTime: timestamp
         };
 
         // Ensure directory exists and append to log file
         try {
             if (level !== "progress") {
                 this.ensureLogDirectoryExists();
-                appendFileSync(Logger.logFilePath, formattedMessage);
+                appendFileSync(Logger.logFilePath, JSON.stringify(logEntry) + '\n');
             }
         } catch (e) {
             //swallow errors, this can happen as process is exiting
