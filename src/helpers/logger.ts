@@ -131,9 +131,6 @@ export class LogManager extends EventEmitter {
             id
         });
     }
-}
-
-const Logger = new LogManager();
 
     getLogs(params: {
         limit?: number;
@@ -187,4 +184,5 @@ const Logger = new LogManager();
     }
 }
 
+const Logger = new LogManager();
 export default Logger;
