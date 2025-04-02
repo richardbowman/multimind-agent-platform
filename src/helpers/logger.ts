@@ -1,5 +1,5 @@
 // logger.ts
-import { appendFileSync, mkdirSync } from 'fs';
+import { appendFileSync, mkdirSync, existsSync, readFileSync, statSync } from 'fs';
 import * as path from 'path';
 import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
@@ -9,12 +9,56 @@ declare global {
     var socket: Socket | undefined;
 }
 
+export interface LogEntry {
+    timestamp: number;
+    isoTime: string;
+    level: string;
+    message: string;
+    details?: Record<string, any>;
+}
+
 export class LogManager extends EventEmitter {
     private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.jsonl`);
+    private logCache: LogEntry[] = [];
+    private lastModified = 0;
+    private cacheSize = 10000;
 
     private ensureLogDirectoryExists(): void {
         const dir = path.dirname(Logger.logFilePath);
         mkdirSync(dir, { recursive: true });
+    }
+
+    private readLogFile(): LogEntry[] {
+        try {
+            if (!existsSync(this.logFilePath)) {
+                return [];
+            }
+
+            const content = readFileSync(this.logFilePath, 'utf-8');
+            return content
+                .split('\n')
+                .filter(line => line.trim())
+                .map(line => JSON.parse(line));
+        } catch (error) {
+            this.error('Error reading log file', error);
+            return [];
+        }
+    }
+
+    private updateCache() {
+        try {
+            const stats = statSync(this.logFilePath);
+            if (stats.mtimeMs > this.lastModified) {
+                this.lastModified = stats.mtimeMs;
+                this.logCache = this.readLogFile();
+                // Keep only the most recent entries
+                if (this.logCache.length > this.cacheSize) {
+                    this.logCache = this.logCache.slice(-this.cacheSize);
+                }
+            }
+        } catch (error) {
+            this.error('Error updating log cache', error);
+        }
     }
 
     log(level: string, message: string, details?: Record<string, any>): void {
@@ -90,5 +134,57 @@ export class LogManager extends EventEmitter {
 }
 
 const Logger = new LogManager();
+
+    getLogs(params: {
+        limit?: number;
+        offset?: number;
+        filter?: {
+            level?: string[];
+            search?: string;
+            startTime?: number;
+            endTime?: number;
+        };
+    }): { logs: LogEntry[]; total: number } {
+        this.updateCache();
+
+        let filtered = [...this.logCache];
+        
+        if (params.filter) {
+            if (params.filter.level?.length) {
+                filtered = filtered.filter(entry => 
+                    params.filter!.level!.includes(entry.level)
+                );
+            }
+            
+            if (params.filter.search) {
+                const search = params.filter.search.toLowerCase();
+                filtered = filtered.filter(entry =>
+                    entry.message.toLowerCase().includes(search)
+                );
+            }
+            
+            if (params.filter.startTime) {
+                filtered = filtered.filter(entry => 
+                    entry.timestamp >= params.filter!.startTime!
+                );
+            }
+            
+            if (params.filter.endTime) {
+                filtered = filtered.filter(entry => 
+                    entry.timestamp <= params.filter!.endTime!
+                );
+            }
+        }
+
+        const offset = params.offset || 0;
+        const limit = params.limit || 100;
+        const paginated = filtered.slice(offset, offset + limit);
+
+        return {
+            logs: paginated.reverse(), // Return most recent first
+            total: filtered.length
+        };
+    }
+}
 
 export default Logger;
