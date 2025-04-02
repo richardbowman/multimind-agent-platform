@@ -1,5 +1,6 @@
 // logger.ts
-import { appendFileSync, mkdirSync } from 'fs';
+import { promises as fs, mkdirSync } from 'fs';
+import { join } from 'path';
 import * as path from 'path';
 import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
@@ -15,6 +16,9 @@ export class LogManager extends EventEmitter implements LogReader {
     private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.jsonl`);
     private logCache: LogEntry[] = [];
     private cacheSize = 10000;
+    private writeQueue: LogEntry[] = [];
+    private isWriting = false;
+    private writeDebounce: NodeJS.Timeout | null = null;
 
     private ensureLogDirectoryExists(): void {
         const dir = path.dirname(Logger.logFilePath);
@@ -41,14 +45,9 @@ export class LogManager extends EventEmitter implements LogReader {
         };
 
         // Ensure directory exists and append to log file
-        try {
-            if (level !== "progress") {
-                this.ensureLogDirectoryExists();
-                appendFileSync(Logger.logFilePath, JSON.stringify(logEntry) + '\n');
-                this.addToCache(logEntry);
-            }
-        } catch (e) {
-            //swallow errors, this can happen as process is exiting
+        if (level !== "progress") {
+            this.addToCache(logEntry);
+            this.queueWrite(logEntry);
         }
 
         // Send to WebSocket if connected
@@ -153,4 +152,62 @@ export class LogManager extends EventEmitter implements LogReader {
 }
 
 const Logger = new LogManager();
+    private async queueWrite(entry: LogEntry) {
+        this.writeQueue.push(entry);
+        
+        // Debounce writes to batch them
+        if (this.writeDebounce) {
+            clearTimeout(this.writeDebounce);
+        }
+        
+        this.writeDebounce = setTimeout(async () => {
+            await this.flushQueue();
+        }, 100); // Batch writes every 100ms
+    }
+
+    private async flushQueue() {
+        if (this.isWriting || this.writeQueue.length === 0) return;
+        
+        this.isWriting = true;
+        const entries = [...this.writeQueue];
+        this.writeQueue = [];
+        
+        try {
+            this.ensureLogDirectoryExists();
+            const data = entries.map(e => JSON.stringify(e)).join('\n') + '\n';
+            await fs.appendFile(this.logFilePath, data);
+        } catch (e) {
+            console.error('Error writing logs:', e);
+            // Requeue failed writes
+            this.writeQueue.unshift(...entries);
+        } finally {
+            this.isWriting = false;
+            
+            // If more entries arrived while we were writing
+            if (this.writeQueue.length > 0) {
+                setTimeout(() => this.flushQueue(), 0);
+            }
+        }
+    }
+
+    async shutdown() {
+        // Flush any remaining logs on shutdown
+        if (this.writeQueue.length > 0) {
+            await this.flushQueue();
+        }
+    }
+}
+
+const Logger = new LogManager();
+
+// Ensure logs are flushed on process exit
+process.on('beforeExit', async () => {
+    await Logger.shutdown();
+});
+
+process.on('SIGINT', async () => {
+    await Logger.shutdown();
+    process.exit(0);
+});
+
 export default Logger;
