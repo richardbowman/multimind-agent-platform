@@ -7,7 +7,7 @@ import {
     Collapse,
     IconButton
 } from '@mui/material';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import ReplyIcon from '@mui/icons-material/Reply';
@@ -461,10 +461,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     return tr.children
                                         .filter((td: any) => td.type === 'element' && td.tagName === 'td')
                                         .map((td: any) => {
-                                            return td.children
-                                                .filter((child: any) => child.type === 'text')
-                                                .map((child: any) => child.value)
-                                                .join('');
+                                            return td.children;
                                         });
                                 });
 
@@ -477,6 +474,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 headerName: header,
                                 flex: 1,
                                 minWidth: 100,
+                                renderCell: (params: GridRenderCellParams<any, any>) => {
+                                    return params.value;
+                                },
                             }));
 
                             const rowsData = dataRows.map((row, rowIndex) => {
