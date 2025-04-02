@@ -22,7 +22,7 @@ import _crypto from 'node:crypto';
 import { loadAgentConfigs, loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
 import { Sequelize } from "sequelize";
 import { Settings } from "./tools/settings";
-import { ILLMService, LLMProviders, LLMServices } from "./llm/ILLMService";
+import { LLMProviders, LLMServices } from "./llm/ILLMService";
 import { LLMProvider } from "./llm/types/LLMProvider";
 import { asError } from "./types/types";
 import "./utils/ArrayUtils";    // need to import because we change array prototype
@@ -64,7 +64,7 @@ async function createLLMServices(providers: LLMProviders, settings: Settings): P
                 continue;
             }
 
-            let service = providers[config.provider!];
+            const service = providers[config.provider!];
             if (!service) {
                 throw new Error(`Provider ${config.provider} could not be found.`);
             }
@@ -272,7 +272,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             if (assignedAgent) {
                 assignedAgent.processTaskQueue();
             } else if (task.assignee === USER_ID) {
-                let post: Message | undefined = undefined;
+                const post: Message | undefined = undefined;
                 if (task.props?.announceChannelId !== undefined) {
                     const handles = await userClient.getHandles();
                     const creatorHandle = handles[task.creator];
@@ -300,7 +300,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             artifactManager,
             settingsManager,
             llmLogger: chatService.getLogger(),
-            logReader: new LogReader(),
+            logReader: Logger,
             llmService: chatService,
             vectorCollections: [docsVectorDB, proceduresVectorDB],
             cleanup: shutdown,

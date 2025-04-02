@@ -20,7 +20,7 @@ import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
 import { SplashWindow } from './windows/SplashWindow';
 import { ConfigurationError } from './errors/ConfigurationError';
 import { MainWindow } from './windows/MainWindow';
-import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from './types/BackendServices';
+import { BackendServicesConfigNeeded, BackendServicesWithWindows } from './types/BackendServices';
 import { ElectronIPCServer } from './server/ElectronIPCServer';
 import { SettingsManager } from './tools/settingsManager';
 import { LogReader } from './server/LogReader';
@@ -102,7 +102,7 @@ app.whenReady().then(async () => {
             type: "configNeeded",
             settingsManager,
             mainWindow,
-            logReader: new LogReader(),
+            logReader: Logger,
             error,
             autoUpdater
         } as BackendServicesConfigNeeded;
@@ -177,7 +177,7 @@ export async function reinitializeBackend() : Promise<BackendServicesConfigNeede
             type: "configNeeded",
             settingsManager,
             mainWindow,
-            logReader: new LogReader(),
+            logReader: Logger,
             autoUpdater
         } as BackendServicesConfigNeeded;
 

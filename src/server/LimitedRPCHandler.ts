@@ -36,7 +36,7 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
     }
 
     async resetSettings() : Promise<Settings> {
-        return await this.partialServices.settingsManager.reset();
+        return this.partialServices.settingsManager.reset();
     }
 
 
@@ -157,7 +157,7 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
     }): Promise<any> {
         switch (logType) {
             case 'llm':
-                return await LLMCallLogger.getAllLogs();
+                return LLMCallLogger.getAllLogs();
             case 'system':
                 return this.getSystemLogs(params || {});
             case 'api':

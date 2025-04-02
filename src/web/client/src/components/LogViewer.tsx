@@ -39,31 +39,31 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         try {
             // Fetch logs with newest first
             const result = await fetchLogs(currentLogTypeRef.current, {
-                sort: 'desc',
-                limit: pageSize,
-                forceRefresh: true
+                limit: pageSize
             });
-            
-            // Check if we have new logs by comparing the latest timestamp
-            const latestTimestamp = result.logs[0]?.timestamp;
-            if (latestTimestamp && latestTimestamp > lastLogTimestampRef.current) {
-                lastLogTimestampRef.current = latestTimestamp;
-                setIsLoading(true);
-                setLoadedLogs(prev => {
-                    // Only update if we have new logs
-                    const newLogs = result.logs.filter(newLog => 
-                        !prev.some(existingLog => existingLog.timestamp === newLog.timestamp)
-                    );
-                    return newLogs.length > 0 ? [...newLogs, ...prev] : prev;
-                });
-                setHasMore(result.total > result.logs.length);
-                setIsLoading(false);
-            }
         } catch (error) {
             console.error('Error refreshing logs:', error);
             setIsLoading(false);
         }
     }, [fetchLogs, pageSize]);
+
+    useEffect(() => {
+        // Check if we have new logs by comparing the latest timestamp
+        const latestTimestamp = logs?.system?.logs?.[0].timestamp;
+        if (latestTimestamp && latestTimestamp > lastLogTimestampRef.current) {
+            lastLogTimestampRef.current = latestTimestamp;
+            setIsLoading(true);
+            setLoadedLogs(prev => {
+                // Only update if we have new logs
+                const newLogs = logs.system?.logs.filter(newLog => 
+                    !prev.some(existingLog => existingLog.timestamp === newLog.timestamp)
+                );
+                return newLogs.length > 0 ? [...newLogs, ...prev] : prev;
+            });
+            setHasMore(logs.system?.total > logs.system?.logs.length);
+            setIsLoading(false);
+        }
+    }, [logs]);
 
     useEffect(() => {
         currentLogTypeRef.current = currentLogTab;
@@ -117,8 +117,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     limit: pageSize,
                     offset: loadedLogs.length,
                     filter: {
-                        search: filterText,
-                        showVerbose: showVerbose
+                        search: filterText
                     }
                 });
                 

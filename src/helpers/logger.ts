@@ -149,9 +149,7 @@ export class LogManager extends EventEmitter implements LogReader {
             total: filtered.length
         };
     }
-}
 
-const Logger = new LogManager();
     private async queueWrite(entry: LogEntry) {
         this.writeQueue.push(entry);
         
