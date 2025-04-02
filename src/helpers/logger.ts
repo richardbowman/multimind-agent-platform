@@ -22,10 +22,11 @@ export class LogManager extends EventEmitter implements LogReader {
     }
 
     private addToCache(entry: LogEntry) {
-        this.logCache.push(entry);
+        // Add new entries to beginning of array to maintain reverse chronological order
+        this.logCache.unshift(entry);
         // Keep only the most recent entries
         if (this.logCache.length > this.cacheSize) {
-            this.logCache.shift();
+            this.logCache.pop();
         }
     }
 
@@ -145,7 +146,7 @@ export class LogManager extends EventEmitter implements LogReader {
         const paginated = filtered.slice(offset, offset + limit);
 
         return {
-            logs: paginated.reverse(), // Return most recent first
+            logs: paginated,
             total: filtered.length
         };
     }
