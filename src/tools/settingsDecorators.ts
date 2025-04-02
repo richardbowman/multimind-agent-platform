@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import { Settings } from './settings';
 
 export function ClientSettings(metadata: {
     label: string;

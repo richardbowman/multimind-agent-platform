@@ -1,10 +1,7 @@
-import { PromptBuilder } from 'src/llm/promptBuilder';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ArtifactGenerationStepResponse, GenerateArtifactExecutor } from './GenerateArtifactExecutor';
-import { JSONSchema } from 'openai/lib/jsonschema';
-import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
-import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { ArtifactType } from 'src/tools/artifact';
 import { ModelConversation } from '../interfaces/StepExecutor';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise a single Markdown document.')

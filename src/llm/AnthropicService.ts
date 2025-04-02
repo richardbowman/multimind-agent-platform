@@ -1,4 +1,4 @@
-import { IEmbeddingFunction, ILLMService, LLMRequestParams } from "./ILLMService";
+import { ILLMService, LLMRequestParams } from "./ILLMService";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import { AsyncQueue } from "../helpers/asyncQueue";
@@ -7,7 +7,6 @@ import JSON5 from 'json5';
 import Anthropic from '@anthropic-ai/sdk';
 import { ModelType } from "./types/ModelType";
 import { Settings } from "src/tools/settings";
-import { ConfigurationError } from "src/errors/ConfigurationError";
 import { LLMProvider } from "./types/LLMProvider";
 
 export class AnthropicService extends BaseLLMService {
@@ -69,7 +68,7 @@ export class AnthropicService extends BaseLLMService {
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
         params: LLMRequestParams
     ): Promise<GenerateOutputParams<T>> {
-        return await this.queue.enqueue(async () => {
+        return this.queue.enqueue(async () => {
             const messages = params.messages.map(msg => ({
                 role: msg.role === 'assistant' ? 'assistant' : 'user',
                 content: msg.content

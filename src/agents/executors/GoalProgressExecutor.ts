@@ -8,7 +8,6 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
-import { TaskStatus } from 'src/schemas/TaskStatus';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { GoalProgressResponse } from 'src/schemas/goalProgress';

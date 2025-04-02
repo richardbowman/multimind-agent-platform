@@ -2,7 +2,7 @@ import { BedrockRuntimeClient, ConversationRole, ConverseCommand, InvokeModelCom
 import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
 import JSON5 from 'json5';
 import { RetryHelper } from "../helpers/retryHelper";
-import { IEmbeddingFunction, ILLMService, ModelRole } from "./ILLMService";
+import { IEmbeddingFunction, ILLMService } from "./ILLMService";
 
 interface LLMRequestParams {
     messages: { role: string; content: string }[];
@@ -16,9 +16,7 @@ interface LLMRequestParams {
     parseJSON?: boolean;
 }
 import { AsyncQueue } from "../helpers/asyncQueue";
-import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { StructuredOutputPrompt } from "./ILLMService";
 import Logger from "src/helpers/logger";
 import { LLMCallLogger } from "./LLMLogger";
 
@@ -189,7 +187,7 @@ export class BedrockService extends BaseLLMService {
 
         await this.waitForNextCall(estimatedTokens);
 
-        return await this.queue.enqueue(async () => {
+        return this.queue.enqueue(async () => {
             // Merge consecutive messages from same role
             const mergedMessages = this.mergeConsecutiveMessages(params.messages);
             // Transform tools format if present
@@ -232,7 +230,7 @@ export class BedrockService extends BaseLLMService {
             } catch (error: any) {
                 if (error?.name === 'ThrottlingException') {
                     response = await RetryHelper.withRetry(async () => {
-                        return await this.runtimeClient.send(command);
+                        return this.runtimeClient.send(command);
                     }, "Bedrock sendLLMRequest() call - throttled");
                 } else {
                     throw error;
@@ -344,7 +342,7 @@ export class BedrockService extends BaseLLMService {
         } catch (error: any) {
             if (error?.name === 'ThrottlingException') {
                 response = await RetryHelper.withRetry(async () => {
-                    return await this.runtimeClient.send(command);
+                    return this.runtimeClient.send(command);
                 }, "Bedrock getTokenCount() call - throttled");
             } else {
                 throw error;

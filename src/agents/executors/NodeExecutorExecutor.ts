@@ -245,7 +245,7 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascr
 
         params.previousResponses && promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
 
-        let result = await this.modelHelpers.generate({
+        const result = await this.modelHelpers.generate({
             message: params.stepGoal || params.message,
             instructions: promptBuilder,
             modelType: ModelType.ADVANCED_REASONING

@@ -19,9 +19,9 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { withRetry } from 'src/helpers/retry';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { asError } from 'src/types/types';
 import { ModelResponseError } from '../stepBasedAgent';
+import { UUID } from 'src/types/uuid';
 
 export type WithReasoning<T extends ModelResponse> = T & {
     reasoning?: string;
@@ -34,7 +34,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     readonly alwaysComplete: boolean = true;
 
     private projects: TaskManager;
-    private userId?: string;
+    private userId?: UUID;
     private modelHelpers: ModelHelpers;
     private stepExecutors: Map<string, StepExecutor<StepResponse>> = new Map();
     private chatClient: ChatClient;
@@ -93,15 +93,16 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             prompt.addOutputInstructions({ outputType: OutputType.ALL_XML_MESSAGE_REASONING_DATA, schema, status: false, specialInstructions: `
     IN <thinking>, describe this process:
     - Review the STEPS COMPLETED FOR POST to see what you've already done.
+    - Consider Procedure Guides for help on step order required to be successful. 
     - Consider the best Action Type from the AVAILABLE ACTION TYPES to achieve the goal.
     - Explain each step and why it would or would not make sense to be the next action.
-    - Consider Procedure Guides for help on step order required to be successful. 
     THEN IN <data>:
+    - If you need to continue working, set the "nextAction" to one of the AVAILABLE ACTION TYPES.
     - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
-    - If you need to continue working, set the next Action Type to one of the other tools. When generating the associated 'taskDescription' make sure it is stand-alone, repeating all necessary information the step needs including the details of the user's message.
     - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.
     FINALLY IN <message>:
-    - Respond in a friendly and concise chat message. Reminder: The user cannot see information in completed steps such as <tool_result> information, you need to share it with them.
+    - For REPLY: Respond in a friendly and concise chat message. Reminder: The user cannot see information in completed steps such as <tool_result> information, you need to share it with them.
+    - For other actions: Provide a clear description of the user's goals as well as a complete task description for the step, repeating all necessary information the step needs including the details of the user's message.
 
     YOU MUST ALWAYS FOLLOW THE OUTPUT FORMAT WITH 3 SEPARATE XML-ENCLOSED SECTIONS: <thinking>...</thinking>, <data>...</data>, and <message>...</message>.
     `});
@@ -134,13 +135,13 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                         throw new ModelResponseError(`Error: Invalid nextAction: ${response.nextAction||"None provided"}. Must be one of: ${Array.from(validActions).join(', ')}`, result.message);
                     }
 
+                    if (StringUtils.isEmptyString(response.message)) {
+                        throw new ModelResponseError(`Error: No message provided.`, result.message);
+                    }
+
                     return response;
                 },
-                (result) => {
-                    const hasValidResponse = !!result && !!result.nextAction && !!result.message;
-                    const hasValidAction = !!result.nextAction && validActions.has(result.nextAction) && result.nextAction !== completionAction;
-                    return hasValidResponse || hasValidAction;
-                },
+                () => true,
                 {
                     maxAttempts: 3,
                     initialDelayMs: 100,
@@ -163,7 +164,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             } : {};
 
             // Create new task for the next action
-            if (response.nextAction && response.nextAction !== completionAction) {
+            if (response.nextAction && response.nextAction !== completionAction && response.message) {
                 // Find the procedure guide if one is being followed
                 const procedureGuide = response.procedureGuideTitle !== "none"
                     ? procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)
@@ -171,8 +172,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
                 const newTask: AddTaskParams = {
                     type: TaskType.Step,
-                    description: response.taskDescription || response.nextAction,
-                    creator: this.userId,
+                    description: response.message,
+                    creator: this.userId||'system',
                     props: {
                         stepType: response.nextAction,
                         ...(procedureGuide && { procedureGuideId: procedureGuide.id })
@@ -182,7 +183,6 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
                 return {
                     finished: true,
-                    goal: response.revisedUserGoal,
                     response: {
                         type: StepResponseType.Plan,
                         reasoning: response.reasoning,
@@ -190,7 +190,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                         data: {
                             steps: response.nextAction ? [{
                                 actionType: response.nextAction,
-                                context: response.taskDescription,
+                                context: response.message,
                                 ...retainedProcedureGuides
                             }] : []
                         }

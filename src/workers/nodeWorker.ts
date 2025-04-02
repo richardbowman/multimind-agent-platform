@@ -146,7 +146,7 @@ try {
     const codeToRun = `
         (async () => {
             try {
-                ${(workerData as any).code}
+                ${(workerData).code}
             } catch (error) {
                 originalConsole.log(error);
                 // Send console output before error

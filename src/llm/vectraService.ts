@@ -1,18 +1,11 @@
-import { EventEmitter } from "events";
 import { LocalIndex } from "vectra";
-import * as crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import * as path from 'path';
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import { BaseVectorDatabase, IVectorDatabase, SearchResult } from "./IVectorDatabase";
+import { BaseVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
-import { saveToFile } from "../tools/storeToFile";
-import { ConversationContext } from "../chat/chatClient";
 import { IEmbeddingService, ILLMService } from "./ILLMService";
 import { getDataPath } from "src/helpers/paths";
-import { timeStamp } from "console";
 import { asError } from "src/types/types";
-import { createUUID, UUID } from "src/types/uuid";
 
 const syncQueue = new AsyncQueue();
 
@@ -78,7 +71,7 @@ class VectraService extends BaseVectorDatabase {
 
             const embedder = this.embeddingService.getEmbeddingModel();
             const queryEmbeddings = await embedder.generate(queryTexts);
-            const results = await this.index!.queryItems(queryEmbeddings[0], nResults, where);
+            const results = await this.index.queryItems(queryEmbeddings[0], nResults, where);
 
             return results.map(result => ({
                 id: result.item.id,

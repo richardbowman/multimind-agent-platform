@@ -1,6 +1,5 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow } from 'electron';
 import * as path from 'path';
-import { electron } from 'process';
 import Logger from 'src/helpers/logger';
 
 export class SplashWindow {

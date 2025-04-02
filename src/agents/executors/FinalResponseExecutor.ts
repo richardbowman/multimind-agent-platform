@@ -2,7 +2,6 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { FinalResponse } from '../../schemas/finalResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -12,8 +11,7 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ModelType } from "src/llm/types/ModelType";
 import { ContentType } from 'src/llm/promptBuilder';
-import { ScrapeResult, ScrapeStepResponse } from './WebScrapeExecutor';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { ScrapeStepResponse } from './WebScrapeExecutor';
 
 /**
  * Executor that synthesizes all previous results into a final response.

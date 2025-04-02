@@ -15,7 +15,6 @@ import { ContentInput, FullGoalsContent, StepsContent } from 'src/llm/ContentTyp
 import { ExecutorType } from './ExecutorType';
 import { Message } from 'src/chat/chatClient';
 import { isObject } from 'src/types/types';
-import { ChatMessage } from '@lmstudio/sdk';
 
 
 export abstract class BaseStepExecutor<R extends StepResponse> implements StepExecutor<R> {
@@ -148,7 +147,7 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                 if (stepResult.response.type !== StepResponseType.CompletionMessage) {
                     let stepInfo: string;
                     if (isRecentStep || stepResult.response.retention === StepResponseRetention.Always || (isLongStep && stepResult.response.retention === StepResponseRetention.Long)) {
-                        let body = await this.prompt.registry.renderResult(stepResult, steps);
+                        const body = await this.prompt.registry.renderResult(stepResult, steps);
                         stepInfo = `- STEP [${step.props.stepType}]:
     Description: ${step.description}
     ${[body && `Result: <toolResult>${body}</toolResult>`,

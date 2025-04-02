@@ -264,7 +264,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
         // If thread_id is provided, send as reply
         if (message.thread_id) {
-            return await this.services.chatClient.postReply(
+            return this.services.chatClient.postReply(
                 message.thread_id,
                 message.channel_id!,
                 message.message!,
@@ -283,7 +283,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         }
         
         // Otherwise send as regular channel message
-        return await this.services.chatClient.postInChannel(
+        return this.services.chatClient.postInChannel(
             message.channel_id!,
             message.message!,
             message.props
@@ -293,7 +293,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     async getMessages({ channelId, threadId, limit }: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]> {
         const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
 
-        let channelMessages = messages
+        const channelMessages = messages
             .filter(post => post.channel_id === channelId)
             .map(post => {
                 // Count replies for this message
@@ -440,7 +440,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async listArtifacts(): Promise<ArtifactItem[]> {
-        return (await this.services.artifactManager.listArtifacts());
+        return (this.services.artifactManager.listArtifacts());
     }
 
     async deleteArtifact(artifactId: string): Promise<ArtifactItem[]> {
@@ -615,7 +615,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
     async createChannel(params: CreateChannelHandlerParams): Promise<string> {
         const mappedParams = await ServerRPCHandler.createChannelHelper(this.services.chatClient, this.services.taskManager, params);
-        return await this.services.chatClient.createChannel(mappedParams);
+        return this.services.chatClient.createChannel(mappedParams);
     }
 
     async deleteChannel(channelId: UUID): Promise<void> {

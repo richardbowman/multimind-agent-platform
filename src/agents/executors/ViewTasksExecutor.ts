@@ -1,7 +1,5 @@
 import { UUID } from "crypto";
 import { ChatClient } from "src/chat/chatClient";
-import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { SchemaType } from "src/schemas/SchemaTypes";
 import { TaskManager } from "src/tools/taskManager";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";

@@ -7,7 +7,7 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
-import { asUUID, createUUID, UUID } from 'src/types/uuid';
+import { asUUID, UUID } from 'src/types/uuid';
 import { Agent } from '../agents';
 import { TaskEventType } from "../../shared/TaskEventType";
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
@@ -19,11 +19,10 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { ChatClient } from 'src/chat/chatClient';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import { StepTask } from '../interfaces/ExecuteStepParams';
-import { response } from 'express';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { CSVProcessingResponse, ExtractColumnsResponse } from 'src/schemas/CSVProcessingSchema';
-import { RetryError, withRetry } from 'src/helpers/retry';
+import { withRetry } from 'src/helpers/retry';
 
 interface CSVProcessingStepResponse extends StepResponse {
     data?: {
@@ -420,7 +419,7 @@ ${task?.props?.resultColumns?.map(c => ` - ${c.name}: ${c.description}`).join("\
         }
 
         // Load the CSV artifact once
-        let csvArtifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
+        const csvArtifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
         let newContent : string|undefined = undefined;
 
         if (!csvArtifact) {

@@ -2,7 +2,6 @@ import Logger from "src/helpers/logger";
 import { ArtifactManager } from "./artifactManager";
 import fs from "node:fs";
 import { ArtifactType, DocumentSubtype, SpreadsheetSubType, Artifact, ArtifactItem, ArtifactMetadata } from "./artifact";
-import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
 

@@ -58,7 +58,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
      */
     async queryOld(queryTexts: string[], where: any, nResults: number): Promise<any> {
         if (!this.collection) throw new Error("Collection not initialized");
-        return await this.collection.query({ queryTexts, where, nResults });
+        return this.collection.query({ queryTexts, where, nResults });
     }
 
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
@@ -164,7 +164,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
     }
 
     public async listCollections(): Promise<Collection[]> {
-        return await this.chromaDB.listCollections();
+        return this.chromaDB.listCollections();
     }
 
     public async hasCollection(name: string): Promise<boolean> {
@@ -174,7 +174,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
 
     public async getItems(): Promise<{ ids: string[], metadatas: any[], documents: string[] }> {
         if (!this.collection) throw new Error("Collection not initialized");
-        return await this.collection.get({});
+        return this.collection.get({});
     }
 
     public async deleteCollection(name: string): Promise<void> {

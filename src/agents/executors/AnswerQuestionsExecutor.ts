@@ -1,9 +1,8 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { AnswerAnalysisResponse, QAAnswers } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
@@ -14,7 +13,7 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { IntakeQuestion } from 'src/schemas/IntakeQuestionsResponse';
-import { ContentType, PromptBuilder } from 'src/llm/promptBuilder';
+import { ContentType } from 'src/llm/promptBuilder';
 
 export interface AnswerMetadata {
     index: number;
@@ -130,7 +129,7 @@ Additionally, analyze the overall progress and provide:
         // }
 
         // Update tasks and store answers based on analysis
-        let newAnswers : QAAnswers[] = [];
+        const newAnswers : QAAnswers[] = [];
         for (const answer of modelResponse.answers) {
             const question = outstandingQuestions[answer.questionIndex];
             if (question && answer.answered) {

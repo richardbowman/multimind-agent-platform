@@ -14,12 +14,10 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
 import { Agents } from "src/utils/AgentLoader";
-import { asUUID, createUUID, UUID } from "src/types/uuid";
+import { asUUID, UUID } from "src/types/uuid";
 import { StringUtils } from "src/utils/StringUtils";
-import { ContentType, PromptBuilder } from "src/llm/promptBuilder";
+import { ContentType } from "src/llm/promptBuilder";
 import { ChatHandle } from "src/types/chatHandle";
-import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { SchemaType } from "src/schemas/SchemaTypes";
 import { ModelType } from "src/llm/types/ModelType";
 import { TaskEventType } from "../shared/TaskEventType";
 
@@ -307,7 +305,7 @@ export abstract class Agent {
 
     // Common method for fetching previous messages
     protected async fetchMessages(channelId: UUID): Promise<ChatPost[]> {
-        return await this.chatClient.fetchPreviousMessages(channelId);
+        return this.chatClient.fetchPreviousMessages(channelId);
     }
 
     public async setupChatMonitor(monitorChannelId: UUID, handle?: ChatHandle, autoRespond?: boolean) {
@@ -325,7 +323,7 @@ export abstract class Agent {
                 let context: ConversationContext | undefined;
 
                 if (!post.getRootId() && (handle && post.message.startsWith(handle + " ") || (!post.message.startsWith("@") && autoRespond))) {
-                    let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
+                    const requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
 
                     const allArtifacts = [...new Set([...requestedArtifacts, ...post.props.artifactIds || []].flat().filter(a => !!a))];
                     const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));
@@ -347,7 +345,7 @@ export abstract class Agent {
                             if (project) projects.push(project);
                         }
 
-                        let requestedArtifacts: UUID[] = [], searchResults: SearchResult[] = [];
+                        const requestedArtifacts: UUID[] = [], searchResults: SearchResult[] = [];
 
                         const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifactIds"])].flat().flat().filter(a => !!a))];
                         const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));

@@ -1,7 +1,7 @@
 // config.ts
 import Logger from './logger';
 import * as path from 'path';
-import { Settings, SettingsManager } from '../tools/settingsManager';
+import { SettingsManager } from '../tools/settingsManager';
 import * as dotenv from 'dotenv';
 
 

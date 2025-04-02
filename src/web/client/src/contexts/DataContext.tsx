@@ -6,6 +6,7 @@ import { useIPCService } from './IPCContext';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from '../../../../tools/settings';
 import { ClientError } from '@mattermost/client';
+import { LogEntry } from '../../../../shared/RPCInterface';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 export interface Paths {
@@ -15,9 +16,7 @@ export interface Paths {
 
 export interface DataContextMethods {
   pendingFiles: Artifact[];
-  logs: {
-    system: any[];
-  };
+  logs: LogSet;
   handles: Array<{ id: string, handle: string }>;
   isLoading: boolean;
   needsConfig: boolean | null;
@@ -26,7 +25,7 @@ export interface DataContextMethods {
   paths: Paths | null;
   setPaths: React.Dispatch<React.SetStateAction<Paths>>;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
-  fetchLogs: (logType: 'llm' | 'system' | 'api') => Promise<void>;
+  fetchLogs: (logType: 'llm' | 'system', opts: LogSearchOptions) => Promise<void>;
   fetchHandles: () => Promise<void>;
   setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
   setLogs: React.Dispatch<React.SetStateAction<{
@@ -41,6 +40,21 @@ export interface DataContextMethods {
   showFileDialog: () => Promise<void>;
 }
 
+export interface LogSearchOptions {
+  limit?: number;
+  offset?: number;
+  filter?: {
+    search?: string;
+  };
+}
+
+export interface LogSet {
+  system: {
+    logs: any[];
+    total: number;
+  };
+}
+
 export const DataProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
@@ -51,16 +65,9 @@ export const DataProvider: React.FC<{
   const [settings, setSettings] = useState<Settings | null>();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
-
-
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);
-  const [logs, setLogs] = useState<{
-    system: {
-      logs: any[];
-      total: number;
-    };
-  }>({
+  const [logs, setLogs] = useState<LogSet>({
     system: {
       logs: [],
       total: 0
@@ -111,13 +118,7 @@ export const DataProvider: React.FC<{
   }, []);
 
 
-  const fetchLogs = useCallback(async (logType: 'system', params?: {
-    limit?: number;
-    offset?: number;
-    filter?: {
-      search?: string;
-    };
-  }) => {
+  const fetchLogs = useCallback(async (logType: 'system', params?: LogSearchOptions) => {
     const newLogs = await ipcService.getRPC().getLogs(logType, params);
 
     setLogs(prev => ({

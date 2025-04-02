@@ -106,7 +106,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         }
 
         const scrapedUrls = await this.getScrapedUrls();
-        let summaries = [];
+        const summaries = [];
 
         const result: ScrapeResult = {
             artifacts: [],

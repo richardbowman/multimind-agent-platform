@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { ModelConversation, StepExecutor } from '../interfaces/StepExecutor';
+import { ModelConversation } from '../interfaces/StepExecutor';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
@@ -8,7 +8,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact, ArtifactMetadata, ArtifactType } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
-import { PromptBuilder, ContentType, OutputType, globalRegistry } from 'src/llm/promptBuilder';
+import { ContentType, OutputType, globalRegistry } from 'src/llm/promptBuilder';
 import { ArtifactGenerationResponse, OperationTypes } from 'src/schemas/ArtifactGenerationResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
@@ -139,7 +139,7 @@ You must use the EXACT text from the original document. Use requestFullContent t
 
 
     async execute(params: ExecuteParams, modelType?: ModelType): Promise<StepResult<ArtifactGenerationStepResponse>> {
-        let retryCount = 0;
+        const retryCount = 0;
         const maxRetries = 1; // Only retry once after getting full content
 
         let artifactIndex = -1, existingArtifact: Artifact | null = null;
@@ -366,7 +366,7 @@ new replacement text
         if (!StringUtils.isNonEmptyString(content)) return content;
 
         // Only remove outer formatting tags if the entire content is wrapped in them
-        const outerFormatRegex = /^```[a-zA-Z]*\n([\s\S]*)\n```$/;
+        const outerFormatRegex = /^```[a-zA-Z]*\s([\s\S]*)\s```$/;
         const match = content.match(outerFormatRegex);
         return match ? match[1].trim() : content;
     }

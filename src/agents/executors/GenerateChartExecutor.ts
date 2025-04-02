@@ -2,7 +2,6 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { ModelMessageResponse } from '../../schemas/ModelResponse';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ArtifactManager } from 'src/tools/artifactManager';

@@ -1,12 +1,8 @@
 import { ExecutorType } from "../interfaces/ExecutorType";
-import { Artifact, CalendarArtifact, CalendarEvent } from "../../tools/artifact";
 import ical from 'ical-generator';
-import { parse } from 'ical-parser';
-import { HandlerParams } from "../agents";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { SchemaType } from "../../schemas/SchemaTypes";
-import { ChatPost } from "../../chat/chatClient";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { CalendarResponse } from "src/schemas/CalendarResponse";
@@ -15,8 +11,7 @@ import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorPara
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
-import { message } from "blessed";
-import { ContentType, PromptBuilder } from "src/llm/promptBuilder";
+import { ContentType } from "src/llm/promptBuilder";
 
 @StepExecutorDecorator(ExecutorType.CALENDAR_MANAGEMENT, 'Create and update a calendar', true)
 export class CalendarExecutor implements StepExecutor {

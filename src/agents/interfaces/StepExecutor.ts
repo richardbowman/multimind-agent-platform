@@ -6,10 +6,10 @@ import { TaskEventType } from "../../shared/TaskEventType";
 import { ChatPost } from 'src/chat/chatClient';
 import { StepTask } from './ExecuteStepParams';
 import { InputPrompt } from 'src/types/structuredInputPrompt';
-import { ModelMessageResponse, ModelResponse, ModelResponseMetadata } from 'src/schemas/ModelResponse';
+import { ModelMessageResponse, ModelResponseMetadata } from 'src/schemas/ModelResponse';
 import { WithMetadata } from 'typescript';
 import { WithTokens } from 'src/llm/modelHelpers';
-import { Artifact, ArtifactItem } from 'src/tools/artifact';
+import { Artifact } from 'src/tools/artifact';
 import { FilterCriteria } from 'src/types/FilterCriteria';
 
 

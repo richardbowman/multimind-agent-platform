@@ -5,7 +5,7 @@ import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepRe
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { ContentType } from 'src/llm/promptBuilder';
 import { ArtifactType } from 'src/tools/artifact';
 import { StringUtils } from 'src/utils/StringUtils';
 

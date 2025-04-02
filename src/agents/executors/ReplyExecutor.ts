@@ -3,13 +3,10 @@ import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult } from '../interfaces/StepResult';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
-import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
-import { ILLMService } from 'src/llm/ILLMService';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ContentType } from 'src/llm/promptBuilder';
-import { Artifact } from 'src/tools/artifact';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**

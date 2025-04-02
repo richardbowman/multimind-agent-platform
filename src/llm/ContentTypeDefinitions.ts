@@ -7,7 +7,7 @@ import { SearchResult } from "./IVectorDatabase";
 import { ContentType } from "./promptBuilder";
 import { StepResponse, StepResult } from "src/agents/interfaces/StepResult";
 import { Agent } from "src/agents/agents";
-import { Project, Task } from "src/tools/taskManager";
+import { Task } from "src/tools/taskManager";
 import { ChatHandle } from "src/types/chatHandle";
 
 export interface ArtifactsExcerptsContent {
@@ -183,5 +183,5 @@ export type ContentInput =
     | IntentContent
     | FullGoalsContent
     | StepsContent
-    | TasksContent
+     
     | ProcedureGuideContent;

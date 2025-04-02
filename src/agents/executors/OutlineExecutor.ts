@@ -1,4 +1,3 @@
-import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';

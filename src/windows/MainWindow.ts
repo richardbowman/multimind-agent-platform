@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import Logger from 'src/helpers/logger';
 import { SettingsManager } from 'src/tools/settingsManager';

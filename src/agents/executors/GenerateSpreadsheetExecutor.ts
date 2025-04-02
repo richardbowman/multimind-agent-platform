@@ -1,8 +1,6 @@
-import { JSONSchema } from 'src/llm/ILLMService';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
-import { PromptBuilder } from 'src/llm/promptBuilder';
 import { ArtifactType } from 'src/tools/artifact';
 import { ModelConversation } from '../interfaces/StepExecutor';
 import { OperationTypes } from 'src/schemas/ArtifactGenerationResponse';

@@ -404,7 +404,7 @@ export class LocalTestClient implements ChatClient {
                 posts.filter(p => p.getRootId() === postId)
             );
             await Promise.all(replies.map(reply => 
-                this.storage.deletePost(reply.id!)
+                this.storage.deletePost(reply.id)
             ));
         }
 
@@ -451,6 +451,6 @@ export class LocalTestClient implements ChatClient {
     }
 
     private async pushPost(post: ChatPost): Promise<ChatPost> {
-        return await this.storage.addPost(post);
+        return this.storage.addPost(post);
     }
 }

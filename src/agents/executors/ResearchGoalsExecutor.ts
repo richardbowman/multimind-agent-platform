@@ -3,7 +3,6 @@ import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';

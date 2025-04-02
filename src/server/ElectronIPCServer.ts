@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow, app } from 'electron';
 import { createBirpc } from 'birpc';
-import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from '../types/BackendServices';
+import { BackendServicesConfigNeeded, BackendServicesWithWindows } from '../types/BackendServices';
 import { ServerRPCHandler } from './ServerRPCHandler';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import { ClientMethods, ServerMethods } from '../shared/RPCInterface';

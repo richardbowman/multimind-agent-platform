@@ -4,7 +4,6 @@ import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ILLMService } from '../../llm/ILLMService';
 import { RefutingResponse } from '../../schemas/refuting';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';

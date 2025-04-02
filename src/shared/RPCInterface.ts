@@ -1,4 +1,4 @@
-import { ChannelData, CreateChannelHandlerParams, CreateChannelParams } from 'src/shared/channelTypes';
+import { ChannelData, CreateChannelHandlerParams } from 'src/shared/channelTypes';
 import { ClientMessage, ClientProject } from "./types";
 import { ClientThread } from "./types";
 import { EmbedderModelInfo } from 'src/llm/ILLMService';

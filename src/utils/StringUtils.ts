@@ -177,10 +177,10 @@ export namespace StringUtils {
      */
     export function mapToTyped<T>(json: any, schema: JSONSchema): T {
         validateJsonAgainstSchema<T>(json, schema);
-        return json as T;
+        return json;
     }
 
-    export function extractAndParseJsonBlock<T extends Object>(text: string|ModelMessageResponse, schema?: JSONSchema): T {
+    export function extractAndParseJsonBlock<T extends object>(text: string|ModelMessageResponse, schema?: JSONSchema): T {
         if (!text) throw new Error("No message provided");
         
         if (isObject(text) && text.message) {
@@ -211,7 +211,7 @@ export namespace StringUtils {
      * @returns Parsed JSON object from the XML block
      * @throws Error if no matching XML block found or JSON parsing fails
      */
-    export function extractAndParseXmlJsonBlock<T extends Object>(
+    export function extractAndParseXmlJsonBlock<T extends object>(
         text: string|ModelMessageResponse, 
         tagName: string,
         schema?: JSONSchema
@@ -271,7 +271,7 @@ export namespace StringUtils {
 
         while ((match = xmlBlockRegex.exec(text)) !== null) {
             const tag = match[1];
-            let content = match[2].trim();
+            const content = match[2].trim();
 
             // Handle nested tags by recursively extracting inner content
             // First add the outer block

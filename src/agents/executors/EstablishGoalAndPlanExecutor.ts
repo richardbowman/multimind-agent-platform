@@ -11,7 +11,6 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
-import { ContentType } from 'src/llm/promptBuilder';
 import { AddTaskParams, TaskType } from '../../tools/taskManager';
 
 /**

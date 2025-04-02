@@ -7,7 +7,7 @@ import { StructuredOutputPrompt } from '../llm/ILLMService';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ChatPost } from 'src/chat/chatClient';
 import { ChannelData } from 'src/shared/channelTypes';
-import { createUUID, UUID } from 'src/types/uuid';
+import { createUUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { RoutingResponse } from 'src/schemas/RoutingResponse';

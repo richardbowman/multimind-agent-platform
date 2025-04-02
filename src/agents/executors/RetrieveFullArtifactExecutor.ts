@@ -14,7 +14,6 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
 import { isUUID, UUID } from "src/types/uuid";
 import { Artifact } from "src/tools/artifact";
-import { IVectorDatabase } from "src/llm/IVectorDatabase";
 
 export interface FullArtifactStepResponse extends StepResponse {
     type: StepResponseType.FullArtifact;
@@ -121,7 +120,7 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
                     }
                     return null;
                 })
-                .filter(id => id !== null) as UUID[] || [];
+                .filter(id => id !== null) || [];
 
             return {
                 finished: true,

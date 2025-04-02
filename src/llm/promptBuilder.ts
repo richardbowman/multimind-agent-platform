@@ -9,8 +9,6 @@ import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 import { StringUtils } from "src/utils/StringUtils";
 import { JSONSchema } from "./ILLMService";
 import { ArtifactType } from "src/tools/artifact";
-import { FullArtifactStepResponse } from "src/agents/executors/RetrieveFullArtifactExecutor";
-import { json } from "sequelize";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 
 export interface ContentRenderer<T> {
@@ -217,7 +215,7 @@ ${this.modelHelpers.getPurpose()}
         if (stepResult.response.type) {
             const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
             if (typeRenderer) {
-                return await typeRenderer(stepResult.response, stepTasks.map(s => s.props.result?.response).filter(r => !!r));
+                return typeRenderer(stepResult.response, stepTasks.map(s => s.props.result?.response).filter(r => !!r));
             }
         }
         return undefined;
@@ -237,7 +235,7 @@ ${this.modelHelpers.getPurpose()}
             // Process steps and group by post
             await Promise.all(filteredSteps.map(async (step) => {
                 const stepResult = step.props.result!;
-                let body = await this.renderResult(stepResult, steps);
+                const body = await this.renderResult(stepResult, steps);
                 
                 const stepInfo = `- STEP [${step.props.stepType}]:
   Description: ${step.description}
@@ -315,7 +313,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
         const resolvedResponses = await Promise.all(filtered.map(async (stepResponse, index) => {
             let body;
             if (stepResponse.type) {
-                const typeRenderer = this.stepResponseRenderers.get(stepResponse.type!)||globalRegistry.stepResponseRenderers.get(stepResponse.type);;
+                const typeRenderer = this.stepResponseRenderers.get(stepResponse.type)||globalRegistry.stepResponseRenderers.get(stepResponse.type);;
                 if (typeRenderer) {
                     body = await typeRenderer(stepResponse, responses);
                 }
@@ -361,7 +359,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
                 ? `${artifact.content.length} characters`
                 : `${artifact.content.length} bytes`;
 
-            let content = typeof artifact.content === 'string'
+            const content = typeof artifact.content === 'string'
                 ? artifact.content
                 : `[Binary data - ${size}]`;
 
@@ -451,7 +449,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
         if (!agents || agents.length === 0) return '';
 
         return "🤖 AGENTS IN THIS CHANNEL:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
-            let output = `- ${agent.messagingHandle}: ${agent.description}`;
+            const output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
         }).join('\n');
     }
@@ -466,7 +464,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
         if (!agents || agents.length === 0) return '';
 
         return "🤖 AGENTS AVAIALBLE ACROSS PLATFORM:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
-            let output = `- ${agent.messagingHandle}: ${agent.description}`;
+            const output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
         }).join('\n');
     }

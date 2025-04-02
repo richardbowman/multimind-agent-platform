@@ -1,6 +1,5 @@
 import* as fs from 'fs/promises';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
 import Logger from 'src/helpers/logger';
 import { getDataPath } from 'src/helpers/paths';
 

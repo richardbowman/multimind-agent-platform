@@ -5,7 +5,6 @@ import { LLMCallLogger } from "./LLMLogger";
 import { ModelType, ModelTypeFallbackStrategy } from "./types/ModelType";
 import { ModelInfo } from "./types";
 import { PromptBuilder } from "./promptBuilder";
-import { SettingsManager } from "src/tools/settingsManager";
 import { Settings } from "src/tools/settings";
 
 export abstract class BaseLLMService implements ILLMService {

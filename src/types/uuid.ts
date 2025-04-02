@@ -17,7 +17,7 @@ export function createUUID(value?: string): UUID {
     if (!isUUID(value)) {
         throw new Error(`Invalid UUID format: ${value}`);
     }
-    return value as UUID;
+    return value;
 }
 
 // Utility functions
@@ -25,5 +25,5 @@ export function asUUID(value: string): UUID {
     if (!isUUID(value)) {
         throw new Error(`Invalid UUID format: ${value}`);
     }
-    return value as UUID;
+    return value;
 }

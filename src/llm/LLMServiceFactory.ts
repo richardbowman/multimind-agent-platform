@@ -6,7 +6,6 @@ import { LlamaCppService } from "./LlamaCppService";
 import { Settings } from "../tools/settings";
 import { OpenAIService } from "./OpenAIService";
 import { ConfigurationError } from "src/errors/ConfigurationError";
-import { ModelProviderConfig } from "src/tools/modelProviderConfig";
 import { LLMProvider } from "./types/LLMProvider";
 import { ProviderConfig } from "src/tools/providerConfig";
 

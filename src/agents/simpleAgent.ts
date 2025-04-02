@@ -1,9 +1,7 @@
 import { Agent, HandlerParams } from './agents';
 import Logger from 'src/helpers/logger';
-import { ContentProject, ContentTask } from './contentManager';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Project, Task } from 'src/tools/taskManager';
-import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
+import { ContentType } from 'src/llm/promptBuilder';
 import { ModelType } from "src/llm/types/ModelType";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { LLMContext } from 'src/llm/ILLMService';

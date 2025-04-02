@@ -1,7 +1,6 @@
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
-import { StepExecutor } from "../interfaces/StepExecutor";
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ArtifactManager } from "src/tools/artifactManager";

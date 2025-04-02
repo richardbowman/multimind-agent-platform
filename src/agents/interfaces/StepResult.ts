@@ -1,4 +1,3 @@
-import { CreateArtifact, ModelResponse } from 'src/schemas/ModelResponse';
 import { Artifact } from 'src/tools/artifact';
 import { UUID } from 'src/types/uuid';
 

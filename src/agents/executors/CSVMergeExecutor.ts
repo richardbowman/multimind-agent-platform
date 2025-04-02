@@ -12,7 +12,6 @@ import { ExecutorType } from "../interfaces/ExecutorType";
 import { MergePlanResponse } from "src/schemas/MergePlanResponse";
 import { StringUtils } from "src/utils/StringUtils";
 import { ContentType, OutputType } from "src/llm/promptBuilder";
-import { ModelMessageResponse } from "src/schemas/ModelResponse";
 
 
 @StepExecutorDecorator(ExecutorType.CSV_MERGE, 'Merges multiple CSV artifacts into a single spreadsheet')

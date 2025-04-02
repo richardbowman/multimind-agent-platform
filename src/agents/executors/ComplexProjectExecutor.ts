@@ -5,10 +5,8 @@ import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Task, TaskManager, TaskType } from '../../tools/taskManager';
+import { TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
-import { createUUID } from 'src/types/uuid';
-import { TaskCategories } from '../interfaces/taskCategories';
 
 @StepExecutorDecorator('complex_project', 'Kickoff a combined project involving both research and content development')
 export class ComplexProjectExecutor implements StepExecutor {

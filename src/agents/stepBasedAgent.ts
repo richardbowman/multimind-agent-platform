@@ -238,7 +238,7 @@ export abstract class StepBasedAgent extends Agent {
         // If no active project, treat it as a new conversation
         if (!projectId) {
             Logger.info("No active project found, starting new conversation");
-            let { projectId } = await this.addNewProject({
+            const { projectId } = await this.addNewProject({
                 projectName: params.userPost.message,
                 tasks: [],
                 metadata: {
@@ -435,7 +435,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
             });
 
-            let context: Partial<ExecuteContext> = {};
+            const context: Partial<ExecuteContext> = {};
             let post: Message | undefined = undefined;      //TODO: we shouild be able to look this up
             if (task.props?.announceChannelId !== undefined) {
                 const handles = await this.chatClient.getHandles();
@@ -677,7 +677,7 @@ export abstract class StepBasedAgent extends Agent {
             }
             if (params.partialPost) {
                 lastPost = await this.chatClient.updatePost(
-                    (params.partialPost as ChatPost).id,
+                    (params.partialPost).id,
                     messageResponse.message,
                     {
                         ...props,

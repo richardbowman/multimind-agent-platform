@@ -4,13 +4,10 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { ExecutorType } from "../interfaces/ExecutorType";
-import { StepExecutor } from "../interfaces/StepExecutor";
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { StepResponse, StepResult } from "../interfaces/StepResult";
 import { Artifact, ArtifactType } from "src/tools/artifact";
-import { createUUID } from "src/types/uuid";
 import { DraftContentStepResponse } from "./AssignWritersExecutor";
-import { CreateArtifact } from "src/schemas/ModelResponse";
 
 @StepExecutorDecorator(ExecutorType.CONTENT_COMBINATION, 'Combine written sections into final content')
 export class ContentCombinationExecutor extends BaseStepExecutor<StepResponse> {
@@ -43,7 +40,7 @@ export class ContentCombinationExecutor extends BaseStepExecutor<StepResponse> {
             }>;
         }> = [];
 
-        let totalTokenUsage = {
+        const totalTokenUsage = {
             inputTokens: 0,
             outputTokens: 0
         };

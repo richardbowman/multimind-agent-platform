@@ -1,9 +1,7 @@
-import { PromptBuilder } from 'src/llm/promptBuilder';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ArtifactGenerationStepResponse, GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { ArtifactType } from 'src/tools/artifact';
-import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ModelConversation } from '../interfaces/StepExecutor';
 import { JSONSchema } from 'openai/lib/jsonschema';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';

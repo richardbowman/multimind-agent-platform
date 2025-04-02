@@ -1,5 +1,4 @@
-import { Artifact } from 'src/tools/artifact';
-import { Project, Task } from 'src/tools/taskManager';
+import { Task } from 'src/tools/taskManager';
 import { StepTask } from './ExecuteStepParams';
 import { UUID } from 'src/types/uuid';
 import { ChatPost } from 'src/chat/chatClient';

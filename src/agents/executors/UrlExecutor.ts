@@ -1,13 +1,10 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { LinkRef } from '../../helpers/scrapeHelper';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { StructuredOutputPrompt } from 'src/llm/ILLMService';
 import Logger from '../../helpers/logger';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { UrlExtractionResponse } from 'src/schemas/UrlExtractionResponse';

@@ -10,7 +10,6 @@ import { ILLMService } from "src/llm/ILLMService";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { AppUpdater } from "electron-updater";
-import { Agent } from "http";
 import { Agents } from "src/utils/AgentLoader";
 
 export interface BackendServicesWithWindows extends BackendServices {

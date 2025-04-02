@@ -1,16 +1,12 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import crypto from 'crypto';
-import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
-import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StringUtils } from 'src/utils/StringUtils';

@@ -5,7 +5,6 @@ import { ReplanType, StepResponse, StepResponseRetention, StepResponseType, Step
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { ContentType } from 'src/llm/promptBuilder';
 import { ArtifactItem, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { ArtifactManager } from 'src/tools/artifactManager';
 

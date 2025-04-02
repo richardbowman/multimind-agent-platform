@@ -1,4 +1,3 @@
-import { EventEmitter } from "events";
 import * as lancedb from "@lancedb/lancedb";
 import * as arrow from 'apache-arrow';
 import { AsyncQueue } from "../helpers/asyncQueue";

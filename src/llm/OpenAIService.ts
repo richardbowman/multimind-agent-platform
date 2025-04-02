@@ -1,16 +1,13 @@
 import { ClientOptions, OpenAI } from "openai";
 import { ModelInfo } from "./types";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { LLMContext, ModelSearchParams, VisionContent } from "./ILLMService";
+import { ModelSearchParams, VisionContent } from "./ILLMService";
 import JSON5 from 'json5';
 import { BaseLLMService } from "./BaseLLMService";
 import { IEmbeddingFunction, LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 import Logger from "src/helpers/logger";
-import { error } from "console";
 import { Settings } from "src/tools/settings";
-import { isObject } from "src/types/types";
-import { ModelType } from "./types/ModelType";
 import { LLMProvider } from "./types/LLMProvider";
 
 
@@ -29,7 +26,7 @@ export class OpenAIService extends BaseLLMService {
 
     private async processVisionContent(content: VisionContent | Buffer): Promise<string> {
         if (Buffer.isBuffer(content)) {
-            return await this.bufferToBase64(content);
+            return this.bufferToBase64(content);
         }
         return content.image_url.url;
     }
@@ -121,7 +118,7 @@ export class OpenAIService extends BaseLLMService {
                 role: m.role,
                 content: Array.isArray(m.content) ?
                     await Promise.all(m.content.map(async c => 
-                        typeof c === 'string' ? c : await this.processVisionContent(c)
+                        typeof c === 'string' ? c : this.processVisionContent(c)
                     )) :
                     typeof m.content === 'string' ? m.content : await this.processVisionContent(m.content)
             })));

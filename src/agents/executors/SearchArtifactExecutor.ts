@@ -9,7 +9,6 @@ import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorPara
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { StepResponseType, StepResponse, StepResult, ReplanType } from "../interfaces/StepResult";
-import { FullArtifactStepResponse } from "./RetrieveFullArtifactExecutor";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { StringUtils } from "src/utils/StringUtils";

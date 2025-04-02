@@ -1492,20 +1492,10 @@
         "procedureGuideTitle": {
           "description": "The title of procedure guide being followed (or \"none\")",
           "type": "string"
-        },
-        "revisedUserGoal": {
-          "description": "Revised user goal",
-          "type": "string"
-        },
-        "taskDescription": {
-          "description": "The goal for performing this action type",
-          "type": "string"
         }
       },
       "required": [
-        "nextAction",
-        "taskDescription",
-        "procedureGuideTitle"
+        "nextAction"
       ],
       "type": "object"
     },

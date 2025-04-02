@@ -2,7 +2,6 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { ThinkingResponse } from '../../schemas/thinking';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';

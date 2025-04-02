@@ -11,5 +11,5 @@ export function createChatHandle(value: string): ChatHandle {
     if (!isChatHandle(value)) {
         throw new Error(`Invalid chat handle format: ${value}. Must start with @ and have at least one character`);
     }
-    return value as ChatHandle;
+    return value;
 }

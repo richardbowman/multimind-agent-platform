@@ -1,8 +1,6 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { UUID } from '../types/uuid';
 import { ChatHandle } from '../types/chatHandle';
-import { asError } from 'src/types/types';
-import Logger from 'src/helpers/logger';
 
 interface ChatPostAttributes {
   id: UUID;

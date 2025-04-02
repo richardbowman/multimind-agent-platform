@@ -233,7 +233,7 @@ export class ArtifactManager {
 
       await this.fileQueue.enqueue(() =>
         //TODO: need to handle calendrevents
-        fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
+        fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content))
       );
 
       // Create or update the artifact record
@@ -315,7 +315,7 @@ export class ArtifactManager {
         contentToIndex = pdfText.text;
 
         // Update metadata to include extracted text
-        let record = await this.getArtifactRecord(artifact.id);
+        const record = await this.getArtifactRecord(artifact.id);
         await ArtifactModel.update({ metadata: {
           ...record?.metadata,
           extractedText: contentToIndex
@@ -359,7 +359,7 @@ export class ArtifactManager {
       const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
       return { 
         id: artifactId, 
-        type: record.type as ArtifactType, 
+        type: record.type, 
         content, 
         metadata: {
           ...record.metadata,
@@ -392,7 +392,7 @@ export class ArtifactManager {
         const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
         return { 
           id: record.id, 
-          type: record.type as ArtifactType, 
+          type: record.type, 
           content, 
           metadata: {
             ...record.metadata,
@@ -418,7 +418,7 @@ export class ArtifactManager {
     const records = await this.getAllArtifactRecords();
     const artifacts: ArtifactItem[] = records.map(record => ({
       id: record.id,
-      type: record.type as ArtifactType,
+      type: record.type,
       metadata: {
         ...record.metadata,
         createdAt: record.createdAt,

@@ -1,17 +1,13 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
-import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { GoalAndPlanResponse, Intentions, IntentionsResponse } from "../../schemas/goalAndPlan";
+import { IntentionsResponse } from "../../schemas/goalAndPlan";
 import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { TaskManager } from 'src/tools/taskManager';
-import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
 

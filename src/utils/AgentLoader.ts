@@ -1,6 +1,5 @@
 import { LocalChatStorage, LocalTestClient } from 'src/chat/localChatClient';
 import { Agent } from '../agents/agents';
-import { AgentConstructorParams } from '../agents/interfaces/AgentConstructorParams';
 import Logger from '../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
 import { ArtifactManager } from 'src/tools/artifactManager';
