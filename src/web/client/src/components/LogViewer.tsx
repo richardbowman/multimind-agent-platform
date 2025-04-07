@@ -49,19 +49,21 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     useEffect(() => {
         // Check if we have new logs by comparing the latest timestamp
-        const latestTimestamp = logs?.system?.logs?.[0].timestamp;
-        if (latestTimestamp && latestTimestamp > lastLogTimestampRef.current) {
-            lastLogTimestampRef.current = latestTimestamp;
-            setIsLoading(true);
-            setLoadedLogs(prev => {
-                // Only update if we have new logs
-                const newLogs = logs.system?.logs.filter(newLog => 
-                    !prev.some(existingLog => existingLog.timestamp === newLog.timestamp)
-                );
-                return newLogs.length > 0 ? [...newLogs, ...prev] : prev;
-            });
-            setHasMore(logs.system?.total > logs.system?.logs.length);
-            setIsLoading(false);
+        if (logs?.system?.logs?.length > 0) {
+            const latestTimestamp = logs.system.logs[0].timestamp;
+            if (latestTimestamp && latestTimestamp > lastLogTimestampRef.current) {
+                lastLogTimestampRef.current = latestTimestamp;
+                setIsLoading(true);
+                setLoadedLogs(prev => {
+                    // Only update if we have new logs
+                    const newLogs = logs.system.logs.filter(newLog => 
+                        !prev.some(existingLog => existingLog.timestamp === newLog.timestamp)
+                    );
+                    return newLogs.length > 0 ? [...newLogs, ...prev] : prev;
+                });
+                setHasMore(logs.system.total > logs.system.logs.length);
+                setIsLoading(false);
+            }
         }
     }, [logs]);
 
