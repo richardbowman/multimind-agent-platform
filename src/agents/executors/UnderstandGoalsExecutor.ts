@@ -12,6 +12,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { Artifact } from '../../tools/artifact';
 import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
+import { withRetry } from 'src/helpers/retry';
 
 /**
  * Executor that generates targeted questions to understand user requirements.
@@ -83,16 +84,15 @@ export class UnderstandGoalsExecutor extends BaseStepExecutor<StepResponse> {
         const schema = await getGeneratedSchema(SchemaType.IntakeQuestionsResponse);
         const prompt = this.startModel(params);
 
-        prompt.addInstruction(`You are a tool step called by the agent. Tell the agent if we have sufficient information to move forward on achieving the goal.
-If you would like to think about the problem to start, use <thinking> tags.
+        prompt.addInstruction(`You are a tool called by the agent. MAKE SURE TO FOLLOW THE RESPONSE FORMAT PRECISELY. Provide a status message explaining if we have sufficient information from the user to achieve the goal.
 
 ${params.executionMode === 'conversation' ? `Then, once you have decided if you want to more information from the user, respond with the information you would like from the user.` : ""}
 
-In the the JSON attributes, you will generate a concise restatement of the user's goal that will be used by
+Set the "goalRestatement" field to a concise restatement of the user's goal that will be used by
 future steps in the agent workflow. 
 
-${params.executionMode === 'conversation' ? `You will also set a flag telling the workflow whether it should continue, or await
-answers from the user.` : `You will also set a flag telling the workflow whether it should fail because it is not possible to continue.`}
+${params.executionMode === 'conversation' ? `Set the 'shouldContinue' to true telling the workflow whether it should continue, or false if we must await
+answers from the user.` : `Set the 'shouldContinue' to false if the workflow should fail because it is not possible to continue.`}
 `)
         
         prompt.addContext({contentType: ContentType.INTENT, params});
@@ -101,16 +101,19 @@ answers from the user.` : `You will also set a flag telling the workflow whether
         prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
 
         prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
-        
-        const rawMessage = await prompt.generate({
-            message: params.message || params.stepGoal
-        });
 
-        const attributes = StringUtils.extractAndParseJsonBlock<IntakeQuestionsResponse>(rawMessage.message, schema);
-        const message = StringUtils.extractNonCodeContent(rawMessage.message, ["thinking"]);
-        const reasoning = StringUtils.extractXmlBlock(rawMessage.message, "thinking");
-
-        const shouldContinue = params.executionMode === 'task' ? true : attributes?.shouldContinue;
+        const { rawMessage, attributes, message, reasoning, shouldContinue } = await withRetry(async () => {
+            const rawMessage = await prompt.generate({
+                message: params.message || params.stepGoal
+            });
+    
+            const attributes = StringUtils.extractAndParseJsonBlock<IntakeQuestionsResponse>(rawMessage.message, schema);
+            const message = StringUtils.extractNonCodeContent(rawMessage.message, ["thinking"]);
+            const reasoning = StringUtils.extractXmlBlock(rawMessage.message, "thinking");
+    
+            const shouldContinue = params.executionMode === 'task' ? true : attributes?.shouldContinue;
+            return { rawMessage, attributes, message, reasoning, shouldContinue };
+        }, () => true);
 
         return {
             finished: true,

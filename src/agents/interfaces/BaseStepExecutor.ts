@@ -141,8 +141,8 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
 
             await Promise.all(allSteps.map(async (step, index) => {
                 const stepResult = step.props.result!;
-                const isLongStep = index >= totalSteps - 10; // Long retention lasts for 5 steps
-                const isRecentStep = index >= totalSteps - 4; // Last two steps get full details
+                const isLongStep = index >= totalSteps - 15; // Long retention lasts for 5 steps
+                const isRecentStep = index >= totalSteps - 8; // Last two steps get full details
 
                 if (stepResult.response.type !== StepResponseType.CompletionMessage) {
                     let stepInfo: string;
@@ -153,7 +153,7 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
     ${[body && `Result: <toolResult>${body}</toolResult>`,
                             stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>`,
                             stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>`,
-                            stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
+                            !body && stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`].filter(a => !!a).join("\n")}`;
                     } else {
                         // Compress older steps to just type and description
                         stepInfo = `- [${step.props.stepType}]: ${step.description}`;
@@ -169,7 +169,15 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                     // If step has a threadId, add to corresponding post
                     const messageId = step.props.responsePostId || lastMessageId;
                     const existing = renderedSteps.get(messageId) || [];
-                    existing.push(step.props.result?.response.reasoning||"");
+                    existing.push(`<thinking>
+${step.props.result?.response.reasoning||""}
+</thinking>`);
+                    existing.push(`<data>
+    ${JSON.stringify({
+        nextAction: "reply",
+        conversationSummary: step.props?.result?.response?.data?.conversationSummary
+    }, null, 2)}
+    </data>`);
                     renderedSteps.set(messageId, existing);
                 }
             }));
@@ -180,20 +188,13 @@ class ModelConversationImpl<R extends StepResponse> implements ModelConversation
                     return {
                         ...p,
                         message: `
-<thinking>
-${renderedSteps.get(p.id)}
-</thinking>
-<data>
-{ 
-  "responseType": "REPLY"
-}
-</data>
+${renderedSteps.get(p.id)?.join("\n")}
 <message>${p.message}</message>`
                     };
                 } else if (renderedSteps.get(p.id)?.length||0 > 0) {
                     return {
                         ...p,
-                        message: p.message + `\n\n# 📝 STEPS COMPLETED FOR POST:\n${renderedSteps.get(p.id)?.join("\n\n")}`,
+                        message: p.message + `\n\n----INTERNAL DATA NOT VISIBLE TO USER BELOW----\n<tool_results>STEPS ASSISTANT COMPLETED FOR POST:\n${renderedSteps.get(p.id)?.join("\n\n")}</tool_results>`,
                     }
                 } else {
                     return p;

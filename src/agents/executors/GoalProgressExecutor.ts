@@ -14,6 +14,7 @@ import { GoalProgressResponse } from 'src/schemas/goalProgress';
 import Logger from 'src/helpers/logger';
 import { StringUtils } from 'src/utils/StringUtils';
 import { isUUID } from 'src/types/uuid';
+import { withRetry } from 'src/helpers/retry';
 
 /**
  * Executor that analyzes thread progress against channel goals.
@@ -46,11 +47,10 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
         
         // Add core instructions
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
-        promptBuilder.addInstruction(`Your goal is to:
+        promptBuilder.addInstruction(`You are a tool with the goal to:
 1. Analyze the thread content against the channel goals
 2. Determine which goals are in-progress or complete based on the discussion
-3. Provide structured feedback on goal progress
-4. Update goal status where appropriate`);
+3. Provide a message expressing the new state of the goals`);
 
         // Add content sections
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
@@ -65,13 +65,20 @@ export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
 
         promptBuilder.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
-        // Build and execute prompt
-        const rawResult = await promptBuilder.generate({
-            message: goal
-        });
+        const { rawResult, goalAnalysis, status } = await withRetry<{ rawResult, goalAnalysis, status }>(async () => {
+            // Build and execute prompt
+            const rawResult = await promptBuilder.generate({
+                message: goal
+            });
 
-        const { goalAnalysis } = StringUtils.extractAndParseJsonBlock<GoalProgressResponse>(rawResult.message, schema);
-        const status = StringUtils.extractNonCodeContent(rawResult.message);
+            const { goalAnalysis } = StringUtils.extractAndParseJsonBlock<GoalProgressResponse>(rawResult.message, schema);
+            const status = StringUtils.extractNonCodeContent(rawResult.message);
+            return {
+                rawResult,
+                goalAnalysis,
+                status
+            };
+        }, () => true);
 
         // Update task statuses based on the analysis
         if (goalAnalysis?.length) {

@@ -1,7 +1,7 @@
 ---
 title: "Supported Spreadsheet Artifact Sub-types"
 artifactType: spreadsheet
-subtype: "Artifact Subtypes"
+artifactSubtype: "Artifact Subtypes"
 ---
 "Subtype","Description"
 "Product Features","User stories or product features"

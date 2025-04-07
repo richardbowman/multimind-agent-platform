@@ -14,5 +14,5 @@ Perform scientific analysis for a specific paper or abstract.
    Using your general knowledge and the provided information, provide the analysis requested by the goal. Do not make up information not available (just specify N/A).
 
 2. **Reply**
-   Action Type: DONE
+   Action Type: done
    Respond with your findings.

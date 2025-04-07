@@ -1,7 +1,7 @@
 ---
 title: "Supported Webpage Artifact Sub-types"
 artifactType: webpage
-subtype: "Artifact Subtypes"
+artifactSubtype: "Artifact Subtypes"
 ---
 Subtype,Description
 App,"Interactive Web-based application"

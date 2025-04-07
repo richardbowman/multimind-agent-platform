@@ -36,7 +36,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
         globalRegistry.stepResponseRenderers.set(StepResponseType.DocumentTemplate, async (response : StepResponse) => {
             const artifactId = response.data?.selectedTemplateId;
             const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
-            return (artifact && `DOCUMENT CREATED FROM TEMPLATE ${artifact.metadata?.title} (ID: ${artifact.id}):\n<artifact_markdown>\n${artifact.content.toString()}</artifact_markdown>\n`) ?? "[NO LOADED TEMPLATE]";
+            return (artifact && `DOCUMENT CREATED FROM TEMPLATE ${artifact.metadata?.title} (ID: ${artifact.id}) Description: \n${artifact.metadata?.description?.toString()}\n`) ?? "[NO LOADED TEMPLATE]";
         });
     }
 
@@ -52,7 +52,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
             instructions.addContext({contentType: ContentType.ABOUT});
             instructions.addContext({contentType: ContentType.INTENT, params});
             instructions.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||""});
-            instructions.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
+            // instructions.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
             instructions.addInstruction( `Available Templates:
                 ${templates.map(t => `
                 - ${t.metadata?.title} (${t.id})
@@ -95,7 +95,7 @@ export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
                             title: `Copy of ${template.metadata?.title || 'Template'}`,
                             isTemplateCopy: true,
                             originalTemplateId: data.selectedTemplateId,
-                            subtype: template.metadata?.subtype || DocumentSubtype.Default
+                            subtype: template.metadata?.subtype || DocumentSubtype.General
                         }
                     });
                     newArtifactId = newArtifact.id;

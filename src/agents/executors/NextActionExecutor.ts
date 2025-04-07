@@ -7,7 +7,7 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { EXECUTOR_METADATA_KEY, StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ChatClient } from 'src/chat/chatClient';
-import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
 import { ModelType } from "src/llm/types/ModelType";
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
@@ -81,12 +81,17 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             const procedureGuides = await prompt.addProcedures(this.agentName ? { 'metadata.agent': this.agentName }: {});
 
             const isConversation = params.executionMode === 'conversation'
-            const completionAction = isConversation ? 'REPLY' : 'DONE';
+            const completionAction = isConversation ? 'reply' : 'done';
 
-            prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
+            prompt.addContext(`# AVAILABLE ACTION TYPES:\n${executorMetadata
                 .filter(metadata => metadata.planner)
                 .map(({ key, description }) => `[${key}]: ${description}`)
                 .join("\n")}\n[${completionAction}]: ${isConversation ? 'Send your provided message to the user' : 'Mark the task as complete with your message containing the final data.'}`);
+
+
+            // TODO: proabably integrate this cleaner into typical step context renderers
+            const pastActionSteps = params.previousResponses?.filter(r => r.type && [StepResponseType.Plan, StepResponseType.CompletionMessage].includes(r.type) && r.data?.conversationSummary);
+            pastActionSteps?.length||0 > 0 && prompt.addContext(`# CONVERSATION SUMMARY: ${pastActionSteps!.slice(-1)[0].data?.conversationSummary}`);
 
             prompt.addContext({ contentType: ContentType.FINAL_INSTRUCTIONS });
 
@@ -99,9 +104,10 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     THEN IN <data>:
     - If you need to continue working, set the "nextAction" to one of the AVAILABLE ACTION TYPES.
     - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
-    - If you are following a procedure guide, use the 'procedureGuideTitle' field to share the title.
+    - In "procedureGuideTitle", share the title of the guide you are following or "NONE".
+    - Summarize the conversation into "conversationSummary"
     FINALLY IN <message>:
-    - For REPLY: Respond in a friendly and concise chat message. Reminder: The user cannot see information in completed steps such as <tool_result> information, you need to share it with them.
+    - For reply: Respond in a friendly and concise chat message.
     - For other actions: Provide a clear description of the user's goals as well as a complete task description for the step, repeating all necessary information the step needs including the details of the user's message.
 
     YOU MUST ALWAYS FOLLOW THE OUTPUT FORMAT WITH 3 SEPARATE XML-ENCLOSED SECTIONS: <thinking>...</thinking>, <data>...</data>, and <message>...</message>.
@@ -188,6 +194,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                         reasoning: response.reasoning,
                         status: response.message,
                         data: {
+                            conversationSummary: response.conversationSummary,
                             steps: response.nextAction ? [{
                                 actionType: response.nextAction,
                                 context: response.message,
@@ -206,6 +213,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                         reasoning: response.reasoning,
                         message: response.message,
                         data: {
+                            conversationSummary: response.conversatonSummary,
                             steps: [retainedProcedureGuides]
                         }
                     }

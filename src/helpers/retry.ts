@@ -1,4 +1,5 @@
 import { asError } from "src/types/types";
+import Logger from "./logger";
 
 export interface RetryOptions {
     maxAttempts?: number;
@@ -21,7 +22,7 @@ export interface RetryFunctionParams<T> {
 
 export async function withRetry<T>(
     fn: (params: RetryFunctionParams<T>) => Promise<T>|T,
-    validate: (result: T) => Promise<boolean>|boolean,
+    validate: (result: T) => Promise<boolean>|boolean = () => true,
     options: RetryOptions = {}
 ): Promise<T> {
     const {
@@ -69,6 +70,7 @@ export async function withRetry<T>(
             
             throw new Error('Validation failed');   
         } catch (error) {
+            Logger.error(`Error in retry: ${asError(error).message}`, error)
             lastError = error as Error;
             retryCount++;
             

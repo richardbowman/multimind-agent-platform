@@ -16,6 +16,7 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { CreateChannelResponse } from 'src/schemas/CreateChannnelResponse';
 import { createChatHandle } from 'src/types/chatHandle';
+import { withRetry } from 'src/helpers/retry';
 
 interface ChannelStepResponse extends StepResponse {
     type: StepResponseType.Channel,
@@ -59,22 +60,24 @@ ${templates.map(t =>
         const prompt = this.startModel(params);
         prompt.addInstruction(`You are a function that creates a chat channel for the user and appropriate agents.`)
         .addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]})
-        .addContext({contentType: ContentType.ARTIFACTS_FULL, artifacts: params.context?.artifacts||[]});
+        .addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
 
         prompt.addInstruction(`# CURRENT CHANNELS: (You may not duplicate or change an existing channel)
 ${(await this.chatClient.getChannels()).map(c => ` - ${c.name}: ${c.description}`).join('\n')}\n`);
 
         prompt.addContext({contentType: ContentType.GOALS_FULL, params})
         .addContext(templatePrompt)
-        .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema, specialInstructions: `In the JSON attributes,
-provide information for the system to create the desired channel. Your channel name must be in the format "#channel-name". Then, respond to the agent
-explaining that you've created the channel, which agents are a part of the channel, and how you recommend the channel be used.`});
+        .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema, specialInstructions: `Step 1. In the \`\`\`json code block, use the attributes specified in the schema to provide information for the system to create the desired channel. Your channel name must be in the format "#channel-name".
+            2. Then, respond to the agent explaining that you've created the channel, which agents are a part of the channel, and how you recommend the channel be used.`});
           
-        const rawResponse = await prompt.generate({
-            message: params.stepGoal||params.message
+        const {rawResponse, channelData, status} = await withRetry(async () => {
+            const rawResponse = await prompt.generate({
+                message: params.stepGoal||params.message
+            });
+            const channelData = StringUtils.extractAndParseJsonBlock<CreateChannelResponse>(rawResponse.message, schema);
+            const status = StringUtils.extractNonCodeContent(rawResponse.message, [], ["json"]);
+            return {rawResponse, channelData, status};
         });
-        const channelData = StringUtils.extractAndParseJsonBlock<CreateChannelResponse>(rawResponse.message, schema);
-        const status = StringUtils.extractNonCodeContent(rawResponse.message, [], ["json"]);
         
         // Ensure channel name starts with #
         const channelName = createChannelHandle(channelData.name);

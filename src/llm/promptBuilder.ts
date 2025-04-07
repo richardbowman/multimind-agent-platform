@@ -525,9 +525,9 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
             `# ${guideType === "in-use" ? "IN-USE PROCEDURE GUIDES" : "SEARCHED PROCEDURE GUIDES"}:\n` +
             uniqueGuideList.map((guide, i) => {
                 return guide ? 
-                    `## Guide ${i+1}:\n` +
-                    `###: ${guide.metadata?.title}\n` +
-                    `\'\'\'${guide.type}\n${guide.content}\n\'\'\'\n` :
+                    `<procedure_guide index="${i+1}">\n` +
+                    `###: ${guide.metadata?.title} [${guide.type}]\n` +
+                    `\n${guide.content}\n</procedure_guide>` :
                     '';
             }).join('\n\n') :
             `### ${guideType === "in-use" ? "IN-USE PROCEDURE GUIDES:\n*No procedure guides in use*" : `### SEARCHED PROCEDURE GUIDES:\n*No relevant procedure guides found*`}`;
@@ -619,7 +619,7 @@ Example:
 
 // \`\`\`json
 // {
-//   nextAction: "REPLY",
+//   nextAction: "reply",
 //   ...
 // }
 // \`\`\`
