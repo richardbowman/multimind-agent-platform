@@ -706,7 +706,7 @@ export abstract class StepBasedAgent extends Agent {
 
         if (stepResult.finished || this.planner?.alwaysComplete) {
             // If this was the last planned task, add a validation step
-            const remainingTasks = (await this.projects.getProjectTasks(projectId)).filter(t => !t.complete && t.type === "step" && t.id !== task.id);
+            const remainingTasks = (await this.projects.getProjectTasks(projectId)).filter(t => t.status === TaskStatus.Pending && t.type === "step" && t.id !== task.id);
             const stepArtifacts =   await this.mapRequestedArtifacts(artifactList);
 
             if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
