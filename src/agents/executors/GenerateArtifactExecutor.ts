@@ -104,7 +104,9 @@ You must use the EXACT text from the original document. Use requestFullContent t
         const promptBuilder = this.startModel(params);
 
         // Add core instructions
-        promptBuilder.addInstruction(`YOUR PURPOSE AND CAPABILITY: You are a tool in a workflow. You can generate or modify a SINGLE ${this.getSupportedFormat()} document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
+        promptBuilder.addInstruction(`YOUR PURPOSE AND CAPABILITY: You are a tool in a workflow. You can generate or modify a
+ SINGLE ${this.getSupportedFormat()} document based on the goal. When you respond, provide a short description of the document you have
+  generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').`);
 
         // Build operations list dynamically
         const operationsList = this.getAvailableOperations()
