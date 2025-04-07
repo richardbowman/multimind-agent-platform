@@ -273,6 +273,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     <ScrollView sx={{
                         display: 'flex',
                         flexDirection: 'column',
+                        flex: 1
+                    }}
+                    innerSx={{
+                        display: 'flex',
+                        flexDirection: 'column',
                         p: 1,
                         flex: 1
                     }}

@@ -30,7 +30,7 @@ import { TaskCard } from './TaskCard';
 import { TaskStatus } from '../../../../schemas/TaskStatus';
 import { TaskType } from '../../../../tools/taskManager';
 import { useIPCService } from '../contexts/IPCContext';
-import { CustomScrollbarStyles } from '../styles/styles';
+import { CustomScrollbarStyleProp, CustomScrollbarStyles } from '../styles/styles';
 
 const flyRight = keyframes`
   0% {
@@ -266,6 +266,7 @@ export const TaskStatusPanel: React.FC = () => {
                             <AutoSizer>
                                 {({ height, width }) => (
                                     <List
+                                        className='task-list'
                                         height={height}
                                         width={width}
                                         itemCount={tasks.length}
@@ -275,7 +276,7 @@ export const TaskStatusPanel: React.FC = () => {
                                         style={{
                                             scrollbarWidth: 'thin',
                                             scrollbarColor: 'rgba(255, 255, 255, 0.2) transparent',
-                                            ...CustomScrollbarStyles(theme)
+                                            ...CustomScrollbarStyleProp(theme)
                                         }}
                                     >
                                         {({ data, index, style }) => {

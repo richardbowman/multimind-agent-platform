@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact, ArtifactItem, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import { Typography, Button, Box, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { Typography, Button, Box, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, MenuItem, Select, FormControl, InputLabel, useTheme } from '@mui/material';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { TreeItem2, TreeItem2Content, TreeItem2Props } from '@mui/x-tree-view/TreeItem2';
 import { useTreeViewApiRef } from '@mui/x-tree-view/hooks';
@@ -27,6 +27,7 @@ export interface DrawerPage {
 }
 
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
+    const theme = useTheme();
     const { artifacts: allArtifacts, fetchAllArtifacts, deleteArtifact } = useArtifacts();
     const { showFileDialog } = useDataContext();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
@@ -332,7 +333,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 <Box sx={{
                     overflowY: 'auto',
                     height: 'calc(100vh - 120px)',
-                    ...CustomScrollbarStyles,
+                    ...CustomScrollbarStyles(theme),
                     p: 1
                 }}>
                     <RichTreeView

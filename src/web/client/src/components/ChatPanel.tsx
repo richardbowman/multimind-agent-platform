@@ -391,9 +391,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         flex: 1,
                         overflowX: 'hidden',
                         overflowY: 'auto',
-                        p: 2,
-                        bgcolor: 'background.paper',
                         width: '100%',
+                    }}
+                    innerSx={{
+                        flex: 1,
+                        overflowX: 'hidden',
+                        overflowY: 'auto',
+                        p: 2,
                     }}
                     onScroll={checkScrollPosition}
                 >

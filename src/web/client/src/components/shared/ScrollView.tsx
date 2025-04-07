@@ -11,6 +11,7 @@ interface ScrollViewProps {
   autoScroll?: boolean;
   onScroll?: (isAtBottom: boolean) => void;
   sx?: SxProps<Theme>;
+  innerSx?: SxProps<Theme>;
 }
 
 export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({ 
@@ -18,7 +19,8 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
   className, 
   autoScroll = false,
   onScroll,
-  sx
+  sx,
+  innerSx
 }, ref) => {
   const theme = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -111,7 +113,7 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
           height: '100%',
           overflowY: 'auto',
           ...CustomScrollbarStyles(theme),
-          ...sx
+          ...innerSx
         }}
         onScroll={checkScrollPosition}
       >

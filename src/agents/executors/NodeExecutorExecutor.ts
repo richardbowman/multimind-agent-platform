@@ -289,7 +289,7 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascr
                 artifactIds: savedArtifacts && savedArtifacts?.map(a => a.id).filter(id => id !== undefined),
                 response: {
                     type: StepResponseType.CodeResult,
-                    message: this.renderResult(data),
+                    status: this.renderResult(data),
                     data
                 }
             };
@@ -306,7 +306,7 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascr
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.CodeResult,
-                    message: this.renderResult(data),
+                    status: this.renderResult(data),
                     data
                 }
             };
