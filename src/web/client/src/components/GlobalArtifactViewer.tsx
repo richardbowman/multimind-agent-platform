@@ -350,6 +350,11 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     // Apply text filter
                                     if (filterText) {
                                         const searchText = filterText.toLowerCase();
+                                        // First check for exact ID match
+                                        if (artifact.id.toLowerCase() === searchText) {
+                                            return true;
+                                        }
+                                        // Then check other fields
                                         return (
                                             artifact.metadata?.title?.toLowerCase().includes(searchText) ||
                                             artifact.type.toLowerCase().includes(searchText) ||
