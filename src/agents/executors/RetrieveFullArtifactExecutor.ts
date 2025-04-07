@@ -42,9 +42,16 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
 
                 const artifactIds = response.data?.selectedArtifactIds;
                 const artifacts : Artifact[] = (artifactIds && (await this.artifactManager.bulkLoadArtifacts(allArtifactIds)).filter(a => !!a)) ?? [];
-                return (artifacts?.length||0>0 ? artifacts?.map((a, index) => `ARTIFACT CONTENT ${index+1} of ${artifacts.length}
+                return (artifacts?.length||0>0 ? artifacts?.map((a, index) => {
+                    const content = StringUtils.truncate(
+                        a.content.toString(), 
+                        100000, 
+                        (max, orig) => `\n[Content truncated from ${orig} to ${max} characters]`
+                    );
+                    return `ARTIFACT CONTENT ${index+1} of ${artifacts.length}
     Link: [${a.metadata?.title||"Unknown title"}(${a.id})
-    \'\'\'\n${a.content.toString()}\'\'\'\n`)?.join("\n") : undefined) ?? "[NO LOADED ARTIFACTS]";
+    \'\'\'\n${content}\'\'\'\n`;
+                })?.join("\n") : undefined) ?? "[NO LOADED ARTIFACTS]";
             } else {
                 return "[out of date step]";
             }
