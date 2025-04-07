@@ -110,6 +110,7 @@ export namespace StringUtils {
         const ajv = new Ajv({
             allErrors: true,
             strict: false,
+            removeAdditional: true,
             formats: {
                 'date-time': {
                     validate: (dateTimeStr: string) => {
