@@ -192,9 +192,12 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     return filterLog(log.message) && 
                            levelMatch && 
                            (showVerbose || log.level.toLowerCase() !== 'verbose');
-                }).map((log, index) => (
+                }).map((log) => {
+                    // Create a more unique key using timestamp and message hash
+                    const logKey = `${log.timestamp}-${log.message.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)}`;
+                    return (
                     <Box 
-                        key={index} 
+                        key={logKey} 
                         className={`log-entry ${log.level?.toLowerCase()}`}
                         sx={{
                             borderBottom: 1,
