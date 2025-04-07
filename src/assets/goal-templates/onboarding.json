@@ -6,24 +6,10 @@
     "defaultResponder": "@onboarding",
     "initialTasks": [
         {
-            "description": "Find an on-boarding template based on my high-level goal",
-            "type": "onboarding",
-            "metadata": {
-                "agent": "@onboarding"
-            }
+            "description": "Understand and document your goals for using MultiMind"
         },
         {
-            "description": "Generate an onboarding plan using the onboarding agent",
-            "type": "onboarding",
-            "dependsOn": ["gather-existing-documents"],
-            "metadata": {
-                "agent": "@onboarding"
-            }
-        },
-        {
-            "description": "Create necessary communication channels for usage based on the user goal",
-            "type": "communication",
-            "dependsOn": ["generate-channel"]
+            "description": "Setup a new channel with the correct agents"
         }
     ]
 }

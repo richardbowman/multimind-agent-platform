@@ -154,6 +154,46 @@ export async function loadAgentConfigs(basePath: string, configPath: string, art
     });
 }
 
+const stdMetadataBuilder = (basePath: string) => ((filePath, content) => {
+    let frontmatter = {};
+    const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+    const match = content.match(frontmatterRegex);
+    
+    if (match) {
+        try {
+            frontmatter = yaml.load(match[1]) || {};
+        } catch (error) {
+            Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
+        }
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const metadata: Record<string, any> = {
+        subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
+        title: frontmatter['title'] || path.basename(filePath, ext),
+        description: 'Procedure guide document',
+        ...frontmatter,
+        mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
+        source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, '')
+    };
+
+    // Load additional metadata from .metadata.json file if exists
+    const metadataPath = path.join(
+        path.dirname(filePath), 
+        `${path.basename(filePath, ext)}.metadata.json`
+    );
+    if (fs.existsSync(metadataPath)) {
+        try {
+            const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+            Object.assign(metadata, loadedMetadata);
+        } catch (error) {
+            Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
+        }
+    }
+
+    return metadata;
+});
+
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
     const loadedSpreadsheet = await loadAssets(basePath, guidePath, artifactManager, {
         artifactType: ArtifactType.Spreadsheet,
@@ -162,45 +202,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
             const ext = path.extname(f).toLowerCase();
             return ext === '.csv';
         },
-        metadataBuilder: (filePath, content) => {
-            let frontmatter = {};
-            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-            const match = content.match(frontmatterRegex);
-            
-            if (match) {
-                try {
-                    frontmatter = yaml.load(match[1]) || {};
-                } catch (error) {
-                    Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
-                }
-            }
-
-            const ext = path.extname(filePath).toLowerCase();
-            const metadata: Record<string, any> = {
-                subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
-                title: frontmatter['title'] || path.basename(filePath, ext),
-                description: 'Procedure guide document',
-                ...frontmatter,
-                mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
-                source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, '')
-            };
-
-            // Load additional metadata from .metadata.json file if exists
-            const metadataPath = path.join(
-                path.dirname(filePath), 
-                `${path.basename(filePath, ext)}.metadata.json`
-            );
-            if (fs.existsSync(metadataPath)) {
-                try {
-                    const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-                    Object.assign(metadata, loadedMetadata);
-                } catch (error) {
-                    Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
-                }
-            }
-
-            return metadata;
-        },
+        metadataBuilder: stdMetadataBuilder(basePath),
         contentProcessor: (content) => {
             const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
             const match = content.match(frontmatterRegex);
@@ -215,45 +217,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
             const ext = path.extname(f).toLowerCase();
             return ext === '.md';
         },
-        metadataBuilder: (filePath, content) => {
-            let frontmatter = {};
-            const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-            const match = content.match(frontmatterRegex);
-            
-            if (match) {
-                try {
-                    frontmatter = yaml.load(match[1]) || {};
-                } catch (error) {
-                    Logger.warn(`Failed to parse YAML frontmatter in ${filePath}: ${error}`);
-                }
-            }
-
-            const ext = path.extname(filePath).toLowerCase();
-            const metadata: Record<string, any> = {
-                subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
-                title: frontmatter['title'] || path.basename(filePath, ext),
-                description: 'Procedure guide document',
-                ...frontmatter,
-                mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
-                source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, '')
-            };
-
-            // Load additional metadata from .metadata.json file if exists
-            const metadataPath = path.join(
-                path.dirname(filePath), 
-                `${path.basename(filePath, ext)}.metadata.json`
-            );
-            if (fs.existsSync(metadataPath)) {
-                try {
-                    const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-                    Object.assign(metadata, loadedMetadata);
-                } catch (error) {
-                    Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
-                }
-            }
-
-            return metadata;
-        },
+        metadataBuilder: stdMetadataBuilder(basePath),
         contentProcessor: (content) => {
             const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
             const match = content.match(frontmatterRegex);
