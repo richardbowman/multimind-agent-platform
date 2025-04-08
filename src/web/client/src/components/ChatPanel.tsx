@@ -436,7 +436,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         </Typography>
                     ) : (
                         visibleMessages.map((message, index) => (
-                            <ToolbarActionsProvider>
+                            <ToolbarActionsProvider key={`toolbar-${message.id}`}>
                                 <ChatMessage
                                     key={`${message.id}-${messageVersions[message.id] || 0}`}
                                     message={message}
