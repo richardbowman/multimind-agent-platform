@@ -23,6 +23,7 @@ import licenseText from '../../../../../docs/LICENSE.md';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { ScrollView } from './shared/ScrollView';
 import { SettingsFormBuilder } from './SettingsFormBuilder';
+import { MarkdownRenderer } from './shared/MarkdownRenderer';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const [settings, setSettings] = useState<Settings>({});
@@ -344,16 +345,14 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         <Typography variant="body1" gutterBottom>
                             Copyright © 2025 Rick Bowman
                         </Typography>
-                        <Typography variant="body2" component="pre" sx={{
-                            whiteSpace: 'pre-wrap',
-                            wordWrap: 'break-word',
+                        <Box sx={{ 
                             mt: 2,
                             p: 2,
                             backgroundColor: 'background.paper',
                             borderRadius: 1
                         }}>
-                            {licenseText}
-                        </Typography>
+                            <MarkdownRenderer content={licenseText} />
+                        </Box>
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
