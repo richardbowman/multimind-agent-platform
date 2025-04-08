@@ -144,6 +144,25 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         autoHideDuration={options.persist ? null : 6000}
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        sx={{
+          '& .MuiSnackbarContent-root': {
+            backgroundColor: theme => theme.palette.background.paper,
+            color: theme => theme.palette.text.primary,
+            boxShadow: theme => theme.shadows[6],
+            borderLeft: theme => `4px solid ${theme.palette.primary.main}`,
+            minWidth: 300,
+            maxWidth: 500,
+          },
+          '& .MuiButton-text': {
+            color: theme => theme.palette.primary.main,
+          },
+          '& .MuiLinearProgress-root': {
+            backgroundColor: theme => theme.palette.action.disabledBackground,
+          },
+          '& .MuiLinearProgress-bar': {
+            backgroundColor: theme => theme.palette.primary.main,
+          },
+        }}
         action={
           <>
             {options.onClick && (
