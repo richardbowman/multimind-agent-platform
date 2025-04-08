@@ -52,18 +52,21 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 if (currentSettings) {
                     setSettings(currentSettings);
                 }
-                // If there was a config error, show it
-                if (configError) {
-                    setValidationMessage(configError);
-                }
             } catch (error) {
                 console.error('Failed to load settings:', error);
                 setValidationMessage(`Failed to load settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         };
         loadSettings();
-    }, [getSettings, configError]);
+    }, [getSettings]);
 
+
+    useEffect(() => {
+        // If there was a config error, show it
+        if (configError) {
+            setValidationMessage(configError);
+        }
+    }, [configError]);
 
 
     const handleChange = async (key: string, value: string | number | boolean) => {
