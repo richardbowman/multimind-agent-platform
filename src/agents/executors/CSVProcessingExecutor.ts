@@ -9,7 +9,7 @@ import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { asUUID, UUID } from 'src/types/uuid';
 import { Agent } from '../agents';
-import { TaskEventType } from "../../shared/TaskEventType";
+import { TaskEventType } from "../../types/TaskEventType";
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType, SpreadsheetSubType } from '../../tools/artifact';
 import { CSVUtils } from 'src/utils/CSVUtils';

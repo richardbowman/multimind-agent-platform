@@ -3,7 +3,7 @@ import { Box } from '@mui/material';
 import { Snackbar, IconButton, Button, LinearProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SnackbarCloseReason } from '@mui/material/Snackbar';
-import { UpdateStatus } from '../../../../shared/UpdateStatus';
+import { UpdateStatus } from '../../../../types/UpdateStatus';
 import { useIPCService } from '../contexts/IPCContext';
 
 export interface ProgressMeter {

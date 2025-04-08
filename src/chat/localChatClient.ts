@@ -1,6 +1,6 @@
 import Logger from "../helpers/logger";
 import { Attachment, ChatClient, ChatPost, ConversationContext, isValidPostParams } from "../chat/chatClient";
-import { ChannelData, ChannelHandle, CreateChannelParams } from "src/shared/channelTypes";
+import { ChannelData, ChannelHandle, CreateChannelParams } from "src/types/channelTypes";
 import { EventEmitter } from "stream";
 import { UUID } from "src/types/uuid";
 import { ChatHandle } from "src/types/chatHandle";

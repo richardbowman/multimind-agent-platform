@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
-import { ClientMessage } from '../../../../shared/types';
+import { ClientMessage } from '../../../../types/viewTypes';
 import { useIPCService } from './IPCContext';
 import { asUUID, UUID } from '../../../../types/uuid';
 import { useChannels } from './ChannelContext';

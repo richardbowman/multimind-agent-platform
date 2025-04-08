@@ -2,8 +2,8 @@ import { ipcMain, BrowserWindow, app } from 'electron';
 import { createBirpc } from 'birpc';
 import { BackendServicesConfigNeeded, BackendServicesWithWindows } from '../types/BackendServices';
 import { ServerRPCHandler } from './ServerRPCHandler';
-import { createSafeServerRPCHandlers } from './rpcUtils';
-import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
+import { createSafeRPCHandlers } from '../types/rpcUtils';
+import { ClientMethods, ServerMethods } from '../types/RPCInterface';
 import { LimitedRPCHandler } from './LimitedRPCHandler';
 import { AppUpdater } from 'electron-updater';
 import Logger from 'src/helpers/logger';
@@ -52,7 +52,7 @@ export class ElectronIPCServer {
     }
 
     private setupRPC() {
-        const safeHandlers = createSafeServerRPCHandlers();
+        const safeHandlers = createSafeRPCHandlers(Logger);
 
         const cleanupFns : Function[] = [];
 

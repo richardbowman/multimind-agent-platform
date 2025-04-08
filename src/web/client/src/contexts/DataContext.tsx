@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
-import { ClientMessage } from '../../../../shared/types';
-import { CreateChannelParams } from '../../../../shared/channelTypes';
+import { ClientMessage } from '../../../../types/viewTypes';
+import { CreateChannelParams } from '../../../../types/channelTypes';
 import { useIPCService } from './IPCContext';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from '../../../../tools/settings';
 import { ClientError } from '@mattermost/client';
-import { LogEntry } from '../../../../shared/RPCInterface';
+import { LogEntry } from '../../../../types/RPCInterface';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 export interface Paths {

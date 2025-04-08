@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import { GoalTemplate } from '../../../../schemas/goalTemplateSchema';
 import { useChannels } from '../contexts/ChannelContext';
-import { ChannelHandle, createChannelHandle } from '../../../../shared/channelTypes';
+import { ChannelHandle, createChannelHandle } from '../../../../types/channelTypes';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
 import { useMessages } from '../contexts/MessageContext';

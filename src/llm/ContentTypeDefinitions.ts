@@ -1,7 +1,7 @@
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 import { ChatPost } from "src/chat/chatClient";
-import { ChannelData } from "src/shared/channelTypes";
+import { ChannelData } from "src/types/channelTypes";
 import { Artifact } from "src/tools/artifact";
 import { SearchResult } from "./IVectorDatabase";
 import { ContentType } from "./promptBuilder";

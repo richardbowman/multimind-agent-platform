@@ -1,9 +1,10 @@
 import io from 'socket.io-client';
 import { createBirpc } from 'birpc';
-import { BaseRPCService } from '../../../../shared/BaseRPCService';
-import type { ClientMethods, ServerMethods } from '../../../../shared/RPCInterface';
-import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
+import { BaseRPCService } from '../../../../types/BaseRPCService';
+import type { ClientMethods, ServerMethods } from '../../../../types/RPCInterface';
+import { createSafeRPCHandlers } from '../../../../types/rpcUtils';
 import { Socket } from 'socket.io';
+import { ClientLogger } from './ClientLogger';
 
 export default class WebSocketService extends BaseRPCService {
   private socket: Socket | null = null;
@@ -85,7 +86,7 @@ export default class WebSocketService extends BaseRPCService {
       console.log('Client: Successfully connected to WebSocket server');
       
       // Set up the real RPC instance once connected
-      const safeHandlers = createSafeRPCHandlers();
+      const safeHandlers = createSafeRPCHandlers(ClientLogger);
       this.rpc = createBirpc<ServerMethods, ClientMethods>(
         createClientMethods(this.emit.bind(this), this.showSnackbar),
         {

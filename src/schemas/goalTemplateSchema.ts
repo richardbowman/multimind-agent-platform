@@ -1,4 +1,4 @@
-import { ChannelHandle } from "src/shared/channelTypes";
+import { ChannelHandle } from "src/types/channelTypes";
 import { ChatHandle } from "src/types/chatHandle";
 
 export interface GoalTemplate {

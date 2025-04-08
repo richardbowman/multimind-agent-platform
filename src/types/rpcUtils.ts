@@ -1,10 +1,12 @@
-export const createSafeRPCHandlers = () => ({
+import { SystemLogger } from "src/types/logger";
+
+export const createSafeRPCHandlers = (Logger: SystemLogger) => ({
     post: (data: any) => {
         try {
             return data;
         } catch (error) {
-            console.error('Error in RPC post:', error);
-            throw error;
+            Logger.error('Error in server RPC post:', error);
+            // throw error;
         }
     },
     on: (handler: (data: any) => void) => {
@@ -12,8 +14,8 @@ export const createSafeRPCHandlers = () => ({
             try {
                 return handler(data);
             } catch (error) {
-                console.error('Error in RPC handler:', error);
-                throw error;
+                Logger.error('Error in server RPC handler:', error);
+                // throw error;
             }
         };
     },
@@ -21,16 +23,16 @@ export const createSafeRPCHandlers = () => ({
         try {
             return JSON.stringify(data);
         } catch (error) {
-            console.error('Error serializing RPC data:', error);
-            throw error;
+            Logger.error('Error in server RPC serialization:', error);
+            // throw error;
         }
     },
     deserialize: (message: string) => {
         try {
             return JSON.parse(message);
         } catch (error) {
-            console.error('Error deserializing RPC message:', error);
-            throw error;
+            Logger.error('Error in server RPC deserialization:', error);
+            // throw error;
         }
     }
 });

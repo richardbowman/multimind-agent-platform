@@ -1,4 +1,4 @@
-import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
+import { ChannelData, CreateChannelParams } from "src/types/channelTypes";
 import { ChatHandle } from "src/types/chatHandle";
 import { UUID } from "src/types/uuid";
 

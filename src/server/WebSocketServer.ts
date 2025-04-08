@@ -2,11 +2,11 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
 import { createBirpc } from 'birpc';
-import { createSafeServerRPCHandlers } from './rpcUtils';
+import { createSafeRPCHandlers } from '../types/rpcUtils';
 import Logger from '../helpers/logger';
 import { ServerRPCHandler } from './ServerRPCHandler';
 import { BackendServices } from '../types/BackendServices';
-import { ClientMethods, ServerMethods } from 'src/shared/RPCInterface';
+import { ClientMethods, ServerMethods } from 'src/types/RPCInterface';
 import { OllamaRouter } from './OllamaRouter';
 
 export class WebSocketServer {
@@ -51,7 +51,7 @@ export class WebSocketServer {
             const rpc = createBirpc<ClientMethods, ServerMethods>(
                 handlers,
                 {
-                    ...createSafeServerRPCHandlers(),
+                    ...createSafeRPCHandlers(Logger),
                     post: (data) => socket.emit('birpc', data),
                     on: (handler) => socket.on('birpc', handler)
                 }

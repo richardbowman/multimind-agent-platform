@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { Agent, PlannerParams } from './agents';
-import { TaskEventType } from "../shared/TaskEventType";
+import { TaskEventType } from "../types/TaskEventType";
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandlerParams } from './agents';

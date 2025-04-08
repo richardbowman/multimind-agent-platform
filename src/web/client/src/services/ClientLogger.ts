@@ -1,4 +1,6 @@
-export class ClientLogger {
+import { SystemLogger } from '../../../../types/logger';
+
+export class ClientLogger implements SystemLogger {
     private logHandler: (level: string, message: string, details?: Record<string, any>) => Promise<void>;
     private originalConsole: typeof console;
     private isConsoleIntercepted = false;

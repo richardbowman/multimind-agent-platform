@@ -5,7 +5,7 @@ import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divid
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
 import { useIPCService } from '../contexts/IPCContext';
-import { ClientError } from '../../../../shared/RPCInterface';
+import { ClientError } from '../../../../types/RPCInterface';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import { LLMProvider } from '../../../../llm/types/LLMProvider';
 import { ModelType } from '../../../../llm/types/ModelType';

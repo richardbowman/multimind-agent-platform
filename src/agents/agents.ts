@@ -3,7 +3,7 @@ import { ChatClient, ChatPost, ConversationContext, CreateMessage, Message, Proj
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import { ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
-import { InputPrompt } from "src/types/structuredInputPrompt";
+import { InputPrompt } from "src/types/InputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, ProjectMetadata, Task, TaskManager, TaskType } from "src/tools/taskManager";
@@ -19,7 +19,7 @@ import { StringUtils } from "src/utils/StringUtils";
 import { ContentType } from "src/llm/promptBuilder";
 import { ChatHandle } from "src/types/chatHandle";
 import { ModelType } from "src/llm/types/ModelType";
-import { TaskEventType } from "../shared/TaskEventType";
+import { TaskEventType } from "../types/TaskEventType";
 
 
 export interface ActionMetadata {

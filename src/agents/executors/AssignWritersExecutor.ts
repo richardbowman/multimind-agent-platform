@@ -3,7 +3,7 @@ import { TaskNotification } from '../interfaces/StepExecutor';
 import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { TaskEventType } from "../../shared/TaskEventType";
+import { TaskEventType } from "../../types/TaskEventType";
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

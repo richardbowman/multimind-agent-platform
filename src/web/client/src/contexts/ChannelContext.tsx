@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
-import { ChannelData, CreateChannelParams } from '../../../../shared/channelTypes';
+import { ChannelData, CreateChannelParams } from '../../../../types/channelTypes';
 import { useIPCService } from './IPCContext';
 import { useDataContext } from './DataContext';
 import { asUUID, UUID } from '../../../../types/uuid';
-import { ClientProject } from '../../../../shared/types';
+import { ClientProject } from '../../../../types/viewTypes';
 
 export interface ChannelContextType {
   channels: ChannelData[];

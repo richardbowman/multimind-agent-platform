@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import * as path from 'path';
-import { WebSocketMessage } from '../shared/types';
+import { WebSocketMessage } from '../types/viewTypes';
 
 const app = express();
 const server = createServer(app);

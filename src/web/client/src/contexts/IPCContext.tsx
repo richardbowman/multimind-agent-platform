@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useRef } from 'react';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
-import { BaseRPCService } from '../../../../shared/BaseRPCService';
+import { BaseRPCService } from '../../../../types/BaseRPCService';
 
 const IPCContext = createContext<BaseRPCService | null>(null);
 

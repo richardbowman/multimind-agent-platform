@@ -1,7 +1,8 @@
 import { createBirpc } from 'birpc';
-import { BaseRPCService } from '../../../../shared/BaseRPCService';
-import type { ClientMethods, ServerMethods } from '../../../../shared/RPCInterface';
-import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
+import { BaseRPCService } from '../../../../types/BaseRPCService';
+import type { ClientMethods, ServerMethods } from '../../../../types/RPCInterface';
+import { createSafeRPCHandlers } from '../../../../types/rpcUtils';
+import { ClientLogger } from './ClientLogger';
 
 export class ElectronIPCService extends BaseRPCService {
     private status: { configured: boolean; ready: boolean; message?: string; };
@@ -26,7 +27,7 @@ export class ElectronIPCService extends BaseRPCService {
             this.wrapper = clientMethods;
         } else {
             // Initialize birpc
-            const safeHandlers = createSafeRPCHandlers();
+            const safeHandlers = createSafeRPCHandlers(ClientLogger);
 
             const clientWrappers = new Proxy({} as ClientMethods, {
                 get: (target, prop: string) => {

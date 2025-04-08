@@ -1,6 +1,6 @@
-import { ChannelData, CreateChannelHandlerParams } from 'src/shared/channelTypes';
-import { ClientMessage, ClientProject } from "./types";
-import { ClientThread } from "./types";
+import { ChannelData, CreateChannelHandlerParams } from 'src/types/channelTypes';
+import { ClientMessage, ClientProject } from "./viewTypes";
+import { ClientThread } from "./viewTypes";
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
@@ -9,7 +9,7 @@ import { Artifact, ArtifactItem } from 'src/tools/artifact';
 import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
 import { Task } from 'src/tools/taskManager';
 import { Settings } from 'src/tools/settings';
-import { TaskEventType } from "src/shared/TaskEventType";
+import { TaskEventType } from "src/types/TaskEventType";
 import { LLMLogEntry } from 'src/llm/LLMLogModel';
 import { ModelType } from 'src/llm/types/ModelType';
 import { LLMProvider } from 'src/llm/types/LLMProvider';

@@ -3,7 +3,7 @@ import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import Logger from "src/helpers/logger";
 import { ModelHelpers } from "./modelHelpers";
 import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelNameContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent, ChannelDetailsContent, StepGoalContent, ProcedureGuideContent } from "./ContentTypeDefinitions";
-import { InputPrompt } from "src/types/structuredInputPrompt";
+import { InputPrompt } from "src/types/InputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 import { StringUtils } from "src/utils/StringUtils";

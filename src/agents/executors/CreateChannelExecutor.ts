@@ -9,7 +9,7 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { ChatClient } from 'src/chat/chatClient';
 import { ServerRPCHandler } from 'src/server/ServerRPCHandler';
-import { ChannelHandle, createChannelHandle } from 'src/shared/channelTypes';
+import { ChannelHandle, createChannelHandle } from 'src/types/channelTypes';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';

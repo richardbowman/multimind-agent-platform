@@ -8,7 +8,7 @@ import {
     ListItemButton,
     Button
 } from '@mui/material';
-import { ClientProject } from '../../../../shared/types';
+import { ClientProject } from '../../../../types/viewTypes';
 import { UUID } from '../../../../types/uuid';
 
 interface ChatHeaderProps {

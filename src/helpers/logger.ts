@@ -6,12 +6,13 @@ import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
 import EventEmitter from 'events';
 import { LogEntry, LogReader } from 'src/server/LogReader';
+import { SystemLogger } from 'src/types/logger';
 
 declare global {
     var socket: Socket | undefined;
 }
 
-export class LogManager extends EventEmitter implements LogReader {
+export class LogManager extends EventEmitter implements LogReader, SystemLogger {
     private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.jsonl`);
     private logCache: LogEntry[] = [];
     private cacheSize = 10000;

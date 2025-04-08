@@ -23,7 +23,7 @@ import { useIPCService } from '../contexts/IPCContext';
 import remarkGfm from 'remark-gfm';
 import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
-import { ClientProject } from '../../../../shared/types';
+import { ClientProject } from '../../../../types/viewTypes';
 import { CodeBlock } from './shared/CodeBlock';
 import { WelcomePanel } from './WelcomePanel.tsx';
 import { TaskType } from '../../../../tools/taskManager.ts';

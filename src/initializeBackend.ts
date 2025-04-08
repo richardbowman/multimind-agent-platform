@@ -15,7 +15,7 @@ import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/ServerRPCHandler";
 import { asUUID, createUUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
-import { createChannelHandle } from "./shared/channelTypes";
+import { createChannelHandle } from "./types/channelTypes";
 import { app } from "electron";
 import { Message } from "./chat/chatClient";
 import _crypto from 'node:crypto';

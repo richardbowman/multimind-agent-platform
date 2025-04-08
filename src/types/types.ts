@@ -12,11 +12,6 @@ export const asError = (obj: any): { message: string, trace?: string, code?: str
     };
 };
 
-export interface WebSocketMessage {
-    type: 'CHAT' | 'CHANNEL' | 'THREAD' | 'TASK' | 'ARTIFACT' | 'LOG';
-    action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LIST';
-    payload: any;
-}
 
 export interface ChatMessage {
     id: string;

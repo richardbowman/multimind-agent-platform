@@ -13,7 +13,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { AddChannelDialog } from './AddChannelDialog';
-import { createChannelHandle } from '../../../../shared/channelTypes';
+import { createChannelHandle } from '../../../../types/channelTypes';
 import { useMessages } from '../contexts/MessageContext';
 import { ScrollView } from './shared/ScrollView';
 

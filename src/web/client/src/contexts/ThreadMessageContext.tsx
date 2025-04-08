@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { ClientMessage } from '../../../../shared/types';
+import { ClientMessage } from '../../../../types/viewTypes';
 import { useMessages } from './MessageContext';
 import { UUID } from '../../../../types/uuid';
 
