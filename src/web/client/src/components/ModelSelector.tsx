@@ -4,7 +4,6 @@ import { ModelInfo } from '../../../../llm/types';
 import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider, CircularProgress } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
-import './ModelSelector.css';
 import { useIPCService } from '../contexts/IPCContext';
 import { ClientError } from '../../../../shared/RPCInterface';
 import { useSnackbar } from '../contexts/SnackbarContext';
@@ -173,7 +172,13 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
     };
 
     return (
-        <Box className="model-selector" sx={{ mt: 2 }}>
+        <Box sx={{ 
+            mt: 2,
+            width: '100%',
+            maxWidth: 800,
+            mx: 'auto',
+            p: 2
+        }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
                 <TextField
                     placeholder="Search models..."
@@ -193,13 +198,30 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                     </Alert>
                 )}
 
-                <Box className="model-list-container">
+                <Box sx={{
+                    maxHeight: 500,
+                    overflowY: 'auto',
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    p: 1
+                }}>
                     <List>
                         {models?.map((model) => (
                             <React.Fragment key={model.id}>
                                 <ListItem
                                     onClick={() => handleSelect(model)}
-                                    className={`model-item ${selectedModel?.id === model.id ? 'selected' : ''}`}
+                                    sx={{
+                                        cursor: 'pointer',
+                                        p: 1,
+                                        transition: 'background-color 0.3s',
+                                        '&:hover': {
+                                            backgroundColor: 'action.hover'
+                                        },
+                                        ...(selectedModel?.id === model.id && {
+                                            backgroundColor: 'primary.lighter'
+                                        })
+                                    }}
                                 >
                                     <Card component="li" sx={{ width: '100%', p: 2 }}>
                                         <ListItemText
@@ -268,7 +290,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                 </Box>
 
                 {selectedModel && (
-                    <Box className="selected-model" sx={{ p: 2, mt: 2 }}>
+                    <Box sx={{ 
+                        p: 2, 
+                        mt: 2,
+                        backgroundColor: 'background.default',
+                        borderRadius: 1
+                    }}>
                         <Typography variant="subtitle1" fontWeight="bold">
                             Selected Model:
                         </Typography>
