@@ -2,7 +2,6 @@ import { Artifact } from 'src/tools/artifact';
 import { UUID } from 'src/types/uuid';
 
 export enum StepResultType {
-    DecomposeResearch = "decompose-research",
     Question = "Question",
     AnswerQuestion = "AnswerQuestion",
     ComplexProjectKickoff = "ComplexProjectKickoff",

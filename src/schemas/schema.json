@@ -26,6 +26,7 @@
       "type": "object"
     },
     "AnswerAnalysisResponse": {
+      "additionalProperties": false,
       "properties": {
         "answers": {
           "items": {
@@ -33,16 +34,12 @@
           },
           "type": "array"
         },
-        "message": {
-          "type": "string"
-        },
         "shouldContinue": {
           "type": "boolean"
         }
       },
       "required": [
         "answers",
-        "message",
         "shouldContinue"
       ],
       "type": "object"
@@ -437,10 +434,6 @@
           ],
           "type": "string"
         },
-        "confirmationMessage": {
-          "description": "Confirmation message to show the user",
-          "type": "string"
-        },
         "events": {
           "description": "Array of calendar events to create/update",
           "items": {
@@ -451,8 +444,7 @@
       },
       "required": [
         "events",
-        "action",
-        "confirmationMessage"
+        "action"
       ],
       "type": "object"
     },
@@ -545,42 +537,6 @@
         "type",
         "properties",
         "required"
-      ],
-      "type": "object"
-    },
-    "ContentDecompositionResponse": {
-      "additionalProperties": false,
-      "properties": {
-        "goal": {
-          "type": "string"
-        },
-        "sections": {
-          "items": {
-            "additionalProperties": false,
-            "properties": {
-              "description": {
-                "type": "string"
-              },
-              "title": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "title",
-              "description"
-            ],
-            "type": "object"
-          },
-          "type": "array"
-        },
-        "strategy": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "goal",
-        "strategy",
-        "sections"
       ],
       "type": "object"
     },
@@ -1383,22 +1339,6 @@
       ],
       "type": "object"
     },
-    "LookupResearchResponse": {
-      "additionalProperties": false,
-      "properties": {
-        "query": {
-          "type": "string"
-        },
-        "reinterpreted_goal": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "reinterpreted_goal",
-        "query"
-      ],
-      "type": "object"
-    },
     "MergePlanResponse": {
       "additionalProperties": false,
       "properties": {
@@ -1773,33 +1713,6 @@
       },
       "required": [
         "reasoning"
-      ],
-      "type": "object"
-    },
-    "RefutingResponse": {
-      "additionalProperties": false,
-      "description": "Interface for refuting response",
-      "properties": {
-        "analysis": {
-          "description": "Analysis of the counterarguments",
-          "type": "string"
-        },
-        "counterarguments": {
-          "description": "List of potential counterarguments",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
-        },
-        "finalVerdict": {
-          "description": "Final verdict after considering counterarguments",
-          "type": "string"
-        }
-      },
-      "required": [
-        "counterarguments",
-        "analysis",
-        "finalVerdict"
       ],
       "type": "object"
     },
@@ -2321,24 +2234,6 @@
       },
       "required": [
         "selectedTemplateId"
-      ],
-      "type": "object"
-    },
-    "ThinkingResponse": {
-      "additionalProperties": false,
-      "properties": {
-        "conclusion": {
-          "description": "Final conclusion based on the reasoning",
-          "type": "string"
-        },
-        "reasoning": {
-          "description": "Step-by-step reasoning process",
-          "type": "string"
-        }
-      },
-      "required": [
-        "reasoning",
-        "conclusion"
       ],
       "type": "object"
     },

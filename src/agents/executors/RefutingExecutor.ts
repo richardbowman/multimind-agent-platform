@@ -1,13 +1,11 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResult } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { RefutingResponse } from '../../schemas/refuting';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 
 /**
  * Executor that critically analyzes arguments and identifies potential flaws.
@@ -22,10 +20,11 @@ import { ExecutorType } from '../interfaces/ExecutorType';
  * - Maintains objective analytical approach
  */
 @StepExecutorDecorator(ExecutorType.REFUTING, 'Challenge assumptions and identify potential flaws in the current reasoning')
-export class RefutingExecutor implements StepExecutor {
+export class RefutingExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
 
     }
@@ -39,21 +38,16 @@ Provide a balanced analysis and final verdict.
 
 ${previousResponses ? `Specifically analyze these previous conclusions:\n${JSON.stringify(previousResponses, null, 2)}` : ''}`;
 
-        const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate<RefutingResponse>({
+        const { message } = await this.modelHelpers.generate({
             message: goal,
-            instructions
+            instructions: prompt
         });
 
-        const counterargumentsList = result.counterarguments
-            .map((arg: string) => `- ${arg}`).join('\n');
-
         return {
-            type: "refuting",
             finished: true,
             replan: ReplanType.Allow,
             response: {
-                message: `**Potential Counterarguments:**\n${counterargumentsList}\n\n**Analysis:**\n${result.analysis}\n\n**Final Verdict:**\n${result.finalVerdict}`
+                status: message
             }
         };
     }

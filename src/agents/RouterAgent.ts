@@ -11,6 +11,7 @@ import { createUUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { RoutingResponse } from 'src/schemas/RoutingResponse';
+import { StringUtils } from 'src/utils/StringUtils';
 
 export interface RoutingContext {
     channelData: Partial<ChannelData>;
@@ -22,6 +23,10 @@ export interface RoutingContext {
 }
 
 export class RouterAgent extends Agent {
+    public onReady?(): Promise<void> {
+        return Promise.resolve();
+    }
+
     protected async handlerThread(params: HandlerParams): Promise<void> {
         return this.handleMessage(params);
     }
@@ -200,11 +205,12 @@ export class RouterAgent extends Agent {
 - confidence: Your confidence level (0-1) in this selection`);
 
         const posts = [rootPost, ...threadPosts].filter(p => p !== undefined);
-        const response = await this.modelHelpers.generate<RoutingResponse>({
+        const rawResponse = await this.modelHelpers.generate({
             message: userPost.message,
-            instructions: new StructuredOutputPrompt(schema, await promptBuilder.build()),
+            instructions: await promptBuilder.build(),
             threadPosts: posts
         });
+        const response = StringUtils.extractAndParseJsonBlock<RoutingResponse>(rawResponse.message);
 
         await this.handleRoutingResponse(userPost, response, threadPosts, context);
     }

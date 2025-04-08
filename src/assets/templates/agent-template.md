@@ -35,7 +35,6 @@ Make sure to select no more than 10 executors to enable.
  - [ ] refuting
  - [ ] reply
  - [ ] aggregate-research
- - [ ] decompose-research
  - [ ] route-request
  - [ ] thinking
  - [ ] understand-goals

@@ -1,7 +1,7 @@
 import { ClientOptions, OpenAI } from "openai";
 import { ModelInfo } from "./types";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { ModelSearchParams, VisionContent } from "./ILLMService";
+import { ModelSearchParams } from "./ILLMService";
 import JSON5 from 'json5';
 import { BaseLLMService } from "./BaseLLMService";
 import { IEmbeddingFunction, LLMRequestParams } from "./ILLMService";
@@ -20,19 +20,7 @@ export class OpenAIService extends BaseLLMService {
         this.client = null as unknown as OpenAI;
     }
 
-    private async bufferToBase64(buffer: Buffer): Promise<string> {
-        return `data:image/jpeg;base64,${buffer.toString('base64')}`;
-    }
-
-    private async processVisionContent(content: VisionContent | Buffer): Promise<string> {
-        if (Buffer.isBuffer(content)) {
-            return this.bufferToBase64(content);
-        }
-        return content.image_url.url;
-    }
-
-
-    constructor(private settings: Settings, apiKey: string, baseURL?: string, private serviceName: LLMProvider = LLMProvider.OPENAI) {
+    constructor(settings: Settings, apiKey: string, baseURL?: string, private serviceName: LLMProvider = LLMProvider.OPENAI) {
         super(serviceName, settings);
         const configuration: ClientOptions = ({
             apiKey,
@@ -106,65 +94,6 @@ export class OpenAIService extends BaseLLMService {
             return modelList;
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
-            throw error;
-        }
-    }
-
-    async sendVisionRequest<T extends ModelResponse = ModelMessageResponse>(
-        params: LLMRequestParams
-    ): Promise<GenerateOutputParams<T>> {
-        try {
-            const messages = await Promise.all(params.messages.map(async m => ({
-                role: m.role,
-                content: Array.isArray(m.content) ?
-                    await Promise.all(m.content.map(async c => 
-                        typeof c === 'string' ? c : this.processVisionContent(c)
-                    )) :
-                    typeof m.content === 'string' ? m.content : await this.processVisionContent(m.content)
-            })));
-
-            if (params.systemPrompt) {
-                messages.unshift({
-                    role: "system",
-                    content: params.systemPrompt
-                });
-            }
-
-            const model = this.selectModel(params.modelType);
-
-            const startTime = Date.now();
-            const response = await this.client.chat.completions.create({
-                model: model,
-                messages,
-                temperature: params.opts?.temperature,
-                max_tokens: params.opts?.maxPredictedTokens,
-                top_p: params.opts?.topP,
-            });
-
-            const result: GenerateOutputParams<T> = {
-                response: { message: response.choices[0].message?.content || '' } as T,
-                metadata: {
-                    _usage: {
-                        inputTokens: response.usage?.prompt_tokens || 0,
-                        outputTokens: response.usage?.completion_tokens || 0
-                    }
-                }
-            };
-            const durationMs = Date.now() - startTime;
-
-            await this.logger.logCall('sendVisionRequest', {
-                messages: params.messages,
-                systemPrompt: params.systemPrompt,
-                opts: params.opts
-            }, result.response, undefined, durationMs);
-
-            return result;
-        } catch (error) {
-            await this.logger.logCall('sendVisionRequest', {
-                messages: params.messages,
-                systemPrompt: params.systemPrompt,
-                opts: params.opts
-            }, null, error);
             throw error;
         }
     }

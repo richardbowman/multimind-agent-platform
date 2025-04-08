@@ -39,7 +39,7 @@ export interface MessageOpts {
     contextWindowLength?: number;
 }
 
-import { ModelRole, StructuredOutputPrompt } from "./ILLMService";
+import { ModelRole } from "./ILLMService";
 
 import { BaseLLMService } from "./BaseLLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
@@ -108,75 +108,6 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
             throw error;
         }
     }
-
-
-
-
-    async sendStructuredRequest(
-        message: string,
-        instructions: StructuredOutputPrompt,
-        history?: any[],
-        contextWindowLength?: number,
-        maxTokens?: number
-    ): Promise<any> {
-        if (!this.chatModel) {
-            throw new Error("LLaMA model is not initialized.");
-        }
-
-        // Add the current message to the history
-        const userMessage = { role: "user", content: message };
-        let messageChain = [
-            ...history || [], userMessage
-        ];
-
-        const opts: LLMPredictionConfig = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens };
-
-        // If contextWindowLength is provided, truncate the history
-        const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || contextWindowLength || 4096;
-        let tokenCount = 0;
-        for (let i = messageChain.length - 1; i >= 0; i--) {
-            const messageTokens = await this.chatModel.countTokens(messageChain[i].content);
-            tokenCount += messageTokens;
-
-            if (tokenCount > contextLength) {
-                Logger.info("CUTTING TOKENS");
-                messageChain = messageChain.slice(i + 1);
-                break;
-            }
-        }
-
-        // Set the maxTokens parameter for the LLaMA model
-        const input = {
-            message,
-            instructions: (await instructions.getPrompt()),
-            history,
-            contextWindowLength,
-            maxTokens
-        };
-
-        try {
-            const prediction = await this.chatModel.respond(messageChain, opts);
-            const resultBody = prediction.content;
-            const output = JSON5.parse(resultBody);
-
-            const result = {
-                response: output,
-                metadata: {
-                    _usage: {
-                        inputTokens: await this.countTokens(messageChain.map(m => m.content).join('')),
-                        outputTokens: await this.countTokens(resultBody)
-                    }
-                }
-            };
-
-            await this.logger.logCall('sendStructuredRequest', input, result.response);
-            return result;
-        } catch (error) {
-            await this.logger.logCall('sendStructuredRequest', input, null, error);
-            throw error;
-        }
-    }
-
 
     getEmbeddingModel(): IEmbeddingFunction {
         if (!this.embeddingModel) throw new Error("LMStudioService not initalized");

@@ -298,10 +298,6 @@ export class BedrockService extends BaseLLMService {
         });
     }
 
-    getLogger(): LLMCallLogger {
-        return this.logger;
-    }
-
     async getAvailableModels(): Promise<string[]> {
         try {
             const models = await this.runtimeClient.listModels();

@@ -1,8 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ThinkingResponse } from '../../schemas/thinking';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -11,6 +8,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { ContentType } from 'src/llm/promptBuilder';
 import { ModelType } from "src/llm/types/ModelType";
 import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
 
 /**
  * Executor that performs deep analytical thinking and reasoning.
@@ -27,18 +25,18 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
  * - Documents thinking steps clearly
  */
 @StepExecutorDecorator(ExecutorType.THINKING, 'Develop ideas and reasoning through careful analysis and deep thinking')
-export class ThinkingExecutor implements StepExecutor<StepResponse> {
+export class ThinkingExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
-        const promptBuilder = this.modelHelpers.createPrompt();
+        const promptBuilder = this.startModel(params);
         promptBuilder.addContext({contentType: ContentType.ABOUT});
         promptBuilder.addInstruction(`You are a thinking step in a broader agentic workflow.
 Given a problem, break it down into logical steps and reason through it carefully.
@@ -50,9 +48,8 @@ Consider multiple angles and potential implications. You cannot run code, but yo
 
         promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});
 
-        const result = await this.modelHelpers.generate<ThinkingResponse>({
+        const result = await promptBuilder.generate({
             message: params.message,
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
             modelType: ModelType.ADVANCED_REASONING
         });
 
@@ -61,7 +58,7 @@ Consider multiple angles and potential implications. You cannot run code, but yo
             finished: true, 
             replan: ReplanType.Allow,
             response: {
-                status: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion (so far):**\n\n${result.conclusion}`
+                status: result.message
             }
         };
     }

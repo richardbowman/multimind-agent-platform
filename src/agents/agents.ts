@@ -46,7 +46,7 @@ export interface PlannerParams extends GenerateParams {
 }
 
 export interface GenerateInputParams extends GenerateParams {
-    instructions: string | Promise<string> | InputPrompt | StructuredOutputPrompt;
+    instructions: string | Promise<string> | InputPrompt;
     userPost?: Message;
     threadPosts?: Message[];
     modelType?: ModelType;
@@ -63,10 +63,6 @@ export interface GenerateParams {
     message?: string;
     contextWindow?: number;
     maxTokens?: number;
-}
-
-export interface ProjectHandlerParams extends HandlerParams {
-    projectChain: ProjectChainResponse;
 }
 
 // Custom decorator to map activity types to methods
@@ -430,14 +426,6 @@ Do not make information up.`);
         });
 
         return response.message;
-    }
-
-    // @deprecated
-    protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
-        return this.modelHelpers.generate({
-            instructions: structure,
-            ...params
-        });
     }
 
     protected async generate(params: GenerateInputParams): Promise<ModelMessageResponse> {

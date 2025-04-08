@@ -31,8 +31,8 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
-            <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', flex: 1, flexDirection: 'column', overflowY: 'hidden' }}>
+            <Box sx={{ pt: 2, px: 2 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="h6">
                         Channels ({channels.length})
@@ -46,7 +46,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 </Stack>
             </Box>
 
-            <ScrollView>
+            <ScrollView innerSx={{p: 1, px: 2}}>
                 {channels.length === 0 && (
                     <Typography variant="body1" sx={{ color: '#666', textAlign: 'center', mt: 2 }}>
                         Loading channels...

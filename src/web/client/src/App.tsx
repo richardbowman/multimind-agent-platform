@@ -229,30 +229,29 @@ const AppContent: React.FC = () => {
                                 width: leftDrawerWidth,
                                 flexShrink: 0,
                                 '& .MuiDrawer-paper': {
-                                    width: 250,
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                    backdropFilter: 'blur(10px)',
-                                    WebkitBackdropFilter: 'blur(10px)',
-                                    borderRight: '1px solid rgba(255, 255, 255, 0.1)'
-                                },
+                                    width: 250
+                                }
                             }}
                             PaperProps={{
                                 sx: {
-                                    zIndex: 1
+                                    zIndex: 1,
+                                    overflow: 'hidden'
                                 }
                             }}
                         >
-                            <Toolbar /> {/* For spacing under app bar */}
-                            <ChannelList
-                                onChannelSelect={(channelId) => {
-                                    setCurrentChannelId(channelId);
-                                    setCurrentThreadId(null); // Reset thread when changing channels
-                                }}
-                            />
-                            <ThreadList
-                                channelId={currentChannelId}
-                                onThreadSelect={setCurrentThreadId}
-                            />
+                            <Box sx={{overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+                                <Toolbar /> {/* For spacing under app bar */}
+                                <ChannelList
+                                    onChannelSelect={(channelId) => {
+                                        setCurrentChannelId(channelId);
+                                        setCurrentThreadId(null); // Reset thread when changing channels
+                                    }}
+                                />
+                                <ThreadList
+                                    channelId={currentChannelId}
+                                    onThreadSelect={setCurrentThreadId}
+                                />
+                            </Box>
                         </Drawer>
 
 

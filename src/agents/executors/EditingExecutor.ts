@@ -1,7 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResponse, StepResult } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -11,6 +9,10 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from 'src/tools/taskManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
+import { StringUtils } from 'src/utils/StringUtils';
+import { OutputType } from 'src/llm/promptBuilder';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 
 /**
  * Executor that reviews and improves content quality.
@@ -27,14 +29,14 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
  * - Creates structured edit summaries
  */
 @StepExecutorDecorator(ExecutorType.EDITING, 'Review and improve content quality')
-export class EditingExecutor implements StepExecutor<StepResponse> {
+export class EditingExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
     private taskManager: TaskManager
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager!;
     }
@@ -55,19 +57,22 @@ export class EditingExecutor implements StepExecutor<StepResponse> {
             throw new Error(`Could not load content artifact ${project.metadata.contentArtifactId}`);
         }
 
-        const prompt = `You are a content editor.
+        const prompt = this.startModel(params);
+        prompt.addInstruction(`You are a content editor.
 First, generate a clear and concise title that captures the main topic of the content.
 Then review the content for clarity, structure, style, and grammar.
 Provide specific suggestions for improvements while maintaining the original message.
 
 Content to review:
-${contentArtifact.content}`;
+${contentArtifact.content}`);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
-        const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate<EditingResponse>({
-            message: goal,
-            instructions
+        const rawResponse = await prompt.generate({
+            message: goal
         });
+
+        const result = StringUtils.extractAndParseJsonBlock<EditingResponse>(rawResponse.message);
+        const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
         // Create a new content artifact with improvements applied
         let updatedContent = contentArtifact.content.toString();
@@ -79,10 +84,10 @@ ${contentArtifact.content}`;
 
         // Save the updated content as a new artifact
         const newArtifact = await this.artifactManager.saveArtifact({
-            id: crypto.randomUUID(),
-            type: 'content',
+            type: ArtifactType.Document,
             content: updatedContent,
             metadata: {
+                subtype: DocumentSubtype.General,
                 ...contentArtifact.metadata,
                 previousVersion: contentArtifact.id,
                 editingFeedback: result.overallFeedback,

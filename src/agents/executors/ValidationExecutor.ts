@@ -1,7 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
@@ -9,7 +7,9 @@ import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
+import { StringUtils } from 'src/utils/StringUtils';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 /**
@@ -27,10 +27,11 @@ const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schema
  * - Creates detailed validation reports
  */
 @StepExecutorDecorator(ExecutorType.VALIDATION, 'Before providing your final response, verify your work addresses the goal')
-export class ValidationExecutor implements StepExecutor {
+export class ValidationExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
 
     }
@@ -48,7 +49,7 @@ export class ValidationExecutor implements StepExecutor {
         const maxAttempts = 3; // Maximum validation attempts before forcing completion
 
         // Create a new prompt builder
-        const promptBuilder = this.modelHelpers.createPrompt();
+        const promptBuilder = this.startModel(params);
 
         // Add core validation instructions
         promptBuilder.addInstruction(`You are validating whether a proposed solution addresses the original goal. 
@@ -72,29 +73,32 @@ Analyze the previous steps and their results to determine if a reasonable effort
 
 If the solution is wrong, list the specific aspects that must be addressed.`);
 
+        promptBuilder.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+
         // Add execution mode context
         if (params.executionMode === 'task') {
             promptBuilder.addContext('Note: This is running in task mode - be more lenient with validation since we can\'t request user input.');
         }
 
         // Generate the validation response
-        const response = await this.modelHelpers.generate<ValidationResult>({
-            message: "Validate solution meets user goal.",
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
-            threadPosts: params.context?.threadPosts
+        const rawResponse = await promptBuilder.generate({
+            message: "Validate solution meets user goal."
         });
+
+        const message = StringUtils.extractNonCodeContent(rawResponse.message);
+        const response = StringUtils.extractAndParseJsonBlock<ValidationResult>(rawResponse.message);
 
         // Force completion if we've reached max validation attempts
         const forceCompletion = validationAttempts >= maxAttempts;
         
-        const result: StepResult = {
+        const result: StepResult<StepResponse> = {
             type: StepResultType.Validation,
             finished: true,
             needsUserInput: params.executionMode === 'conversation' && forceCompletion,
             replan: response.isComplete ? ReplanType.Allow : ReplanType.Force,
             response: {
                 type: StepResponseType.Validation,
-                message: forceCompletion 
+                status: forceCompletion 
                     ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +
                       `${response.missingAspects?.map(a => `- ${a}`).join('\n')}`
                     : response.message,

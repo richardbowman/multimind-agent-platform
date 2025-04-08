@@ -571,7 +571,7 @@ export abstract class StepBasedAgent extends Agent {
                 if (executor.execute) {
                     stepResult = await executor.execute({
                         agentId: this.userId,
-                        goal: `[Step: ${task.description}] [Project: ${project.name}] Solve the user's request: ${userPost?.message}`,
+                        goal: `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message ? `Solve the user's request: ${userPost?.message}` : ''}`,
                         step: task.props.stepType,
                         stepId: task.id,
                         channelGoals,
@@ -579,7 +579,7 @@ export abstract class StepBasedAgent extends Agent {
                         previousResponses: priorResults,
                         steps: priorSteps,
                         message: userPost?.message,
-                        userPost: userPost,
+                        userPost,
                         stepGoal: task.description,
                         overallGoal: project.name,
                         executionMode: userPost ? 'conversation' : 'task',
@@ -594,13 +594,6 @@ export abstract class StepBasedAgent extends Agent {
                         },
                         partialResponse: this.getPartialPost(userPost, params)
                     });
-                } else {
-                    stepResult = await executor.executeOld(
-                        `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
-                        task.props.stepType,
-                        projectId,
-                        priorResults
-                    );
                 }
             }
 

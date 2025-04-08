@@ -17,7 +17,6 @@ description: "A list of all supported actions that agents can perform."
 | `refuting` | `RefutingExecutor` | Handles argument refutation |
 | `reply` | `ReplyExecutor` | Generates conversational replies |
 | `aggregate-research` | `ResearchAggregationExecutor` | Aggregates research findings |
-| `decompose-research` | `ResearchDecompositionExecutor` | Breaks down research tasks |
 | `route-request` | `RouteRequestExecutor` | Routes requests to appropriate handlers |
 | `thinking` | `ThinkingExecutor` | Performs reasoning tasks |
 | `understand-goals` | `UnderstandGoalsExecutor` | Interprets and understands goals |

@@ -34,7 +34,7 @@ export class WebSearchExecutor extends BaseStepExecutor<StepResponse> {
             finished: true,
             replan: ReplanType.Allow,
             response: {
-                status: `Notes on query generation: ${message}. Query found ${searchResults.length} possible links (still need to select best links and download page content)`,
+                status: `Notes on query generation: ${message}. ${searchResults.length > 1 ? `Query found ${searchResults.length} possible links (still need to select best links and download page content)` : `Query found no links. Try different search criteria.`}`,
                 type: StepResponseType.SearchResults,
                 data: {
                     searchResults,
@@ -52,11 +52,15 @@ export class WebSearchExecutor extends BaseStepExecutor<StepResponse> {
         const previousGaps = previousResponses?.map(r => r.data?.analysis?.gaps) || [];
 
         const prompt = this.startModel(params);
-        prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}.  
-Previous Research Findings:
+        prompt.addInstruction(`You are a research assistant.
+            
+## Goal
+${goal}
+
+## Previous Research Findings:
 ${previousFindings.filter(f => !!f).map((f: any) => `- ${f.finding}`).join('\n')}
 
-Identified Gaps:
+## Identified Gaps:
 ${previousGaps.filter(f => !!f).map((g: string) => `- ${g}`).join('\n')}
 
 Generate a broad web search query without special keywords or operators based on the task and previous findings.

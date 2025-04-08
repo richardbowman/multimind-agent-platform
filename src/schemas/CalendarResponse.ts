@@ -10,9 +10,4 @@ export interface CalendarResponse {
    * The action to perform with these events
    */
   action: 'create' | 'update' | 'delete';
-  
-  /**
-   * Confirmation message to show the user
-   */
-  confirmationMessage: string;
 }

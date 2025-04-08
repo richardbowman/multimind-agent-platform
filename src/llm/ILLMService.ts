@@ -16,14 +16,6 @@ export interface IEmbeddingFunction {
     generate(texts: string[]): Promise<number[][]>;
 }
 
-export interface VisionContent {
-    type: "image_url";
-    image_url: {
-        url: string;
-        detail?: "low" | "high" | "auto";
-    };
-}
-
 export interface ModelSearchParams {
     /** Text to search in model names and IDs */
     textFilter?: string;
@@ -43,7 +35,6 @@ export interface ILLMService {
     shutdown(): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
-    sendVisionRequest?<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     countTokens(content: string): Promise<number>;
     getLogger(): LLMCallLogger;
     getAvailableModels(searchParams?: ModelSearchParams): Promise<ModelInfo[]>;
@@ -52,8 +43,6 @@ export interface ILLMService {
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: LLMOptions): Promise<T>;
     /** @deprecated */
     sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
-    /** @deprecated */
-    generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
 }
 
 export interface JSONObjectSchema extends JSONSchema {
@@ -83,6 +72,7 @@ export interface LLMPredictionOpts {
         type: string;
         jsonSchema: any;
     };
+    /** deprecated - use promptbuilder/outputtypes */
     tools?: LLMTool[];
     contextWindowLength?: number;
 }
@@ -106,7 +96,7 @@ export interface LLMContext {
 }
 
 export interface LLMRequestParams {
-    messages: { role: string; content: string | VisionContent | (string | VisionContent)[] }[];
+    messages: { role: string; content: string | (string)[] }[];
     systemPrompt?: string;
     opts?: LLMPredictionOpts;
     parseJSON?: boolean;

@@ -1,24 +1,26 @@
 import { ExecutorType } from "../interfaces/ExecutorType";
 import ical from 'ical-generator';
 import { ModelHelpers } from "../../llm/modelHelpers";
-import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { CalendarResponse } from "src/schemas/CalendarResponse";
-import { StepResult, StepResultType } from "../interfaces/StepResult";
+import { StepResponse, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
-import { StepExecutor } from "../interfaces/StepExecutor";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
-import { ContentType } from "src/llm/promptBuilder";
+import { ContentType, OutputType } from "src/llm/promptBuilder";
+import { BaseStepExecutor } from "../interfaces/BaseStepExecutor";
+import { StringUtils } from "src/utils/StringUtils";
+import { ArtifactType } from "src/tools/artifact";
 
 @StepExecutorDecorator(ExecutorType.CALENDAR_MANAGEMENT, 'Create and update a calendar', true)
-export class CalendarExecutor implements StepExecutor {
+export class CalendarExecutor extends BaseStepExecutor<StepResponse> {
   private modelHelpers: ModelHelpers;
   private artifactManager: ArtifactManager;
 
   constructor(params: ExecutorConstructorParams) {
+    super(params);
     this.modelHelpers = params.modelHelpers;
     this.artifactManager = params.artifactManager;
   }
@@ -29,7 +31,7 @@ export class CalendarExecutor implements StepExecutor {
       const schema = await getGeneratedSchema(SchemaType.CalendarResponse);
 
       // Create the structured prompt
-      const prompt = this.modelHelpers.createPrompt();
+      const prompt = this.startModel(params);
       prompt.addInstruction(`You are a calendar management assistant. Your job is to:
 1. Create new calendar events based on user requests
 2. Modify existing events when requested
@@ -40,14 +42,15 @@ export class CalendarExecutor implements StepExecutor {
 
       prompt.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]});
 
-      const instructions = new StructuredOutputPrompt(schema, await prompt.build());
+      prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
       // Generate the structured response
-      const response = await this.modelHelpers.generate<CalendarResponse>({
-        message: params.stepGoal,
-        instructions,
-        artifacts: params.context?.artifacts,
+      const rawResponse = await prompt.generate({
+        message: params.stepGoal
       });
+
+      const response = StringUtils.extractAndParseJsonBlock<CalendarResponse>(rawResponse.message);
+      const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
       // Create iCalendar content
       const calendar = ical({
@@ -77,11 +80,12 @@ export class CalendarExecutor implements StepExecutor {
 
       // Create the calendar artifact
       const calendarArtifact = await this.artifactManager.saveArtifact({
-        type: 'calendar',
+        type: ArtifactType.Calendar,
         content: calendar.toString(),
-        mimeType: 'text/calendar',
         metadata: {
-          title: title
+          title: title,
+          mimeType: 'text/calendar',
+          subtype: 'calendar'
         }
       });
 
@@ -90,7 +94,7 @@ export class CalendarExecutor implements StepExecutor {
         type: StepResultType.Calendar,
         finished: true,
         response: {
-          message: response.confirmationMessage,
+          message
         },
         artifactIds: [calendarArtifact.id],
       };

@@ -219,6 +219,9 @@ export class DuckDuckGoProvider implements ISearchProvider {
             // Simplified Electron implementation
             const window = context as BrowserWindow;
             await window.loadURL('about:blank');
+            if (this.settings.duckduckgo.headless === false) {
+                window.show();
+            }
             
             const encodedQuery = encodeURIComponent(query);
             const isNews = category === 'news';

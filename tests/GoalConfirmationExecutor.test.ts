@@ -1,8 +1,6 @@
 import { GoalConfirmationExecutor } from '../src/agents/executors/GoalConfirmationExecutor';
 import { ModelHelpers } from '../src/llm/modelHelpers';
 import { ExecuteParams } from '../src/agents/interfaces/ExecuteParams';
-import { StepResult } from '../src/agents/interfaces/StepResult';
-import { StructuredOutputPrompt } from '../src/llm/ILLMService';
 import { GoalConfirmationResponse } from '../src/schemas/goalConfirmation';
 import { createUUID } from '../src/types/uuid';
 
@@ -50,8 +48,7 @@ describe('GoalConfirmationExecutor', () => {
         expect(result.needsUserInput).toBe(false);
         expect(result.response.message).toBe('I understand the goal');
         expect(mockModelHelpers.generate).toHaveBeenCalledWith(expect.objectContaining({
-            message: 'Test goal',
-            instructions: expect.any(StructuredOutputPrompt)
+            message: 'Test goal'
         }));
     });
 
@@ -90,8 +87,7 @@ describe('GoalConfirmationExecutor', () => {
         });
 
         expect(mockModelHelpers.generate).toHaveBeenCalledWith(expect.objectContaining({
-            message: 'Test goal',
-            instructions: expect.any(StructuredOutputPrompt)
+            message: 'Test goal'
         }));
         expect(result.finished).toBe(true);
     });

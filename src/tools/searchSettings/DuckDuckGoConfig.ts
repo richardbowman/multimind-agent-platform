@@ -6,7 +6,7 @@ export class DuckDuckGoConfig {
         label: 'DuckDuckGo Headless Mode',
         category: 'Search Settings',
         type: 'boolean',
-        description: 'Run DuckDuckGo searches in headless browser mode',
+        description: 'Run DuckDuckGo searches in headless browser mode (restart required)',
         visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
     })
     headless: boolean = true;

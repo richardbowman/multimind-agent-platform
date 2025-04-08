@@ -181,6 +181,12 @@ const columns: GridColDef[] = [
         valueFormatter: (value) => value ? new Date(value).toLocaleString() : ''
     },
     {
+        field: 'agentName',
+        headerName: 'Agent',
+        width: 150,
+        valueFormatter: (value) => value || 'N/A'
+    },
+    {
         field: 'input',
         headerName: 'Input',
         width: 300,
@@ -201,12 +207,6 @@ const columns: GridColDef[] = [
         valueFormatter: (value) => value ? 'ERROR' : 'SUCCESS',
         cellClassName: (params) => 
             params.value === 'ERROR' ? 'error-cell' : 'success-cell'
-    },
-    {
-        field: 'agentName',
-        headerName: 'Agent',
-        width: 150,
-        valueFormatter: (value) => value || 'N/A'
     },
     {
         field: 'provider',

@@ -1,5 +1,3 @@
-import { ModelMessageResponse } from "./ModelResponse";
-
 export interface QAAnswers {
     question: string;
     answer: string;
@@ -14,7 +12,7 @@ export interface AnswerAnalysis {
     extractedAnswer: string;
 }
 
-export interface AnswerAnalysisResponse extends ModelMessageResponse {
+export interface AnswerAnalysisResponse {
     answers: AnswerAnalysis[];
     shouldContinue: boolean;
 }

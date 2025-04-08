@@ -39,11 +39,13 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
         .sort((a, b) => b.last_message_at - a.last_message_at);
 
     return (
-        <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'hidden' }}>
-            <Typography variant="h6">
-                Threads
-            </Typography>
-            <ScrollView>
+        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflowY: 'hidden' }}>
+            <Box sx={{ pt: 2, px: 2 }}>
+                <Typography variant="h6">
+                    Threads
+                </Typography>
+            </Box>
+            <ScrollView sx={{ display: 'flex', flexDirection: 'column', flex: 1 }} innerSx={{ p:1, px: 2 }}>
                 <List
                     ref={listRef}
                 >
