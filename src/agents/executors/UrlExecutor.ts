@@ -84,7 +84,7 @@ export class UrlExecutor extends BaseStepExecutor<StepResponse> {
                 .map(r => r.message)
                 .filter(Boolean);
 
-            if (!params.message) return [];
+            if (!params.message && !params.stepGoal) return [];
 
             const instructions = this.startModel(params);
             const schema = await getGeneratedSchema(SchemaType.UrlExtractionResponse);

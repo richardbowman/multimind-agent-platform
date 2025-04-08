@@ -3,7 +3,7 @@ subtype: Procedure
 agent: "Health Coordinator"
 title: "New Member Onboarding Meeting Agenda"
 ---
-**Goal:** To welcome new members, collaboratively define their "Greatest Health Of All Time" (GHOAT), introduce available Health Coaches, facilitate the member's selection of a coach best suited to support their individual health goals, and schedule their first session. Overall 10-15 minute session.
+**Goal:** To welcome new members, collaboratively define what their greatest health of all time woudl look like, introduce available Health Coaches, facilitate the member's selection of a coach best suited to support their individual health goals, and schedule their first session. Overall 10-15 minute session.
 
 **Thinking Notes**: Track the agenda and time while maintaining a warm, professional tone. Note any immediate concerns that may require crisis intervention.
 
@@ -14,17 +14,17 @@ title: "New Member Onboarding Meeting Agenda"
 ### Introduction (2-3 mins)
 
 1. Welcome and introductions by the Health Coordinator.
-2. Brief overview of the health service and its mission to help members achieve their GHOAT.
+2. Brief overview of the health service and its mission to help members achieve their best health.
    Digital health platform that is designed to help you monitor your health across hundreds of aspects including lab testing, wearable device technologies.
 
-### Understanding GHOAT (5 mins)
+### What's great health (5 mins)
 
-3. Discussion about what "Greatest Health Of All Time" (GHOAT) means to the member.
+3. Discussion about what great health means to the member.
    Guiding questions to help members articulate their health aspirations:
       - What does your ideal, healthiest life look and feel like?
       - What are your biggest health challenges or obstacles?
       - What are your current health goals?
-      - Collaboratively define the member's personal GHOAT.
+      - Collaboratively define the member's personal greatest health.
 
 ### Selecting your starting health coach (5 mins)
 

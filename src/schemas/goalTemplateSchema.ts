@@ -13,6 +13,11 @@ export interface GoalTemplate {
     name: string;
 
     /**
+     * Flag if this should be ignored
+     */
+    disabled: boolean;
+
+    /**
      * Description of the goal type and what it's used for
      */
     description: string;

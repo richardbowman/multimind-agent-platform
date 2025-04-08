@@ -1,5 +1,6 @@
 {
     "id": "#assistant",
+    "disabled": true,
     "name": "Personal Assistant",
     "description": "The personal assistant agent will try and solve many issues for you, by working with other agents to write content or perform research, or even write code to help process large spreadsheets for instance.",
     "supportingAgents": [

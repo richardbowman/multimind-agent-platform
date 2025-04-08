@@ -26,6 +26,7 @@ import { LLMProviders, LLMServices } from "./llm/ILLMService";
 import { LLMProvider } from "./llm/types/LLMProvider";
 import { asError } from "./types/types";
 import "./utils/ArrayUtils";    // need to import because we change array prototype
+import { createChatHandle } from "./types/chatHandle";
 
 if (!global.crypto) {
     global.crypto = _crypto;
@@ -66,17 +67,18 @@ async function createLLMServices(providers: LLMProviders, settings: Settings): P
 
             const service = providers[config.provider!];
             if (!service) {
-                throw new Error(`Provider ${config.provider} could not be found.`);
-            }
+                Logger.error(`Provider ${config.provider} could not be found.`);
+            } else {
 
-            // Initialize the specific model
-            await service.initializeChatModel(config.model!);
-            
-            // Store the service using a combination of type and provider as the key
-            const serviceKey = config.type;
-            services[serviceKey] = service;
-            
-            Logger.info(`Initialized ${config.type} service for provider ${config.provider}`);
+                // Initialize the specific model
+                await service.initializeChatModel(config.model!);
+                
+                // Store the service using a combination of type and provider as the key
+                const serviceKey = config.type;
+                services[serviceKey] = service;
+                
+                Logger.info(`Initialized ${config.type} service for provider ${config.provider}`);
+            }
         } catch (error) {
             const msg = `Failed to initialize ${config.type} service for provider ${config.provider}: ${asError(error).message}`;
             Logger.error(msg, error);
@@ -95,17 +97,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     
     // Initialize the models
     try {
-        //TODO: bring back this validation
-
-
-        // if (!_s.providers.chat) {
-        //     throw new ConfigurationError("No chat provider is selected");
-        // }
-        // if (!_s.models.conversation[_s.providers.chat]) {
-        //     throw new ConfigurationError("No chat model is selected");
-        // }
-
-        //        Logger.progress('Initializing LLM services...', 0.1);
+        Logger.progress('Initializing LLM services...', 0.1);
 
 
         const embeddingConfig = _s.modelConfigs.find(c => c.enabled && c.type === ModelType.EMBEDDINGS);
@@ -138,26 +130,24 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         // Get the primary chat service
         const chatService = llmServices.conversation;
         if (!chatService) {
-            throw new ConfigurationError(`No chat service found for provider ${_s.providers.chat}`);
+            throw new ConfigurationError(`No chat model configuration found for active providers. Loaded providers include: ${Object.keys(providers).join(", ")}`);
         }
         await sleep();
 
         Logger.progress('Loading vector database', 0.3, "loading");
-        const docsVectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
-        const proceduresVectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
+        const vectorDBService = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
 
-        const artifactManager = new ArtifactManager(docsVectorDB, proceduresVectorDB, chatService);
+        const artifactManager = new ArtifactManager(vectorDBService, chatService);
         await artifactManager.initialize();
 
         await sleep();
 
-        docsVectorDB.on("needsReindex", async () => {
+        vectorDBService.on("needsReindex", async () => {
             Logger.progress("Reindexing vector database", 0.4, "loading");
             await artifactManager.indexArtifacts();
         });
 
-        await docsVectorDB.initializeCollection(_s.chromaCollection);
-        await proceduresVectorDB.initializeCollection("procedures");
+        await vectorDBService.initializeCollection(_s.vectorCollection);
 
         const tasks = new SimpleTaskManager();
         await tasks.initialize();
@@ -221,7 +211,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             artifactManager,
             chatStorage,
             settingsManager,
-            agents
+            agents,
+            vectorDBService
         });
 
         // Initialize all agents
@@ -243,7 +234,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         const USER_ID = createUUID("bd1c9698-ce26-41e4-819f-83982891456e");
         const userClient = new LocalTestClient(USER_ID, "@user", chatStorage);
-        userClient.registerHandle("@user");
+        userClient.registerHandle(createChatHandle("@user"));
 
         const channels = await chatStorage.getChannels();
 
@@ -302,7 +293,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             llmLogger: chatService.getLogger(),
             logReader: Logger,
             llmService: chatService,
-            vectorCollections: [docsVectorDB, proceduresVectorDB],
+            vectorCollections: [vectorDBService],       //proceduresVectorDB
             cleanup: shutdown,
             agents
         };

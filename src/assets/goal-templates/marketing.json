@@ -1,27 +1,23 @@
 {
-    "id": "#marketing-campaign",
+    "id": "#marketing",
     "name": "Marketing Campaign",
     "description": "Template for running a marketing campaign",
     "supportingAgents": [
         "@writer",
         "@content",
-        "@data",
+        "@research-assistant",
         "@marketing"
     ],
     "defaultResponder": "@marketing",
     "initialTasks": [
         {
-            "description": "Share existing website content",
-            "type": "data-gathering"
+            "description": "Share my existing website with agent"
         },
         {
-            "description": "Define campaign goals",
-            "type": "planning"
+            "description": "Define my marketing campaign goals"
         },
         {
-            "description": "Create content calendar",
-            "type": "planning",
-            "dependsOn": ["define-campaign-goals"]
+            "description": "Create a content calendar"
         }
     ]
 }

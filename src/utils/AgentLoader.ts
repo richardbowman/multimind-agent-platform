@@ -8,6 +8,7 @@ import { SettingsManager } from '../tools/settingsManager';
 import { UUID } from 'src/types/uuid';
 import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 import { MarkdownAgentConstructorParams, MarkdownConfigurableAgent } from 'src/agents/markdownConfigurableAgent';
+import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 
 
 export interface AgentLoaderParams {
@@ -17,6 +18,7 @@ export interface AgentLoaderParams {
     chatStorage: LocalChatStorage;
     settingsManager: SettingsManager;
     agents: Agents;
+    vectorDBService: IVectorDatabase;
 }
 
 export interface Agents {

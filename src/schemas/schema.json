@@ -1141,6 +1141,10 @@
           "description": "Description of the goal type and what it's used for",
           "type": "string"
         },
+        "disabled": {
+          "description": "Flag if this should be ignored",
+          "type": "boolean"
+        },
         "id": {
           "description": "Unique identifier for the goal template"
         },
@@ -1164,6 +1168,7 @@
       "required": [
         "id",
         "name",
+        "disabled",
         "description",
         "supportingAgents",
         "initialTasks"

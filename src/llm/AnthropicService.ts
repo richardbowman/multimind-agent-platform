@@ -8,18 +8,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import { ModelType } from "./types/ModelType";
 import { Settings } from "src/tools/settings";
 import { LLMProvider } from "./types/LLMProvider";
+import { ModelInfo } from "./types";
 
 export class AnthropicService extends BaseLLMService {
     private client: Anthropic;
     private queue: AsyncQueue = new AsyncQueue();
-    private embeddingService?: ILLMService;
 
-    constructor(apiKey: string, private settings: Settings, embeddingService?: ILLMService) {
-        super(LLMProvider.ANTHROPIC);
+    constructor(apiKey: string, settings: Settings) {
+        super(LLMProvider.ANTHROPIC, settings);
         this.client = new Anthropic({
             apiKey: apiKey
         });
-        this.embeddingService = embeddingService;
     }
 
     async shutdown(): Promise<void> {
@@ -123,7 +122,8 @@ export class AnthropicService extends BaseLLMService {
                 await this.logger.logCall('sendLLMRequest', {
                     messages: params.messages,
                     systemPrompt: params.systemPrompt,
-                    opts: params.opts
+                    opts: params.opts,
+                    context: params.context
                 }, result.response);
 
                 return result;
@@ -148,8 +148,7 @@ export class AnthropicService extends BaseLLMService {
             // Map the API response to our ModelInfo interface
             return response.data.map(model => ({
                 id: model.id,
-                name: model.name || model.id,
-                size: model.size || 'Unknown',
+                name: model.display_name || model.id,
                 lastModified: new Date(),
                 isLocal: false,
                 author: 'Anthropic',

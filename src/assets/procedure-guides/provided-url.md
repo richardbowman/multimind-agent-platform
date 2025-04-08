@@ -1,6 +1,6 @@
 ---
-agent: ResearchAssistant
-title: "Provided URL Procedure"
+agent: Research Assistant
+title: Provided URL Procedure
 ---
 
 # Overview

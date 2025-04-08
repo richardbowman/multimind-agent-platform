@@ -107,7 +107,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
         const _s = await this.getSettings();
 
-        Logger.info(`Reindexing collection: ${_s.chromaCollection}`);
+        Logger.info(`Reindexing collection: ${_s.vectorCollection}`);
         for(const collection of this.services.vectorCollections) {
             await collection.reindexCollection();
 
@@ -517,7 +517,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         const dir = await fsPromises.readdir(templatesDir);
         const jsonFiles = dir.filter(file => file.endsWith('.json'));
 
-        return Promise.all(jsonFiles.map(async file => {
+        const templates = await Promise.all(jsonFiles.map(async file => {
             const template = JSON5.parse(await fsPromises.readFile(path.join(templatesDir, file), 'utf8'));
             return {
                 ...template,
@@ -526,6 +526,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 defaultResponder: template.defaultResponder ? createChatHandle(template.defaultResponder) : undefined
             };
         }));
+
+        return templates.filter(t => !t.disabled)
     }
     
     async getLLMLogsPaginated({ offset, limit }: { offset: number; limit: number }): Promise<LLMLogEntry[]> {

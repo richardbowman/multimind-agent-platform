@@ -162,6 +162,10 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           '& .MuiLinearProgress-bar': {
             backgroundColor: theme => theme.palette.primary.main,
           },
+          minWidth: 300, // Match the snackbar width to progress bar
+          '& .MuiSnackbarContent-message': {
+            width: '100%' // Make message container full width
+          }
         }}
         action={
           <>
@@ -225,12 +229,6 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             )}
           </Box>
         }
-        sx={{
-          minWidth: 300, // Match the snackbar width to progress bar
-          '& .MuiSnackbarContent-message': {
-            width: '100%' // Make message container full width
-          }
-        }}
       />
     </SnackbarContext.Provider>
   );

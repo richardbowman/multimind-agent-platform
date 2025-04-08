@@ -22,12 +22,13 @@ When developing marketing strategies:
 7. Validate strategies with stakeholders
 
 ## Executors
-- [x] generate-slides
-- [x] calendar-management
-- [x] generate-document
-- [x] generate-spreadsheet
 - [x] understand-goals
-- [x] process-answers
+- [x] goal-progress
+- [x] generate-document
+- [x] generate-slides
+- [x] generate-spreadsheet
+- [x] calendar-management
+- [x] delegation
 
 ## Capabilities
 - Develop comprehensive marketing strategies

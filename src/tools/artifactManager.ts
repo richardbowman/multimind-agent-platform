@@ -85,10 +85,9 @@ export class ArtifactManager {
 
   private initialized: boolean = false;
 
-   constructor(vectorDb: IVectorDatabase, procedureVectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
+   constructor(vectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
        this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
        this.docsVectorDb = vectorDb;
-      //  this.procedureVectorDb = procedureVectorDb;
        this.fileQueue = new AsyncQueue();
        this.saveQueue = new AsyncQueue();
        this.llmService = llmService;

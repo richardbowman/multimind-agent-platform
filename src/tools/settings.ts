@@ -73,7 +73,7 @@ export class Settings {
         type: 'string',
         visibleWhen: (settings) => settings.vectorDatabaseType === 'chroma'
     })
-    chromaCollection: string = 'core';
+    vectorCollection: string = 'core';
 
     @ClientSettings({
         label: 'Max Link Selections',

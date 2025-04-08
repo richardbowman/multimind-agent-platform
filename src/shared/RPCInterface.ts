@@ -64,7 +64,7 @@ export interface ServerMethods {
     addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
     removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
     getSettings(): Promise<Settings>;
-    updateSettings(settings: any): Promise<ClientError>;
+    updateSettings(settings: any): Promise<Settings|ClientError>;
     getLogs(logType: 'llm' | 'system' | 'api'): Promise<any>;
     getHandles(): Promise<Array<{id: string; handle: string}>>;
     quitAndInstall(): Promise<void>;

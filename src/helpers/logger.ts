@@ -5,8 +5,7 @@ import * as path from 'path';
 import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
 import EventEmitter from 'events';
-import { LogReader } from 'src/server/LogReader';
-import { LogEntry } from '@langchain/core/dist/tracers/log_stream';
+import { LogEntry, LogReader } from 'src/server/LogReader';
 
 declare global {
     var socket: Socket | undefined;

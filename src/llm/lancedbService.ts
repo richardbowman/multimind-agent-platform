@@ -76,12 +76,13 @@ class LanceDBService extends BaseVectorDatabase implements IVectorDatabase {
 
             const embedder = this.embeddingService.getEmbeddingModel();
             const queryEmbedding = (await embedder.generate(queryTexts))[0];
+            const whereClause = where ? this.buildWhereClause(where) : "";
 
-            const results = await this.table.search(queryEmbedding)
-                .limit(nResults)
-                .where(where ? this.buildWhereClause(where) : "")
-                .select(["id", "text", "metadata_json", "artifactid"])
-                .toArray();
+            let query = this.table.search(queryEmbedding).limit(nResults)
+            if (whereClause.length > 0) {
+                query = query.where(whereClause);
+            }
+            const results = await query.select(["id", "text", "metadata_json", "artifactid"]).toArray();
 
             return results.map((result: any) => ({
                 id: result.id,

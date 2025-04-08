@@ -239,7 +239,7 @@ const AppContent: React.FC = () => {
                                 }
                             }}
                         >
-                            <Box sx={{overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+                            <Box sx={{overflow: 'hidden', display: 'flex', flex: 1, flexDirection: 'column'}}>
                                 <Toolbar /> {/* For spacing under app bar */}
                                 <ChannelList
                                     onChannelSelect={(channelId) => {

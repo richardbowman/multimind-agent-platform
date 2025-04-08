@@ -1,5 +1,5 @@
 {
-    "id": "#brainstorming",
+    "id": "#brainstorm",
     "name": "Brainstorming Channel",
     "description": "Template for collaborative brainstorming sessions, facilitated by an AI assistant",
     "supportingAgents": ["@assistant"],
