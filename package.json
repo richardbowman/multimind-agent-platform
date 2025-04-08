@@ -1,6 +1,6 @@
 {
   "name": "multimind-agent-platform",
-  "version": "0.1.47",
+  "version": "0.1.48",
   "main": "dist/main.electron.js",
   "scripts": {
     "uuid": "tsx scripts/generate-uuid.ts",
