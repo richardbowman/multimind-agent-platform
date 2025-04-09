@@ -235,28 +235,40 @@ export class DuckDuckGoProvider implements ISearchProvider {
             // Get simplified page data
             const pageData = await window.webContents.executeJavaScript(`
                 (function() {
-                    const results = [];
-                    const elements = document.querySelectorAll('${isNews ? '.results--main .result' : '.react-results--main [data-testid="result"]'}');
+                    try {
+                        const results = [];
+                        const container = document.querySelector('${isNews ? 'article[data-testid="news-vertical"]' : '.react-results--main'}');
+                        const elements = container.querySelectorAll('${isNews ? 'article' : '[data-testid="result"]'}');
                     
-                    elements.forEach(el => {
-                        const titleEl = el.querySelector('${isNews ? '.result__title' : '[data-testid="result-title-a"]'}');
-                        const linkEl = el.querySelector('${isNews ? '.result__a' : '[data-testid="result-extras-url-link"]'}');
-                        const snippetEl = el.querySelector('${isNews ? '.result__snippet' : '[data-result="snippet"]'}');
+                        elements.forEach(el => {
+                            const titleEl = el.querySelector('${isNews ? 'h2' : '[data-testid="result-title-a"]'}');
+                            const linkEl = el.querySelector('${isNews ? 'a' : '[data-testid="result-extras-url-link"]'}');
+                            const snippetEl = el.querySelector('${isNews ? 'p' : '[data-result="snippet"]'}');
+
+                            if (titleEl && linkEl && linkEl.href.startsWith('http')) {
+                                results.push({
+                                    title: titleEl.textContent,
+                                    url: linkEl.href,
+                                    description: snippetEl ? snippetEl.textContent.trim() : ''
+                                });
+                            }
+                        });
                         
-                        if (titleEl && linkEl && linkEl.href.startsWith('http')) {
-                            results.push({
-                                title: titleEl.textContent,
-                                url: linkEl.href,
-                                description: snippetEl ? snippetEl.textContent.trim() : ''
-                            });
-                        }
-                    });
-                    
-                    return results;
+                        return {
+                            elements: [...elements].map(e => e.innerHTML),
+                            results
+                        };
+                    } catch (error) {
+                        return {
+                            error: error.toString()
+                        } 
+                    }
                 })()
             `);
 
-            results.push(...pageData);
+            if (pageData.error) throw new Error(pageData.error);
+            
+            results.push(...pageData.results);
 
             await this.browserHelper.releaseContext(context);
 
