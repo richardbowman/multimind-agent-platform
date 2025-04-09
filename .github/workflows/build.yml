@@ -45,6 +45,11 @@ jobs:
         with:
            token: ${{ secrets.GH_PAT }}   
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Enable Corepack and Yarn
         run: |
           corepack enable
