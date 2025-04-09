@@ -44,15 +44,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
            token: ${{ secrets.GH_PAT }}   
+
+      - name: Enable Corepack and Yarn
+        run: |
+          corepack enable
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
-
-      - name: Enable Corepack and Yarn
-        run: |
-          corepack enable
           
       - name: Bump Version
         run: |
@@ -116,10 +117,15 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
 
+      - name: Enable Corepack and Yarn
+        run: |
+          corepack enable
+
       - name: Setup Node.js and Python
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'yarn'
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -146,10 +152,6 @@ jobs:
           key: ${{ runner.os }}-electron-builder-cache-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
           restore-keys: |
             ${{ runner.os }}-electron-builder-cache-
-
-      - name: Enable Corepack and Yarn
-        run: |
-          corepack enable
 
       - name: Install Dependencies
         run: |
