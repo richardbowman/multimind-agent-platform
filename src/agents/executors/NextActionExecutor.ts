@@ -97,15 +97,16 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
             prompt.addOutputInstructions({ outputType: OutputType.ALL_XML_MESSAGE_REASONING_DATA, schema, status: false, specialInstructions: `
     IN <thinking>, describe this process:
-    - Review the STEPS COMPLETED FOR POST to see what you've already done.
-    - Consider Procedure Guides for help on step order required to be successful. 
-    - Consider the best Action Type from the AVAILABLE ACTION TYPES to achieve the goal.
-    - Explain each step and why it would or would not make sense to be the next action.
+    1. Using the STEPS ASSISTANT COMPLETED FOR POST, explain what you've already done.
+    2. Consider Procedure Guides for help on step order required to be successful. 
+    3. Consider the best Action Type from the AVAILABLE ACTION TYPES to achieve the goal.
+    
     THEN IN <data>:
-    - If you need to continue working, set the "nextAction" to one of the AVAILABLE ACTION TYPES.
-    - If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
-    - In "procedureGuideTitle", share the title of the guide you are following or "NONE".
-    - Summarize the conversation into "conversationSummary"
+    1. If you need to continue working, set the "nextAction" to one of the AVAILABLE ACTION TYPES.
+    2. If you achieved the goal${isConversation ? " or need to reply to the user with questions" : ""}, set the Action Type to ${completionAction}.
+    3. In "procedureGuideTitle", share the title of the guide you are following or "NONE".
+    4. Summarize the conversation into "conversationSummary"
+    
     FINALLY IN <message>:
     - For reply: Respond in a friendly and concise chat message.
     - For other actions: Provide a clear description of the user's goals as well as a complete task description for the step, repeating all necessary information the step needs including the details of the user's message.
