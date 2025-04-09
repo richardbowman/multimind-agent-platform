@@ -88,6 +88,8 @@ export interface ConversationContext extends Record<string, any> {
     "conversation-root"?: string;
     artifactIds?: string[];
     partial?: boolean;
+    originalMessage?: string;
+    toolResponses?: string[];
 }
 
 export interface Attachment {

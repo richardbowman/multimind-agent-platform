@@ -50,8 +50,16 @@ export abstract class BaseLLMService implements ILLMService {
             ...(history ? this.mapPosts(userPost, cleanedHistory) : []),
             {
                 role: "user",
-                content: userPost.message
-            }
+                content: userPost.props?.originalMessage||userPost.message
+            },
+            // ...(userPost.props.toolResponses ? userPost.props.toolResponses.map(t => ({
+            //     role: "tool",
+            //     content: t
+            // })) : [])
+            ...(userPost.props?.toolResponses ? [{
+                "role": "assistant",
+                content: "<completedSteps>\n# STEPS ASSISTANT COMPLETED FOR POST:\n\n" + userPost.props.toolResponses.join("\n\n") + "\n</completedSteps>\n"
+            }] : [])
         ];
 
         const result = await this.sendLLMRequest<T>({

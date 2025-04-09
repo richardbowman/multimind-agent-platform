@@ -182,7 +182,6 @@ ${step.props.result?.response.reasoning||""}
                 }
             }));
 
-
             return recentPosts.map(p => {
                 if (p.user_id === this.params.agentId) {
                     return {
@@ -194,7 +193,11 @@ ${renderedSteps.get(p.id)?.join("\n")}
                 } else if (renderedSteps.get(p.id)?.length||0 > 0) {
                     return {
                         ...p,
-                        message: p.message + `\n\n----INTERNAL DATA NOT VISIBLE TO USER BELOW----\n<tool_results>STEPS ASSISTANT COMPLETED FOR POST:\n${renderedSteps.get(p.id)?.join("\n\n")}</tool_results>`,
+                        message: p.message + `\n\n----PRIOR EXECUTED STEP RESPONSES FOR THIS USER MESSAGE, USE IN YOUR PROCESSING (NOT VISIBLE TO USER)----\n<tool_results>\n# STEPS ASSISTANT COMPLETED FOR POST:\n\n${renderedSteps.get(p.id)?.join("\n\n")}</tool_results>`,
+                        props: {
+                            originalMessage: p.message,
+                            toolResponses: renderedSteps.get(p.id)
+                        }
                     }
                 } else {
                     return p;
